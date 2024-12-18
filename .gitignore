@@ -1,0 +1,11 @@
+.DS_Store
+*/Library
+*/Logs
+*/Temp
+*/UserSettings
+*/*.csproj
+*/*.sln
+*/Assets/Unity.VisualScripting.Generated
+*/.idea
+*/obj
+*.sln.DotSettings.user
