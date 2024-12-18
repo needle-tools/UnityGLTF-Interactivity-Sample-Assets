@@ -1,0 +1,6 @@
+[submodule "UnityGLTF"]
+	path = UnityGLTF
+	url = git@github.com:KhronosGroup/UnityGLTF.git
+[submodule "UnityGLTF-Interactivity"]
+	path = UnityGLTF-Interactivity
+	url = git@github.com:needle-tools/UnityGLTF-Interactivity.git
