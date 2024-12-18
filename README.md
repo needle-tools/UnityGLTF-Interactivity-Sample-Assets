@@ -7,7 +7,7 @@
 
 #### Downloading the code
 1. Clone this repository with a git client
-2. Ensure that all submodules (UnityGLTF and the UnityGLTF Interactivity Plugin) are cloned as well.
+2. Ensure that all submodules are cloned as well: [UnityGLTF](https://github.com/KhronosGroup/UnityGLTF) and the [UnityGLTF Interactivity Plugin](https://github.com/needle-tools/UnityGLTF-Interactivity)).
 
 #### Opening and preparing the project
 3. Open the `Interactivity-2022.3` project. It currently uses Unity 2022.3.46f1.
