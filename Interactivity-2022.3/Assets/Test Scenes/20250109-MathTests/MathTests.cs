@@ -23,7 +23,7 @@ public class MathTests : MonoBehaviour, IInteractivityExport
         foreach (var schema in schemas)
         {
             var instance = (GltfInteractivityNodeSchema) System.Activator.CreateInstance(schema);
-            schemasByTypeName.Add(instance.Type, schema);
+            schemasByTypeName.Add(instance.Op, schema);
         }
     }
     
@@ -118,8 +118,8 @@ public class MathTests : MonoBehaviour, IInteractivityExport
         
         var startNode = nodes.CreateNode(GetSchema("event/onStart"));
         var sequenceNode = nodes.CreateNode(GetSchema("flow/sequence"));
-        sequenceNode.FlowSocketConnectionData.Add("0", new GltfInteractivityNode.FlowSocketData { Id = "0" });
-        sequenceNode.FlowSocketConnectionData.Add("1", new GltfInteractivityNode.FlowSocketData { Id = "1" });
+        sequenceNode.FlowSocketConnectionData.Add("0", new GltfInteractivityNode.FlowSocketData { });
+        sequenceNode.FlowSocketConnectionData.Add("1", new GltfInteractivityNode.FlowSocketData { });
         startNode.SetFlowOut("out", sequenceNode, "in");
         sequenceNode.SetFlowOut("0", setPositionNode, "in");
         sequenceNode.SetFlowOut("1", switchNode, "in");
