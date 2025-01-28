@@ -1,0 +1,98 @@
+fileFormatVersion: 2
+guid: d79f0c4c524869547ac374f2bcd77e19
+ScriptedImporter:
+  internalIDToNameTable: []
+  externalObjects:
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: BlueMetal
+    second: {fileID: 2100000, guid: fb212bf20eb10df4a8f851491e8c86a5, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: Glass.001
+    second: {fileID: 2100000, guid: b924b5f991f09fb4eb2f47f3127e173a, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: MagicBall
+    second: {fileID: 2100000, guid: f65a4533f6385a649a1580ac55b6f958, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: WhiteFont
+    second: {fileID: 2100000, guid: d40b047c2c98931439eed9121905ca3a, type: 2}
+  serializedVersion: 2
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+  script: {fileID: 11500000, guid: 804e1ce4c496647cfa3f1a1134187c71, type: 3}
+  _removeEmptyRootObjects: 1
+  _scaleFactor: 1
+  _deduplicateResources: 0
+  _maximumLod: 300
+  _readWriteEnabled: 1
+  _generateColliders: 0
+  _swapUvs: 0
+  _generateLightmapUVs: 0
+  _importBlendShapeNames: 1
+  _blendShapeFrameWeight:
+    _option: 0
+    _multiplier: 1
+  _importNormals: 0
+  _importTangents: 0
+  _importCamera: 2
+  _importAnimations: 2
+  _mecanimHumanoidFlip: 0
+  _addAnimatorComponent: 0
+  _animationLoopTime: 1
+  _animationLoopPose: 0
+  _importMaterials: 1
+  _enableGpuInstancing: 0
+  _texturesReadWriteEnabled: 1
+  _generateMipMaps: 1
+  _useSceneNameIdentifier: 1
+  _textureCompression: -50
+  _gltfAsset: '<b>Generator: </b>Khronos glTF Blender I/O v4.3.47
+
+    <b>Version:
+    </b>2.0
+
+'
+  optimizeGameObjects: 0
+  materials:
+  - {fileID: -6973002786052489387, guid: d79f0c4c524869547ac374f2bcd77e19, type: 3}
+  - {fileID: 3392243222815625112, guid: d79f0c4c524869547ac374f2bcd77e19, type: 3}
+  - {fileID: -517650979257516875, guid: d79f0c4c524869547ac374f2bcd77e19, type: 3}
+  - {fileID: -2643890043280603836, guid: d79f0c4c524869547ac374f2bcd77e19, type: 3}
+  textures:
+  - {fileID: -3634506582267549300, guid: d79f0c4c524869547ac374f2bcd77e19, type: 3}
+  - {fileID: 7701825437847749863, guid: d79f0c4c524869547ac374f2bcd77e19, type: 3}
+  - {fileID: 1771782060269246366, guid: d79f0c4c524869547ac374f2bcd77e19, type: 3}
+  - {fileID: 9056373536998721773, guid: d79f0c4c524869547ac374f2bcd77e19, type: 3}
+  hasSceneData: 1
+  hasAnimationData: 0
+  hasMaterialData: 1
+  hasTextureData: 1
+  animations: []
+  _extensions:
+  - name: KHR_materials_transmission
+    supported: 1
+    used: 1
+    required: 0
+  _textures:
+  - texture: {fileID: -3634506582267549300, guid: d79f0c4c524869547ac374f2bcd77e19, type: 3}
+    shouldBeLinear: 1
+    shouldBeNormalMap: 0
+  - texture: {fileID: 7701825437847749863, guid: d79f0c4c524869547ac374f2bcd77e19, type: 3}
+    shouldBeLinear: 1
+    shouldBeNormalMap: 1
+  - texture: {fileID: 1771782060269246366, guid: d79f0c4c524869547ac374f2bcd77e19, type: 3}
+    shouldBeLinear: 1
+    shouldBeNormalMap: 0
+  - texture: {fileID: 9056373536998721773, guid: d79f0c4c524869547ac374f2bcd77e19, type: 3}
+    shouldBeLinear: 0
+    shouldBeNormalMap: 0
+  _mainAssetIdentifier: scenes/Scene
+  _importPlugins: []
