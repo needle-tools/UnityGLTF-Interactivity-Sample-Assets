@@ -146,10 +146,10 @@ Material:
     - _DetailNormalMapScale: 1
     - _DstBlend: 10
     - _GlossMapScale: 1
-    - _Glossiness: 0.917
+    - _Glossiness: 0.096
     - _GlossyReflections: 1
     - _IRIDESCENCE: 0
-    - _Metallic: 0
+    - _Metallic: 0.275
     - _Mode: 3
     - _NormalMapFormatXYZ: 0
     - _OcclusionStrength: 1
