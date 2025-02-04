@@ -1,5 +1,7 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
+using System.Reflection;
 using UnityEditor;
 using UnityEngine;
 using UnityGLTF.Interactivity;
@@ -16,14 +18,46 @@ public class MathTests : MonoBehaviour, IInteractivityExport
     
     private static Dictionary<string, Type> schemasByTypeName = null;
     
+    public static IEnumerable<Type> GetLoadableTypes(Assembly assembly)
+    {
+        try
+        {
+            return assembly.GetTypes();
+        }
+        catch (ReflectionTypeLoadException e)
+        {
+            return e.Types.Where(t => t != null);
+        }
+    }
+    
     static void Setup()
     {
-        var schemas = TypeCache.GetTypesDerivedFrom<GltfInteractivityNodeSchema>();
+        var schemas = AppDomain.CurrentDomain
+            .GetAssemblies()
+            .SelectMany(assembly => GetLoadableTypes(assembly))
+            .Where(t => t.IsSubclassOf(typeof(GltfInteractivityNodeSchema)))
+            .Where( t => !t.IsAbstract)
+            .ToList();
+        
+        // Is not collecting all schema classes
+        // > maybe https://issuetracker.unity3d.com/issues/not-all-assemblies-are-found-in-the-current-appdomain-when-scanning-with-typecache
+        //var schemas = TypeCache.GetTypesDerivedFrom<GltfInteractivityNodeSchema>();
+        
         schemasByTypeName = new Dictionary<string, Type>();
         foreach (var schema in schemas)
         {
             var instance = (GltfInteractivityNodeSchema) System.Activator.CreateInstance(schema);
-            schemasByTypeName.Add(instance.Op, schema);
+            if (instance == null)
+            {
+                Debug.LogWarning($"Failed to create instance of schema: {schema.FullName}");
+                continue;
+            }
+            if (!schemasByTypeName.ContainsKey(instance.Op))
+                schemasByTypeName.Add(instance.Op, schema);
+            else
+            {
+                Debug.LogWarning($"Duplicate schema found: {instance.Op} Type: "+schema.FullName);
+            }
         }
     }
     
@@ -55,6 +89,11 @@ public class MathTests : MonoBehaviour, IInteractivityExport
         testNode.OutValueSocket["value"].expectedType = ExpectedType.Float;
 
         var equalsNode = default(GltfInteractivityNode);
+
+        if (expected == null)
+        {
+            Debug.LogWarning("Expected value is null. Schema: " + schema);
+        }
         
         var expectedRestriction = expected is float ? TypeRestriction.LimitToFloat : TypeRestriction.LimitToBool;
         var isSpecialValue = expected.Equals(float.NaN) || expected.Equals(float.PositiveInfinity) || expected.Equals(float.NegativeInfinity);
