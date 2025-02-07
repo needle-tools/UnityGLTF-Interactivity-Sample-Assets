@@ -1,3 +1,6 @@
+#if UNITY_EDITOR
+// TODO make runtime capable
+
 using System;
 using System.Collections.Generic;
 using UnityEditor;
@@ -421,3 +424,5 @@ public class CreateMathTests : MonoBehaviour
         }
     }
 }
+
+#endif

@@ -1,11 +1,12 @@
+#if UNITY_EDITOR
+// TODO make runtime capable
+
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
-using UnityEditor;
 using UnityEngine;
 using UnityGLTF.Interactivity;
-using UnityGLTF.Interactivity.Export;
 using UnityGLTF.Interactivity.Schema;
 
 public class MathTests : MonoBehaviour, IInteractivityExport
@@ -160,3 +161,5 @@ public class MathTests : MonoBehaviour, IInteractivityExport
         label.text = schema;
     }
 }
+
+#endif

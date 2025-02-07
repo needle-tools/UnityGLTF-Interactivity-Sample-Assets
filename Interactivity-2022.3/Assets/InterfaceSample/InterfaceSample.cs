@@ -1,5 +1,7 @@
+#if UNITY_EDITOR
+// TODO make runtime capable
+
 using UnityEngine;
-using UnityGLTF.Interactivity.Export;
 using UnityGLTF.Interactivity.Schema;
 using UnityGLTF.Interactivity;
 
@@ -35,3 +37,5 @@ public class InterfaceSample : MonoBehaviour ,IInteractivityExport
        
     }
 }
+
+#endif

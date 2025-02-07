@@ -12,6 +12,7 @@ public class SetMessage : MonoBehaviour
     public string message1 = "my name is world.\nI can dance!";
     public string message2 = "glTF is a file format for 3D scenes and models\npublished by the Khronos Group.\nThank you.";
 
+#if UNITY_EDITOR
     private void OnValidate()
     {
         var vars = GetComponent<Variables>();
@@ -21,6 +22,7 @@ public class SetMessage : MonoBehaviour
         vars.declarations.Set("characters", GameObject.FindObjectsByType<MaterialCopy>(FindObjectsInactive.Exclude, FindObjectsSortMode.None).OrderByDescending(x => x.transform.position.y).ThenByDescending(x => x.transform.position.x).Select(x => x.gameObject).ToArray());
         EditorUtility.SetDirty(vars);
     }
+#endif
     
     List<int> ConvertMessageToIntArray(string message)
     {
