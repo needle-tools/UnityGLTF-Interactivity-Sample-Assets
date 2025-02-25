@@ -15,7 +15,7 @@ using Unity.VisualScripting;
 public class ExportAllScenes : MonoBehaviour
 {
     // Launch with:
-    // "/Applications/Unity/Hub/Editor/2022.3.57f1/Unity.app/Contents/MacOS/Unity"  -projectPath ~/work/github/UnityGLTF-Interactivity-Sample-Assets/Interactivity-2022.3/ -executeMethod ExportAllScenes.Load
+    // "/Applications/Unity/Hub/Editor/2022.3.57f1/Unity.app/Contents/MacOS/Unity"  -projectPath ~/work/github/UnityGLTF-Interactivity-Sample-Assets/Interactivity-2022.3/ -executeMethod ExportAllScenes.Load -exportpath ~/work/mytestdir21 -batchmode -nographics -quit -logfile -
     private static void Export(Transform[] transforms, UnityEngine.Object[] resources, bool binary, string sceneName)
     {
         try
