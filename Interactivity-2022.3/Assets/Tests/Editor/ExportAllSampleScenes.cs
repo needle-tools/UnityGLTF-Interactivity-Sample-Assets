@@ -67,7 +67,7 @@ public class ExportAllScenes : MonoBehaviour
         string _name = "-" + name;
         string[] args = Environment.GetCommandLineArgs();
         int i = Array.FindIndex(args, a => a == _name);
-        if(i >= 0)
+        if(i >= 0 && i < args.Length - 1)
         {
             return args[i + 1];
         }
@@ -125,6 +125,6 @@ public class ExportAllScenes : MonoBehaviour
             settings.SaveFolderPath = prevSettingsPath;
         }
 
-        Debug.Log($"Complete ExportAllScenes.LoadTestScenes");
+        Debug.Log($"Complete ExportAllScenes.Load");
     }
 }
