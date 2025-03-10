@@ -1,4 +1,4 @@
-#if UNITY_EDITOR
+#if UNITY_EDITOR && HAVE_VISUAL_SCRIPTING
 // TODO make runtime capable
 
 using UnityEngine;

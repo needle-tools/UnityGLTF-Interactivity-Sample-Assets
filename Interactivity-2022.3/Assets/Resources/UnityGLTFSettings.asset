@@ -156,7 +156,7 @@ MonoBehaviour:
   enabled: 1
   debugLogSetting:
     ADBEConsole: 1
-    BabylonLog: 0
+    BabylonLog: 1
 --- !u!114 &-3857604256152664990
 MonoBehaviour:
   m_ObjectHideFlags: 3
@@ -317,6 +317,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 9d9a5969691dba845877d0a52b6d9397, type: 3}
   m_Name: UnityGLTFSettings
   m_EditorClassIdentifier: 
+  packageVersion: 
   shaderStrippingSettings:
     stripPassesFromAllShaders: 0
     stripPasses: 0
@@ -340,7 +341,6 @@ MonoBehaviour:
   - {fileID: -2142469313196315917}
   - {fileID: 3714127495444882092}
   - {fileID: -7948437568330643733}
-  - {fileID: -4017663248162266933}
   - {fileID: -6622928974864253420}
   - {fileID: 9036333003609957737}
   - {fileID: -9114232557462604611}

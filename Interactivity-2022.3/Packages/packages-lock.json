@@ -216,14 +216,6 @@
         "com.unity.mathematics": "1.0.0"
       }
     },
-    "org.khronos.unitygltf.interactivity": {
-      "version": "file:../../UnityGLTF-Interactivity",
-      "depth": 0,
-      "source": "local",
-      "dependencies": {
-        "org.khronos.unitygltf": "2.15.0"
-      }
-    },
     "com.unity.modules.ai": {
       "version": "1.0.0",
       "depth": 0,

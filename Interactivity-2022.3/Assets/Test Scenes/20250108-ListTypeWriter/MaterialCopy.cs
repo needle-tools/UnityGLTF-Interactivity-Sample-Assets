@@ -1,3 +1,5 @@
+#if HAVE_VISUAL_SCRIPTING
+
 using Unity.VisualScripting;
 using UnityEngine;
 
@@ -22,3 +24,5 @@ public class MaterialCopy : MonoBehaviour
         GetComponent<Renderer>().sharedMaterial = source;
     }
 }
+
+#endif

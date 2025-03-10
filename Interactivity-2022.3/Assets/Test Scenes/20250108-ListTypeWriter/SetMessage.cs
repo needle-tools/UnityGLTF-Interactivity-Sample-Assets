@@ -1,3 +1,5 @@
+#if HAVE_VISUAL_SCRIPTING
+
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -34,3 +36,5 @@ public class SetMessage : MonoBehaviour
         return result;
     }
 }
+
+#endif
