@@ -6,8 +6,8 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using UnityEngine;
-using UnityGLTF.Interactivity;
-using UnityGLTF.Interactivity.Schema;
+using UnityGLTF.Interactivity.VisualScripting;
+using UnityGLTF.Interactivity.VisualScripting.Schema;
 
 public class MathTests : MonoBehaviour, IInteractivityExport
 {
@@ -79,7 +79,7 @@ public class MathTests : MonoBehaviour, IInteractivityExport
         throw new Exception($"Schema not found: {name}");
     }
 
-    public void OnInteractivityExport(GltfInteractivityExportContext context, GltfInteractivityExportNodes nodes)
+    public void OnInteractivityExport(VisualScriptingExportContext context, GltfInteractivityExportNodes nodes)
     {
         if (!isActiveAndEnabled) return;
         
@@ -144,9 +144,9 @@ public class MathTests : MonoBehaviour, IInteractivityExport
         combine3Node.SetValueInSocketSource("c", equalsNode, "value", TypeRestriction.LimitToFloat);
         
         var setPositionNode = nodes.CreateNode(GetSchema("pointer/set"));
-        GltfInteractivityNodeHelper.AddPointerConfig(setPositionNode, "/nodes/{nodeIndex}/translation", GltfTypes.Float3);
+        UnitsHelper.AddPointerConfig(setPositionNode, "/nodes/{nodeIndex}/translation", GltfTypes.Float3);
         int thisTransformIndex = context.exporter.GetTransformIndex(pass);
-        GltfInteractivityNodeHelper.AddPointerTemplateValueInput(setPositionNode, "nodeIndex", thisTransformIndex);
+        UnitsHelper.AddPointerTemplateValueInput(setPositionNode, "nodeIndex", thisTransformIndex);
         
         setPositionNode.SetValueInSocketSource("value", combine3Node, "value", TypeRestriction.LimitToFloat3);
         

@@ -2,12 +2,12 @@
 // TODO make runtime capable
 
 using UnityEngine;
-using UnityGLTF.Interactivity.Schema;
-using UnityGLTF.Interactivity;
+using UnityGLTF.Interactivity.VisualScripting.Schema;
+using UnityGLTF.Interactivity.VisualScripting;
 
 public class InterfaceSample : MonoBehaviour ,IInteractivityExport
 {
-    public void OnInteractivityExport(GltfInteractivityExportContext context, GltfInteractivityExportNodes nodes)
+    public void OnInteractivityExport(VisualScriptingExportContext context, GltfInteractivityExportNodes nodes)
     {
 
         var addNode = nodes.CreateNode(new Math_AddNode());
@@ -27,9 +27,9 @@ public class InterfaceSample : MonoBehaviour ,IInteractivityExport
         vector3Node.SetValueInSocketSource("c", equalNode, "value", TypeRestriction.LimitToFloat);
         
         var setPositionNode = nodes.CreateNode(new Pointer_SetNode());
-        GltfInteractivityNodeHelper.AddPointerConfig(setPositionNode, "/nodes/{" + GltfInteractivityNodeHelper.IdPointerNodeIndex + "}/translation", GltfTypes.Float3);
+        UnitsHelper.AddPointerConfig(setPositionNode, "/nodes/{" + UnitsHelper.IdPointerNodeIndex + "}/translation", GltfTypes.Float3);
         int thisTransformIndex = context.exporter.GetTransformIndex(transform);
-        GltfInteractivityNodeHelper.AddPointerTemplateValueInput(setPositionNode, GltfInteractivityNodeHelper.IdPointerNodeIndex, thisTransformIndex);
+        UnitsHelper.AddPointerTemplateValueInput(setPositionNode, UnitsHelper.IdPointerNodeIndex, thisTransformIndex);
         setPositionNode.SetValueInSocketSource("value", vector3Node, "value", TypeRestriction.LimitToFloat3);
         
         var startNode = nodes.CreateNode(new Event_OnStartNode());
