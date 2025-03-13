@@ -6,8 +6,8 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using UnityEngine;
+using UnityGLTF.Interactivity.Schema;
 using UnityGLTF.Interactivity.VisualScripting;
-using UnityGLTF.Interactivity.VisualScripting.Schema;
 
 public class MathTests : MonoBehaviour, IInteractivityExport
 {

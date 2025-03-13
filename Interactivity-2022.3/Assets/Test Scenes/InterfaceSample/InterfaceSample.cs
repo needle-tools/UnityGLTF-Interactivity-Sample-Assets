@@ -2,7 +2,7 @@
 // TODO make runtime capable
 
 using UnityEngine;
-using UnityGLTF.Interactivity.VisualScripting.Schema;
+using UnityGLTF.Interactivity.Schema;
 using UnityGLTF.Interactivity.VisualScripting;
 
 public class InterfaceSample : MonoBehaviour ,IInteractivityExport
