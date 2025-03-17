@@ -107,6 +107,22 @@ MonoBehaviour:
   KHR_materials_clearcoat: 1
   KHR_materials_emissive_strength: 1
   KHR_materials_sheen: 1
+--- !u!114 &-6442387276424217699
+MonoBehaviour:
+  m_ObjectHideFlags: 3
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 13416558369ebcb46a99c28ceb137930, type: 3}
+  m_Name: VisualScriptingExportPlugin
+  m_EditorClassIdentifier: 
+  enabled: 1
+  debugLogSetting:
+    ADBEConsole: 1
+    BabylonLog: 0
 --- !u!114 &-6100253865612741739
 MonoBehaviour:
   m_ObjectHideFlags: 3
@@ -345,6 +361,7 @@ MonoBehaviour:
   - {fileID: 9036333003609957737}
   - {fileID: -9114232557462604611}
   - {fileID: 5699131051538002066}
+  - {fileID: -6442387276424217699}
   exportNames: 1
   exportFullPath: 0
   requireExtensions: 0
@@ -412,7 +429,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b6d87ebf60834245a388cd150253839d, type: 3}
   m_Name: AnimationPointerExport
   m_EditorClassIdentifier: 
-  enabled: 1
+  enabled: 0
 --- !u!114 &3308297621105623092
 MonoBehaviour:
   m_ObjectHideFlags: 3
