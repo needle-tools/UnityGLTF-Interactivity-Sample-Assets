@@ -2,6 +2,7 @@
 // TODO make runtime capable
 
 using UnityEngine;
+using UnityGLTF.Interactivity;
 using UnityGLTF.Interactivity.Schema;
 using UnityGLTF.Interactivity.VisualScripting;
 
