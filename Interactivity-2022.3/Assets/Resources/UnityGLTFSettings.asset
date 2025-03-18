@@ -121,8 +121,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   enabled: 1
   debugLogSetting:
-    ADBEConsole: 1
-    BabylonLog: 0
+    ADBEConsole: 0
+    BabylonLog: 1
 --- !u!114 &-6100253865612741739
 MonoBehaviour:
   m_ObjectHideFlags: 3
