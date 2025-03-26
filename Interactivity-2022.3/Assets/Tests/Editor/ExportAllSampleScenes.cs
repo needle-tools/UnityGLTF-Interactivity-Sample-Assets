@@ -4,10 +4,8 @@ using UnityEditor.SceneManagement;
 using UnityEngine;
 using System.IO;
 using System.Linq;
-using System.Threading.Tasks;
-using TMPro;
+using Tests.Editor;
 using UnityEditor;
-using UnityEngine.UI;
 using UnityGLTF;
 
 public static class ExportAllScenes
@@ -30,7 +28,7 @@ public static class ExportAllScenes
     
     // Launch with:
     // "/Applications/Unity/Hub/Editor/2022.3.57f1/Unity.app/Contents/MacOS/Unity"  -projectPath ~/work/github/UnityGLTF-Interactivity-Sample-Assets/Interactivity-2022.3/ -executeMethod ExportAllScenes.Load -exportpath ~/work/mytestdir21 -batchmode -nographics -quit -logfile -
-    private static void Export(Transform[] transforms, bool binary, string sceneName, string path)
+    private static void Export(Transform[] transforms, bool binary, string sceneName, string path, bool resetRootTransforms = false)
     {
         if (string.IsNullOrEmpty(path))
             return;
@@ -82,7 +80,7 @@ public static class ExportAllScenes
         ExportTo(exportPath);
     }
 
-    public static async void ExportTo(string exportPath)
+    public static void ExportTo(string exportPath)
     {
         List<FileInfo> files = new List<FileInfo>();
         
@@ -128,8 +126,14 @@ public static class ExportAllScenes
             var sceneExportPath = System.IO.Path.Combine(exportPath, relativeSubPath);
             Debug.Log($"<b><color=#F69012> Exporting scene </color> {s.name}</b>");
             
-            await Task.Yield();
-            Export(transforms, true, s.name, sceneExportPath);
+            foreach (var t in transforms)
+            {
+                var exportInterfaces = t.GetComponentsInChildren<IExportScene>(t);
+                foreach (var i in exportInterfaces)
+                    i.OnBeforeExporting();
+            }
+            
+            Export(transforms, true, s.name, sceneExportPath, true);
 
             var batchExports = new List<Transform>();
             foreach (var tr in transforms)
@@ -141,13 +145,13 @@ public static class ExportAllScenes
             {       
                 var exportName = GetHierarchyName(batchExport);
                 Debug.Log($"  <color=#F69012> Exporting batch transform: </color> {exportName}");
-                Export(new []{batchExport}, true, exportName, batchExportPath);
+                Export(new []{batchExport}, true, exportName, batchExportPath, true);
             }
             
         }
         
         Debug.Log($"<color=#00FF00><b>Completed</b></color>");
         
-        System.Diagnostics.Process.Start(exportPath);
+        EditorUtility.RevealInFinder(exportPath);
     }
 }

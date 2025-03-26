@@ -3,10 +3,11 @@
 
 using System;
 using System.Collections.Generic;
+using Tests.Editor;
 using UnityEditor;
 using UnityEngine;
 
-public class CreateMathTests : MonoBehaviour
+public class CreateMathTests : MonoBehaviour, IExportScene
 {
     public MathTests prefab;
 
@@ -382,6 +383,11 @@ public class CreateMathTests : MonoBehaviour
         },
     };
 
+    public void OnBeforeExporting()
+    {
+        CreateTests();       
+    }
+
     [ContextMenu("Create Tests")]
     void CreateTests()
     {
@@ -401,6 +407,7 @@ public class CreateMathTests : MonoBehaviour
             
             var test = PrefabUtility.InstantiatePrefab(prefab) as MathTests;
             test.name = testCase.schema;
+            test.tag = "BATCH_EXPORT";
             
             if (childStateByName.TryGetValue(test.name, out var active))
                 test.gameObject.SetActive(active);
