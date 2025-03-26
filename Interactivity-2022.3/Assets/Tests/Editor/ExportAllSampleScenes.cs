@@ -4,7 +4,10 @@ using UnityEditor.SceneManagement;
 using UnityEngine;
 using System.IO;
 using System.Linq;
+using System.Threading.Tasks;
+using TMPro;
 using UnityEditor;
+using UnityEngine.UI;
 using UnityGLTF;
 
 public static class ExportAllScenes
@@ -37,7 +40,6 @@ public static class ExportAllScenes
             Directory.CreateDirectory(path);
         }
         
-        Debug.Log($"<b><color=#F69012> Exporting scene </color> {sceneName}</b>");
         try
         {
             var settings = GLTFSettings.GetOrCreateSettings();
@@ -80,7 +82,7 @@ public static class ExportAllScenes
         ExportTo(exportPath);
     }
 
-    public static void ExportTo(string exportPath)
+    public static async void ExportTo(string exportPath)
     {
         List<FileInfo> files = new List<FileInfo>();
         
@@ -92,6 +94,22 @@ public static class ExportAllScenes
             foreach (var d in directories)
                 ReadDirectory(d);
         }
+
+        void FindBatchExports(Transform transform, List<Transform> batchExports)
+        {
+            if (transform.tag.Equals("BATCH_EXPORT"))
+                batchExports.Add(transform);
+
+            for (int i = 0; i < transform.childCount; i++)
+                FindBatchExports(transform.GetChild(i), batchExports);
+        }
+        
+        string GetHierarchyName(Transform transform)
+        {
+            if (transform.parent == null)
+                return transform.name;
+            return GetHierarchyName(transform.parent) + "_" + transform.name;
+        }
         
         var info = new DirectoryInfo("Assets/Test Scenes/");
         string fullScenePath = info.FullName; 
@@ -101,14 +119,31 @@ public static class ExportAllScenes
 
         foreach(var f in files)
         {
-            var s = EditorSceneManager.OpenScene(f.FullName, OpenSceneMode.Single);      
+            var s = EditorSceneManager.OpenScene(f.FullName, OpenSceneMode.Single);
+            
             var gameObjects = s.GetRootGameObjects();
             var transforms = Array.ConvertAll(gameObjects, gameObject => gameObject.transform);
 
             var relativeSubPath = System.IO.Path.GetRelativePath(fullScenePath, f.Directory.FullName);
             var sceneExportPath = System.IO.Path.Combine(exportPath, relativeSubPath);
+            Debug.Log($"<b><color=#F69012> Exporting scene </color> {s.name}</b>");
             
+            await Task.Yield();
             Export(transforms, true, s.name, sceneExportPath);
+
+            var batchExports = new List<Transform>();
+            foreach (var tr in transforms)
+                FindBatchExports(tr, batchExports);
+
+            var batchExportPath = System.IO.Path.Combine(sceneExportPath, s.name);
+
+            foreach (var batchExport in batchExports)
+            {       
+                var exportName = GetHierarchyName(batchExport);
+                Debug.Log($"  <color=#F69012> Exporting batch transform: </color> {exportName}");
+                Export(new []{batchExport}, true, exportName, batchExportPath);
+            }
+            
         }
         
         Debug.Log($"<color=#00FF00><b>Completed</b></color>");
