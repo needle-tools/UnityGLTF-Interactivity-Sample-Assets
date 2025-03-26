@@ -1,64 +1,60 @@
 using System;
-using System.Collections;
 using System.Collections.Generic;
-using UnityEditor;
 using UnityEditor.SceneManagement;
-using UnityEngine.SceneManagement;
-
 using UnityEngine;
 using System.IO;
-using UnityEditor.SearchService;
+using System.Linq;
+using UnityEditor;
 using UnityGLTF;
-using UnityEngine.EventSystems;
-using Unity.VisualScripting;
 
-public class ExportAllScenes : MonoBehaviour
+public static class ExportAllScenes
 {
+    [MenuItem("Sample Scenes/Export All Samples")]
+    public static void ExportAllScenesMenu()
+    {
+        string path = EditorPrefs.GetString("sampleScenesExportPath", "");
+        path = EditorUtility.SaveFolderPanel("Select a folder to save the samples", path, "");
+        if (string.IsNullOrEmpty(path))
+            return;
+        
+        EditorPrefs.SetString("sampleScenesExportPath", path);
+
+        ExportTo(path);
+    }
+    
     // Launch with:
     // "/Applications/Unity/Hub/Editor/2022.3.57f1/Unity.app/Contents/MacOS/Unity"  -projectPath ~/work/github/UnityGLTF-Interactivity-Sample-Assets/Interactivity-2022.3/ -executeMethod ExportAllScenes.Load -exportpath ~/work/mytestdir21 -batchmode -nographics -quit -logfile -
-    private static void Export(Transform[] transforms, UnityEngine.Object[] resources, bool binary, string sceneName)
+    private static void Export(Transform[] transforms, bool binary, string sceneName, string path)
     {
+        if (string.IsNullOrEmpty(path))
+            return;
+        
+        if (!Directory.Exists(path))
+        {
+            Directory.CreateDirectory(path);
+        }
+        
+        Debug.Log($"<b><color=#F69012> Exporting scene </color> {sceneName}</b>");
         try
         {
             var settings = GLTFSettings.GetOrCreateSettings();
             var exportOptions = new ExportContext(settings) { TexturePathRetriever = GLTFExportMenu.RetrieveTexturePath };
             var exporter = new GLTFSceneExporter(transforms, exportOptions);
+            
+            var ext = binary ? ".glb" : ".gltf";
+            var resultFile = GLTFSceneExporter.GetFileName(path, sceneName, ext);
+            
+            if (binary)
+                exporter.SaveGLB(path, sceneName);
+            else
+                exporter.SaveGLTFandBin(path, sceneName);
 
-            if (resources != null)
-            {
-                exportOptions.AfterSceneExport += (sceneExporter, _) =>
-                {
-                    foreach (var resource in resources)
-                    {
-                        if (resource is Material material)
-                            sceneExporter.ExportMaterial(material);
-                        if (resource is Texture2D texture)
-                            sceneExporter.ExportTexture(texture, "unknown");
-                        if (resource is Mesh mesh)
-                            sceneExporter.ExportMesh(mesh);
-                    }
-                };
-            }
-
-            var path = settings.SaveFolderPath;
-
-            if (!string.IsNullOrEmpty(path))
-            {
-                var ext = binary ? ".glb" : ".gltf";
-                var resultFile = GLTFSceneExporter.GetFileName(path, sceneName, ext);
-                settings.SaveFolderPath = path;
-                
-                if (binary)
-                    exporter.SaveGLB(path, sceneName);
-                else
-                    exporter.SaveGLTFandBin(path, sceneName);
-
-                Debug.Log("Exported to " + resultFile);
-            }
+            Debug.Log($"\t <color=#00FF00>Exported to </color> {resultFile}");
+            
         }
         catch (Exception e)
         {
-            Debug.Log($"Had exception {e}");
+            Debug.Log($"\t <color=#0000FF> Had exception {e} </color>");
         }
     }
 
@@ -76,55 +72,44 @@ public class ExportAllScenes : MonoBehaviour
 
     public static void Load()
     {
-        List<UnityEngine.SceneManagement.Scene> allScenes = new List<UnityEngine.SceneManagement.Scene>();
-
-        var info = new DirectoryInfo("Assets/Test Scenes/");
-        var files = info.GetFiles();
-        bool first = true;
-        
-        foreach(var f in files)
-        {
-            if(f.Name.EndsWith(".unity"))
-            {
-                Debug.Log($"Adding scene [{f.Name}]");
-                var s = EditorSceneManager.OpenScene(f.FullName, first ? OpenSceneMode.Single : OpenSceneMode.Additive);      
-                first = false;
-                allScenes.Add(s);
-            }
-        }
-
         string exportPath = GetCmdArgValue("exportpath");
 
-        var settings = GLTFSettings.GetOrCreateSettings();
+        ExportTo(exportPath);
+    }
 
-        string prevSettingsPath = settings.SaveFolderPath;
-
-        if(!string.IsNullOrEmpty(exportPath))
-        {           
-            settings.SaveFolderPath = exportPath;
-        }
-
-        var path = settings.SaveFolderPath;
-        if (!Directory.Exists(path))
+    public static void ExportTo(string exportPath)
+    {
+        List<FileInfo> files = new List<FileInfo>();
+        
+        void ReadDirectory(DirectoryInfo info)
         {
-            Directory.CreateDirectory(path);
+            files.AddRange(info.GetFiles().Where( fInfo => fInfo.Name.EndsWith(".unity")));
+            
+            var directories = info.GetDirectories();
+            foreach (var d in directories)
+                ReadDirectory(d);
         }
+        
+        var info = new DirectoryInfo("Assets/Test Scenes/");
+        string fullScenePath = info.FullName; 
+        ReadDirectory(info);
+        
+        Debug.Log($"Exporting to {exportPath}...");
 
-        Debug.Log($"Exporting to {path}...");
-
-        foreach(var s in allScenes)
+        foreach(var f in files)
         {
+            var s = EditorSceneManager.OpenScene(f.FullName, OpenSceneMode.Single);      
             var gameObjects = s.GetRootGameObjects();
             var transforms = Array.ConvertAll(gameObjects, gameObject => gameObject.transform);
 
-            Export(transforms, null, true, s.name);
+            var relativeSubPath = System.IO.Path.GetRelativePath(fullScenePath, f.Directory.FullName);
+            var sceneExportPath = System.IO.Path.Combine(exportPath, relativeSubPath);
+            
+            Export(transforms, true, s.name, sceneExportPath);
         }
-
-        if(prevSettingsPath != null)
-        {
-            settings.SaveFolderPath = prevSettingsPath;
-        }
-
-        Debug.Log($"Complete ExportAllScenes.Load");
+        
+        Debug.Log($"<color=#00FF00><b>Completed</b></color>");
+        
+        System.Diagnostics.Process.Start(exportPath);
     }
 }
