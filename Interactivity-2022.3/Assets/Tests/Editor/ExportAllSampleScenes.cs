@@ -12,6 +12,9 @@ public static class ExportAllScenes
     [MenuItem("Sample Scenes/Export All Samples")]
     public static void ExportAllScenesMenu()
     {
+        if (!EditorSceneManager.SaveCurrentModifiedScenesIfUserWantsTo())
+            return;
+        
         string path = EditorPrefs.GetString("sampleScenesExportPath", "");
         path = EditorUtility.SaveFolderPanel("Select a folder to save the samples", path, "");
         if (string.IsNullOrEmpty(path))
