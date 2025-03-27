@@ -95,7 +95,7 @@ public static class ExportAllScenes
 
         void FindBatchExports(Transform transform, List<Transform> batchExports)
         {
-            if (transform.tag.Equals("BATCH_EXPORT"))
+            if (transform.CompareTag("BATCH_EXPORT"))
                 batchExports.Add(transform);
 
             for (int i = 0; i < transform.childCount; i++)
