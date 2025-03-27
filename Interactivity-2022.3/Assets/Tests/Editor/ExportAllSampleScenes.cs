@@ -42,7 +42,15 @@ public static class ExportAllScenes
         {
             var settings = GLTFSettings.GetOrCreateSettings();
             var exportOptions = new ExportContext(settings) { TexturePathRetriever = GLTFExportMenu.RetrieveTexturePath };
+
             var exporter = new GLTFSceneExporter(transforms, exportOptions);
+            if (resetRootTransforms)
+            {
+                foreach (var rt in exporter.RootTransforms)
+                {
+                    rt.localPosition = Vector3.zero;
+                }
+            }
             
             var ext = binary ? ".glb" : ".gltf";
             var resultFile = GLTFSceneExporter.GetFileName(path, sceneName, ext);
