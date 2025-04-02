@@ -1,5 +1,5 @@
 {
-    "name": "UnitGLTF.Interactivity.Samples.Editor",
+    "name": "UnityGLTF.Interactivity.Samples.Editor",
     "rootNamespace": "",
     "references": [
         "GUID:18d18f811ba286c49814567a3cfba688",
