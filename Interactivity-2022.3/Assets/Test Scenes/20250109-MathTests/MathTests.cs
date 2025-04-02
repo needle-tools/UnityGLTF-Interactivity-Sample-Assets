@@ -85,10 +85,10 @@ public class MathTests : MonoBehaviour, IInteractivityExport
         if (!isActiveAndEnabled) return;
         
         var testNode = nodes.CreateNode(GetSchema(schema));
-        if (testNode.ValueSocketConnectionData.ContainsKey("a")) testNode.SetValueInSocket("a", a, TypeRestriction.LimitToFloat);
-        if (testNode.ValueSocketConnectionData.ContainsKey("b")) testNode.SetValueInSocket("b", b, TypeRestriction.LimitToFloat);
-        if (testNode.ValueSocketConnectionData.ContainsKey("c")) testNode.SetValueInSocket("c", c, TypeRestriction.LimitToFloat);
-        testNode.OutValueSocket["value"].expectedType = ExpectedType.Float;
+        if (testNode.ValueInConnection.ContainsKey("a")) testNode.SetValueInSocket("a", a, TypeRestriction.LimitToFloat);
+        if (testNode.ValueInConnection.ContainsKey("b")) testNode.SetValueInSocket("b", b, TypeRestriction.LimitToFloat);
+        if (testNode.ValueInConnection.ContainsKey("c")) testNode.SetValueInSocket("c", c, TypeRestriction.LimitToFloat);
+        testNode.OutputValueSocket["value"].expectedType = ExpectedType.Float;
 
         var equalsNode = default(GltfInteractivityNode);
 
@@ -145,16 +145,16 @@ public class MathTests : MonoBehaviour, IInteractivityExport
         combine3Node.SetValueInSocketSource("c", equalsNode, "value", TypeRestriction.LimitToFloat);
         
         var setPositionNode = nodes.CreateNode(GetSchema("pointer/set"));
-        UnitsHelper.AddPointerConfig(setPositionNode, "/nodes/{nodeIndex}/translation", GltfTypes.Float3);
+        PointersHelper.AddPointerConfig(setPositionNode, "/nodes/{nodeIndex}/translation", GltfTypes.Float3);
         int thisTransformIndex = context.exporter.GetTransformIndex(pass);
-        UnitsHelper.AddPointerTemplateValueInput(setPositionNode, "nodeIndex", thisTransformIndex);
+        PointersHelper.AddPointerTemplateValueInput(setPositionNode, "nodeIndex", thisTransformIndex);
         
         setPositionNode.SetValueInSocketSource("value", combine3Node, "value", TypeRestriction.LimitToFloat3);
         
         var startNode = nodes.CreateNode(GetSchema("event/onStart"));
         var sequenceNode = nodes.CreateNode(GetSchema("flow/sequence"));
-        sequenceNode.FlowSocketConnectionData.Add("0", new GltfInteractivityNode.FlowSocketData { });
-        sequenceNode.FlowSocketConnectionData.Add("1", new GltfInteractivityNode.FlowSocketData { });
+        sequenceNode.FlowConnections.Add("0", new GltfInteractivityNode.FlowSocketData { });
+        sequenceNode.FlowConnections.Add("1", new GltfInteractivityNode.FlowSocketData { });
         startNode.SetFlowOut("out", sequenceNode, "in");
         sequenceNode.SetFlowOut("0", setPositionNode, "in");
         sequenceNode.SetFlowOut("1", switchNode, "in");
