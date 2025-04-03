@@ -10,6 +10,8 @@ GameObject:
   m_Component:
   - component: {fileID: 6336577471157482840}
   - component: {fileID: 9021335569999290807}
+  - component: {fileID: 5136639074053130659}
+  - component: {fileID: 2201969986335750741}
   m_Layer: 0
   m_Name: Test
   m_TagString: Untagged
@@ -49,12 +51,38 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   schema: math/add
-  a: 0
-  b: 0
-  c: 0
-  expected: 0
   pass: {fileID: 6977253099270244872}
   label: {fileID: 7745050948070496429}
+--- !u!114 &5136639074053130659
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 167534966950456117}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e741851cba3ad425c91ecf922cc6b379, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  _data:
+    _json: '{"declarations":{"Kind":"Object","collection":{"$content":[],"$version":"A"},"$version":"A"}}'
+    _objectReferences: []
+--- !u!114 &2201969986335750741
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 167534966950456117}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d2fe5546f775c47d2820aa5e8a715f53, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  _data:
+    _json: '{"nest":{"source":"Embed","macro":null,"embed":{"variables":{"Kind":"Flow","collection":{"$content":[],"$version":"A"},"$version":"A"},"controlInputDefinitions":[],"controlOutputDefinitions":[],"valueInputDefinitions":[],"valueOutputDefinitions":[],"title":null,"summary":null,"pan":{"x":0.0,"y":0.0},"zoom":1.0,"elements":[{"coroutine":false,"defaultValues":{},"position":{"x":-204.0,"y":-144.0},"guid":"9316d91f-e602-434a-9e93-ee04d5e69543","$version":"A","$type":"Unity.VisualScripting.Start"},{"coroutine":false,"defaultValues":{},"position":{"x":-204.0,"y":60.0},"guid":"e7c9e17a-a154-4583-98d9-2e0ee70b4de3","$version":"A","$type":"Unity.VisualScripting.Update"}],"$version":"A"}}}'
+    _objectReferences: []
 --- !u!1 &474897909314531415
 GameObject:
   m_ObjectHideFlags: 0
