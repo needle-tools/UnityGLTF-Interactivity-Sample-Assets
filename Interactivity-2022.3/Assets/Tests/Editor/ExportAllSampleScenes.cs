@@ -141,7 +141,7 @@ public static class ExportAllScenes
                     i.OnBeforeExporting();
             }
             
-            Export(transforms, true, s.name, sceneExportPath, true);
+            Export(transforms, true, s.name, sceneExportPath, false);
 
             var batchExports = new List<Transform>();
             foreach (var tr in transforms)
