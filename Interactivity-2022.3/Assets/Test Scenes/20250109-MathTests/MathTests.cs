@@ -132,13 +132,11 @@ public class MathTests : MonoBehaviour, IInteractivityExport
         // for logging: switch based on the equals node
         var switchNode = nodes.CreateNode(GetSchema("flow/branch"));
         switchNode.SetValueInSocketSource("condition", equalsNode, "value", TypeRestriction.LimitToBool);
-        var loggingNode1 = nodes.CreateNode(new ADBE_OutputConsoleNode());
-        loggingNode1.SetValueInSocket("message", "Failed: " + schema + ". Expected: " + expected + ". Actual: ");
-        var loggingNode2 = nodes.CreateNode(new ADBE_OutputConsoleNode());
-        loggingNode2.SetValueInSocketSource("message", testNode, "value");
+        
+        var loggingNode1 = nodes.AddLog(LogHelper.LogLevel.Error, "Failed: " + schema + ". Expected: " + expected + ". Actual: {0}");
+        loggingNode1.SetValueInSocketSource("0", testNode, "value");
         switchNode.SetFlowOut("false", loggingNode1, "in");
-        loggingNode1.SetFlowOut("out", loggingNode2, "in");
-
+ 
         var combine3Node = nodes.CreateNode(GetSchema("math/combine3"));
         combine3Node.SetValueInSocket("a", 0f);
         combine3Node.SetValueInSocket("b", 0f);
