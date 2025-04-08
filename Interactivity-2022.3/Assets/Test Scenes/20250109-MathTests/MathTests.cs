@@ -80,7 +80,7 @@ public class MathTests : MonoBehaviour, IInteractivityExport
         throw new Exception($"Schema not found: {name}");
     }
 
-    public void OnInteractivityExport(VisualScriptingExportContext context, GltfInteractivityExportNodes nodes)
+    public void OnInteractivityExport(InteractivityExportContext context, GltfInteractivityExportNodes nodes)
     {
         if (!isActiveAndEnabled) return;
         
@@ -133,7 +133,7 @@ public class MathTests : MonoBehaviour, IInteractivityExport
         var switchNode = nodes.CreateNode(GetSchema("flow/branch"));
         switchNode.SetValueInSocketSource("condition", equalsNode, "value", TypeRestriction.LimitToBool);
         
-        var loggingNode1 = nodes.AddLog(LogHelper.LogLevel.Error, "Failed: " + schema + ". Expected: " + expected + ". Actual: {0}");
+        var loggingNode1 = nodes.AddLog(GltfInteractivityExportNodes.LogLevel.Error, "Failed: " + schema + ". Expected: " + expected + ". Actual: {0}");
         loggingNode1.SetValueInSocketSource("0", testNode, "value");
         switchNode.SetFlowOut("false", loggingNode1, "in");
  

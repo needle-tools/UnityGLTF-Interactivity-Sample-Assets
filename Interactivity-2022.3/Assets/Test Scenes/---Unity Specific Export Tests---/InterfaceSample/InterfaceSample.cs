@@ -8,7 +8,7 @@ using UnityGLTF.Interactivity.VisualScripting;
 
 public class InterfaceSample : MonoBehaviour ,IInteractivityExport
 {
-    public void OnInteractivityExport(VisualScriptingExportContext context, GltfInteractivityExportNodes nodes)
+    public void OnInteractivityExport(InteractivityExportContext context, GltfInteractivityExportNodes nodes)
     {
 
         var addNode = nodes.CreateNode(new Math_AddNode());
