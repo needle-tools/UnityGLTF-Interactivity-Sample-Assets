@@ -1,3 +1,5 @@
+using System.IO;
+using System.Net;
 using UnityEngine;
 
 [GLTFInteractivityCompile]
@@ -29,6 +31,8 @@ static class MenuItem
     static void LogAST()
     {
         var ast = TestComponent.GetAST();
-        Debug.Log("AST: " + ast);
+        Debug.Log("AST:\n" + ast);
+
+        File.WriteAllText("Assets/flowchart.mermaid", ast.ToMermaidFlowchart());
     }
 }
