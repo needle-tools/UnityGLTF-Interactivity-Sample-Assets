@@ -9,7 +9,7 @@ using UnityGLTF.Interactivity.VisualScripting;
 
 public class InterfaceSample : MonoBehaviour ,IInteractivityExport
 {
-    public void OnInteractivityExport(InteractivityExportContext context, GltfInteractivityExportNodes nodes)
+    public void OnInteractivityExport(GltfInteractivityExportNodes nodes)
     {
 
         var addNode = nodes.CreateNode(new Math_AddNode());
@@ -30,7 +30,7 @@ public class InterfaceSample : MonoBehaviour ,IInteractivityExport
         
         var setPositionNode = nodes.CreateNode(new Pointer_SetNode());
         PointersHelper.AddPointerConfig(setPositionNode, "/nodes/{" + PointersHelper.IdPointerNodeIndex + "}/translation", GltfTypes.Float3);
-        int thisTransformIndex = context.exporter.GetTransformIndex(transform);
+        int thisTransformIndex = nodes.Context.exporter.GetTransformIndex(transform);
         PointersHelper.AddPointerTemplateValueInput(setPositionNode, PointersHelper.IdPointerNodeIndex, thisTransformIndex);
         setPositionNode.SetValueInSocketSource("value", vector3Node, "value", TypeRestriction.LimitToFloat3);
         

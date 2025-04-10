@@ -81,7 +81,7 @@ public class MathTests : MonoBehaviour, IInteractivityExport
         throw new Exception($"Schema not found: {name}");
     }
 
-    public void OnInteractivityExport(InteractivityExportContext context, GltfInteractivityExportNodes nodes)
+    public void OnInteractivityExport(GltfInteractivityExportNodes nodes)
     {
         if (!isActiveAndEnabled) return;
         
@@ -145,7 +145,7 @@ public class MathTests : MonoBehaviour, IInteractivityExport
         
         var setPositionNode = nodes.CreateNode(GetSchema("pointer/set"));
         PointersHelper.AddPointerConfig(setPositionNode, "/nodes/{nodeIndex}/translation", GltfTypes.Float3);
-        int thisTransformIndex = context.exporter.GetTransformIndex(pass);
+        int thisTransformIndex = nodes.Context.exporter.GetTransformIndex(pass);
         PointersHelper.AddPointerTemplateValueInput(setPositionNode, "nodeIndex", thisTransformIndex);
         
         setPositionNode.SetValueInSocketSource("value", combine3Node, "value", TypeRestriction.LimitToFloat3);
