@@ -16,6 +16,8 @@ public partial class TestComponent : MonoBehaviour
     // Update is called once per frame
     void Update() 
     {
+        transform.position = new Vector3(0, Mathf.Sin(Time.time), 0);
+        
         // transform.Rotate(new Vector3(0, Time.deltaTime * speed, 0));
 
         /*
