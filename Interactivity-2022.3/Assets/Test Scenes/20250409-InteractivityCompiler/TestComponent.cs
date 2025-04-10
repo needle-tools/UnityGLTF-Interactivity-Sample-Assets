@@ -14,9 +14,19 @@ public partial class TestComponent : MonoBehaviour
     }
 
     // Update is called once per frame
-    void Update() 
+    void Update()
     {
-        transform.position = new Vector3(0, Mathf.Sin(Time.time), 0);
+        transform.position = transform.position + new Vector3(0f, 0.1f, 0f); // Works
+        
+        // adding this currently breaks the AST
+        // transform.position = new Vector3(0f, Mathf.Sin(Time.time), 0f); // Stops at Mathf.Sin
+        // transform.position = new Vector3(1f, 0.1f, 0f);  // Works
+        
+        /* AST generation doesn't work yet
+        var v = transform.localPosition;
+        v.x += Time.deltaTime * speed;
+        transform.localPosition = v;
+        */
         
         // transform.Rotate(new Vector3(0, Time.deltaTime * speed, 0));
 
