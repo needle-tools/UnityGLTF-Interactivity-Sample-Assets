@@ -1,6 +1,6 @@
 using System.IO;
-using System.Net;
 using UnityEngine;
+using UnityGLTF.Interactivity.Export;
 
 [GLTFInteractivityCompile]
 public partial class TestComponent : MonoBehaviour
@@ -10,18 +10,20 @@ public partial class TestComponent : MonoBehaviour
     // Start is called before the first frame update
     void Start()
     {
-        transform.position = new Vector3(0, 0, 0);
+        transform.position = new Vector3(0, 1, 0);
     }
 
     // Update is called once per frame
-    void Update()
+    void Update() 
     {
-        transform.Rotate(new Vector3(0, Time.deltaTime * speed, 0));
+        // transform.Rotate(new Vector3(0, Time.deltaTime * speed, 0));
 
+        /*
         for (int i = 0; i < 10; i++)
         {
             transform.position += transform.TransformDirection(Vector3.forward * Time.deltaTime * speed);
         }
+        */
     }
 }
 
