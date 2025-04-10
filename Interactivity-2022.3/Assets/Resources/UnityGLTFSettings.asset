@@ -121,8 +121,11 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   enabled: 1
   debugLogSetting:
+    GltfLog: 1
     ADBEConsole: 0
     BabylonLog: 1
+  cleanUpAndOptimizeExportedGraph: 0
+  addUnityToGltfSpaceConversion: 1
 --- !u!114 &-6100253865612741739
 MonoBehaviour:
   m_ObjectHideFlags: 3
@@ -171,8 +174,11 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   enabled: 1
   debugLogSetting:
+    GltfLog: 1
     ADBEConsole: 1
     BabylonLog: 1
+  cleanUpAndOptimizeExportedGraph: 1
+  addUnityToGltfSpaceConversion: 1
 --- !u!114 &-3857604256152664990
 MonoBehaviour:
   m_ObjectHideFlags: 3
@@ -364,7 +370,8 @@ MonoBehaviour:
   - {fileID: -6442387276424217699}
   exportNames: 1
   exportFullPath: 0
-  requireExtensions: 0
+  EditorExportTransformMode: 0
+  EditorExportFileFormat: 0
   useMainCameraVisibility: 1
   exportDisabledGameObjects: 1
   tryExportTexturesFromDisk: 0
