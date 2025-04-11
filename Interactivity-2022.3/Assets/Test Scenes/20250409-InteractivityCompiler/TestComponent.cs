@@ -19,7 +19,9 @@ public partial class TestComponent : MonoBehaviour
         transform.position = transform.position + new Vector3(0f, 0.1f, 0f); // Works
         
         // adding this currently breaks the AST
-        // transform.position = new Vector3(0f, Mathf.Sin(Time.time), 0f); // Stops at Mathf.Sin
+        for (int i = 0; i < 1; i++) {
+            transform.position = new Vector3(0f, Mathf.Sin(Time.time), 0f); // Works
+        }
         // transform.position = new Vector3(1f, 0.1f, 0f);  // Works
         
         /* AST generation doesn't work yet
