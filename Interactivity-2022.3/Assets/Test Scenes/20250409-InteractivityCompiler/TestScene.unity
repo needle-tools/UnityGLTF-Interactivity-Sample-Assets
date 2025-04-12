@@ -620,9 +620,9 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 1781489599}
-  - component: {fileID: 1781489598}
   - component: {fileID: 1781489597}
   - component: {fileID: 1781489596}
+  - component: {fileID: 1781489600}
   m_Layer: 0
   m_Name: Test
   m_TagString: Untagged
@@ -660,19 +660,6 @@ MonoBehaviour:
   _data:
     _json: '{"declarations":{"Kind":"Object","collection":{"$content":[],"$version":"A"},"$version":"A"}}'
     _objectReferences: []
---- !u!114 &1781489598
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1781489595}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: e578c6491831745f2b0d13fa4e8e23a3, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  speed: 10
 --- !u!4 &1781489599
 Transform:
   m_ObjectHideFlags: 0
@@ -689,6 +676,19 @@ Transform:
   - {fileID: 1777671370}
   m_Father: {fileID: 174320515}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1781489600
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1781489595}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 356b88bd53a044da3913a7959d5b3b05, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  other: {fileID: 0}
 --- !u!1660057539 &9223372036854775807
 SceneRoots:
   m_ObjectHideFlags: 0

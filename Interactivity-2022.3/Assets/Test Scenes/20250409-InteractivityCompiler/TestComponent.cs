@@ -13,23 +13,38 @@ public partial class TestComponent : MonoBehaviour
         transform.position = new Vector3(0, 1, 0);
     }
 
+    private Vector3[] inputs = new[]
+    {
+        new Vector3(0, 1, 2),
+        new Vector3(3, 4, 5),
+        new Vector3(6, 7, 8),
+    };
+    
     // Update is called once per frame
     void Update()
     {
+        /*
         transform.position = transform.position + new Vector3(0f, 0.1f, 0f); // Works
         
         // adding this currently breaks the AST
-        for (int i = 0; i < 1; i++) {
+        // for (int i = 0; i < 1; i++) {
             transform.position = new Vector3(0f, Mathf.Sin(Time.time), 0f); // Works
-        }
-        // transform.position = new Vector3(1f, 0.1f, 0f);  // Works
+        // }
+        transform.position = new Vector3(1f, 0.1f, 0f);  // Works
+        */
         
-        /* AST generation doesn't work yet
+        /* AST generation doesn't work yet */
         var v = transform.localPosition;
         v.x += Time.deltaTime * speed;
         transform.localPosition = v;
-        */
-        
+
+        var k = 0;
+        for (int i = 0; i < inputs.Length; i++)
+        {
+            k += (int) inputs[i].x;
+        }
+        Debug.Log(k);
+
         // transform.Rotate(new Vector3(0, Time.deltaTime * speed, 0));
 
         /*

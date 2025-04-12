@@ -124,7 +124,7 @@ MonoBehaviour:
     GltfLog: 1
     ADBEConsole: 0
     BabylonLog: 1
-  cleanUpAndOptimizeExportedGraph: 1
+  cleanUpAndOptimizeExportedGraph: 0
 --- !u!114 &-6100253865612741739
 MonoBehaviour:
   m_ObjectHideFlags: 3
