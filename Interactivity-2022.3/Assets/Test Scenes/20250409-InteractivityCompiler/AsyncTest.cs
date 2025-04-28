@@ -1,8 +1,12 @@
+// #define INTERACTIVITY_EXPORT
+
 using System.IO;
 using System.Threading.Tasks;
 using UnityEngine;
 
+#if INTERACTIVITY_EXPORT
 [GLTFInteractivityCompile]
+#endif
 public partial class AsyncTest : MonoBehaviour
 {
     public GameObject other;
@@ -27,6 +31,7 @@ public partial class AsyncTest : MonoBehaviour
     }
 }
 
+#if INTERACTIVITY_EXPORT
 static class MenuItem2
 {
     [UnityEditor.MenuItem("Tests/Log generated AST 2")]
@@ -38,3 +43,4 @@ static class MenuItem2
         File.WriteAllText("Assets/flowchart.mermaid", ast.ToMermaidFlowchart());
     }
 }
+#endif

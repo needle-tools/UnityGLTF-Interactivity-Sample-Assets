@@ -1,8 +1,12 @@
+// #define INTERACTIVITY_EXPORT
+
 using System.IO;
 using UnityEngine;
 using UnityGLTF.Interactivity.Export;
 
+#if INTERACTIVITY_EXPORT
 [GLTFInteractivityCompile]
+#endif
 public partial class TestComponent : MonoBehaviour
 {
     public float speed = 10;
@@ -56,6 +60,7 @@ public partial class TestComponent : MonoBehaviour
     }
 }
 
+#if INTERACTIVITY_EXPORT
 static class MenuItem
 {
     [UnityEditor.MenuItem("Tests/Log generated AST")]
@@ -67,3 +72,4 @@ static class MenuItem
         File.WriteAllText("Assets/flowchart.mermaid", ast.ToMermaidFlowchart());
     }
 }
+#endif
