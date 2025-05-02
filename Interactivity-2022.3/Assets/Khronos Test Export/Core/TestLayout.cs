@@ -1,7 +1,6 @@
-
 using UnityEngine;
 
-namespace Khronos_Test_Export.Core
+namespace Khronos_Test_Export
 {
     public class TestLayout
     {

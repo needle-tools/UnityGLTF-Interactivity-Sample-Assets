@@ -6,7 +6,7 @@ using UnityEngine;
 using UnityGLTF.Interactivity.Export;
 using UnityGLTF.Interactivity.Schema;
 
-namespace Khronos_Test_Export.Core
+namespace Khronos_Test_Export
 {
     public class TestContext : IDisposable
     {

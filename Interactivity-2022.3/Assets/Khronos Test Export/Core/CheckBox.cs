@@ -1,5 +1,4 @@
 using System;
-using Khronos_Test_Export.Core;
 using TMPro;
 using UnityEngine;
 using UnityGLTF.Interactivity;

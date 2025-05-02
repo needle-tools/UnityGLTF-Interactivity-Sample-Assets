@@ -1,10 +1,9 @@
 using System;
-using Khronos_Test_Export.Core;
 using UnityEngine;
 using UnityGLTF.Interactivity;
 using UnityGLTF.Interactivity.Export;
 
-namespace Khronos_Test_Export.OpTests.Variable
+namespace Khronos_Test_Export
 {
     public class VariableSetGetTest : ITestCase
     {

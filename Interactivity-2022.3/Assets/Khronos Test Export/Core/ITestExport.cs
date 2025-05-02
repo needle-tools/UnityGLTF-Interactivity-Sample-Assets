@@ -1,6 +1,5 @@
-namespace Khronos_Test_Export.Core
+namespace Khronos_Test_Export
 {
-    
     public interface ITestCase
     {
         string GetTestName();

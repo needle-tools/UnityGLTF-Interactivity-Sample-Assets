@@ -1,126 +1,133 @@
-
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
-using Khronos_Test_Export;
-using Khronos_Test_Export.Core;
 using UnityEngine;
 using UnityGLTF.Interactivity;
 using UnityGLTF.Interactivity.Schema;
 
-[TestCreator.IgnoreTestCase]
-public class MathTestCase : ITestCase
+namespace Khronos_Test_Export
 {
-    public string schema = "math/add";
-    public object a, b, c;
-    public object expected;
+    [TestCreator.IgnoreTestCase]
+    public class MathTestCase : ITestCase
+    {
+        public string schema = "math/add";
+        public object a, b, c;
+        public object expected;
 
-    private static Dictionary<string, Type> schemasByTypeName = null;
-    
-    public static IEnumerable<Type> GetLoadableTypes(Assembly assembly)
-    {
-        try
+        private static Dictionary<string, Type> schemasByTypeName = null;
+
+        public static IEnumerable<Type> GetLoadableTypes(Assembly assembly)
         {
-            return assembly.GetTypes();
-        }
-        catch (ReflectionTypeLoadException e)
-        {
-            return e.Types.Where(t => t != null);
-        }
-    }
-    
-    static void Setup()
-    {
-        var schemas = AppDomain.CurrentDomain
-            .GetAssemblies()
-            .SelectMany(assembly => GetLoadableTypes(assembly))
-            .Where(t => t.IsSubclassOf(typeof(GltfInteractivityNodeSchema)))
-            .Where( t => !t.IsAbstract)
-            .ToList();
-        
-        // Is not collecting all schema classes
-        // > maybe https://issuetracker.unity3d.com/issues/not-all-assemblies-are-found-in-the-current-appdomain-when-scanning-with-typecache
-        //var schemas = TypeCache.GetTypesDerivedFrom<GltfInteractivityNodeSchema>();
-        
-        schemasByTypeName = new Dictionary<string, Type>();
-        foreach (var schema in schemas)
-        {
-            var instance = (GltfInteractivityNodeSchema) System.Activator.CreateInstance(schema);
-            if (instance == null)
+            try
             {
-                Debug.LogWarning($"Failed to create instance of schema: {schema.FullName}");
-                continue;
+                return assembly.GetTypes();
             }
-            if (!schemasByTypeName.ContainsKey(instance.Op))
-                schemasByTypeName.Add(instance.Op, schema);
-            else
+            catch (ReflectionTypeLoadException e)
             {
-                Debug.LogWarning($"Duplicate schema found: {instance.Op} Type: "+schema.FullName);
+                return e.Types.Where(t => t != null);
             }
         }
-    }
-    
-    static GltfInteractivityNodeSchema GetSchema(string name)
-    {
-        if (schemasByTypeName == null)
-            Setup();
-        
-        if (schemasByTypeName == null)
-            throw new Exception("No schemas found");
-        
-        if (schemasByTypeName.TryGetValue(name, out var schemaType))
+
+        static void Setup()
         {
-            var schema = (GltfInteractivityNodeSchema) System.Activator.CreateInstance(schemaType);
+            var schemas = AppDomain.CurrentDomain
+                .GetAssemblies()
+                .SelectMany(assembly => GetLoadableTypes(assembly))
+                .Where(t => t.IsSubclassOf(typeof(GltfInteractivityNodeSchema)))
+                .Where(t => !t.IsAbstract)
+                .ToList();
+
+            // Is not collecting all schema classes
+            // > maybe https://issuetracker.unity3d.com/issues/not-all-assemblies-are-found-in-the-current-appdomain-when-scanning-with-typecache
+            //var schemas = TypeCache.GetTypesDerivedFrom<GltfInteractivityNodeSchema>();
+
+            schemasByTypeName = new Dictionary<string, Type>();
+            foreach (var schema in schemas)
+            {
+                var instance = (GltfInteractivityNodeSchema)System.Activator.CreateInstance(schema);
+                if (instance == null)
+                {
+                    Debug.LogWarning($"Failed to create instance of schema: {schema.FullName}");
+                    continue;
+                }
+
+                if (!schemasByTypeName.ContainsKey(instance.Op))
+                    schemasByTypeName.Add(instance.Op, schema);
+                else
+                {
+                    Debug.LogWarning($"Duplicate schema found: {instance.Op} Type: " + schema.FullName);
+                }
+            }
+        }
+
+        static GltfInteractivityNodeSchema GetSchema(string name)
+        {
+            if (schemasByTypeName == null)
+                Setup();
+
+            if (schemasByTypeName == null)
+                throw new Exception("No schemas found");
+
+            if (schemasByTypeName.TryGetValue(name, out var schemaType))
+            {
+                var schema = (GltfInteractivityNodeSchema)System.Activator.CreateInstance(schemaType);
+                return schema;
+            }
+
+            throw new Exception($"Schema not found: {name}");
+        }
+
+
+        private CheckBox basicTestCheckBox;
+
+        public string GetTestName()
+        {
             return schema;
         }
-        
-        throw new Exception($"Schema not found: {name}");
-    }
 
-    
-    private CheckBox basicTestCheckBox;
+        public string GetTestDescription()
+        {
+            return "";
+        }
 
-    public string GetTestName()
-    {
-        return schema;
-    }
+        public void PrepareObjects(TestContext context)
+        {
+            basicTestCheckBox = context.AddCheckBox("basic");
+        }
 
-    public string GetTestDescription()
-    {
-        return "";
-    }
+        public void CreateNodes(TestContext context)
+        {
+            var nodeCreator = context.interactivityExportContext;
 
-    public void PrepareObjects(TestContext context)
-    {
-        basicTestCheckBox = context.AddCheckBox("basic");
-    }
+            var testNode = nodeCreator.CreateNode(GetSchema(schema));
 
-    public void CreateNodes(TestContext context)
-    {
-        var nodeCreator = context.interactivityExportContext;
-        
-        var testNode = nodeCreator.CreateNode(GetSchema(schema));
-    
-        if (testNode.ValueInConnection.ContainsKey("a")) testNode.SetValueInSocket("a", a, TypeRestriction.LimitToFloat);
-        if (testNode.ValueInConnection.ContainsKey("b")) testNode.SetValueInSocket("b", b, TypeRestriction.LimitToFloat);
-        if (testNode.ValueInConnection.ContainsKey("c")) testNode.SetValueInSocket("c", c, TypeRestriction.LimitToFloat);
+            if (testNode.ValueInConnection.ContainsKey("a"))
+                testNode.SetValueInSocket("a", a, TypeRestriction.LimitToFloat);
+            if (testNode.ValueInConnection.ContainsKey("b"))
+                testNode.SetValueInSocket("b", b, TypeRestriction.LimitToFloat);
+            if (testNode.ValueInConnection.ContainsKey("c"))
+                testNode.SetValueInSocket("c", c, TypeRestriction.LimitToFloat);
 
-        var schemaExpetedType = testNode.Schema.OutputValueSockets["value"].expectedType;
-        var typeRestriction = expected is float ? TypeRestriction.LimitToFloat : TypeRestriction.LimitToBool;
-        var expectedRestriction = expected is float ? ExpectedType.Float : ExpectedType.Bool;
+            var schemaExpetedType = testNode.Schema.OutputValueSockets["value"].expectedType;
+            var typeRestriction = expected is float ? TypeRestriction.LimitToFloat : TypeRestriction.LimitToBool;
+            var expectedRestriction = expected is float ? ExpectedType.Float : ExpectedType.Bool;
 
-        if ((schemaExpetedType != null && schemaExpetedType.typeIndex != GltfTypes.TypeIndex(typeof(bool))
-            || schemaExpetedType == null))
-            testNode.OutputValueSocket["value"].expectedType = expectedRestriction;
-        
+            if ((schemaExpetedType != null && schemaExpetedType.typeIndex != GltfTypes.TypeIndex(typeof(bool))
+                 || schemaExpetedType == null))
+                testNode.OutputValueSocket["value"].expectedType = expectedRestriction;
 
-        var isSpecialValue = expected.Equals(float.NaN) || expected.Equals(float.PositiveInfinity) || expected.Equals(float.NegativeInfinity);
-        
-        var testApproximateEquality = schema == "math/e" || schema == "math/pi" || expected is float && !isSpecialValue;
 
-        basicTestCheckBox.SetupCheck(context, testNode.FirstValueOut(), out var checkFlowIn, expected, testApproximateEquality);
+            var isSpecialValue = expected.Equals(float.NaN) || expected.Equals(float.PositiveInfinity) ||
+                                 expected.Equals(float.NegativeInfinity);
 
-        context.SetEntryPoint(checkFlowIn, "Basic float");
+            var testApproximateEquality =
+                schema == "math/e" || schema == "math/pi" || expected is float && !isSpecialValue;
+
+            basicTestCheckBox.SetupCheck(context, testNode.FirstValueOut(), out var checkFlowIn, expected,
+                testApproximateEquality);
+
+            context.SetEntryPoint(checkFlowIn, "Basic float");
+        }
     }
 }

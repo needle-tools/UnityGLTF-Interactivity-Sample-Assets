@@ -1,181 +1,190 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using GLTF.Schema;
-using Khronos_Test_Export.Core;
-using Unity.VisualScripting;
+using System.Reflection;
+#if UNITY_EDITOR
 using UnityEditor;
+#endif
 using UnityEngine;
 
-public class TestCreator : MonoBehaviour
+namespace Khronos_Test_Export
 {
-    [Serializable]
-    public class TestCaseEntry
+    public class TestCreator : MonoBehaviour
     {
-        public bool Enabled = true;
-        public string Name = "TestCase";
-        public string Description = "TestCase Description";
-
-        [HideInInspector]
-        public string typeFullName;
-
-        public Type type
+        [Serializable]
+        public class TestCaseEntry
         {
-            get
+            public bool Enabled = true;
+            public string Name = "TestCase";
+            public string Description = "TestCase Description";
+
+            [HideInInspector] public string typeFullName;
+
+            public Type type
             {
-                if (string.IsNullOrEmpty(typeFullName))
+                get
                 {
-                    return null;
+                    if (string.IsNullOrEmpty(typeFullName))
+                    {
+                        return null;
+                    }
+
+                    var type = Type.GetType(typeFullName);
+                    if (type == null)
+                    {
+                        Debug.LogError($"Type {typeFullName} not found.");
+                        return null;
+                    }
+
+                    return type;
                 }
-                
-                var type = Type.GetType(typeFullName);
-                if (type == null)
+            }
+
+            public ITestCase instance
+            {
+                get
                 {
-                    Debug.LogError($"Type {typeFullName} not found.");
-                    return null;
+                    if (_instance == null)
+                    {
+                        _instance = (ITestCase)System.Activator.CreateInstance(type);
+                    }
+
+                    return _instance;
                 }
-                
-                return type;
+            }
+
+            private ITestCase _instance;
+
+        }
+
+        [SerializeField] protected TestExporter testExporter;
+        [SerializeField] protected TestCaseEntry[] testCases;
+
+        public string testName = "TestName";
+
+        public class IgnoreTestCaseAttribute : Attribute
+        {
+            public IgnoreTestCaseAttribute()
+            {
             }
         }
 
-        public ITestCase instance
+        [ContextMenu("Generate Test List")]
+        protected virtual void GenerateTestList()
         {
-            get
+            // Find all classes with ITestCase interface
+            var testCases = new List<TestCaseEntry>(this.testCases ?? new TestCaseEntry[0]);
+            var testCaseTypes = System.Reflection.Assembly.GetExecutingAssembly().GetTypes()
+                .Where(t => !t.GetCustomAttributes().Any( c => c.GetType() == typeof(IgnoreTestCaseAttribute)));
+
+            testCases.Where(tc => !testCaseTypes.Contains(tc.type)).ToList().ForEach(tc => testCases.Remove(tc));
+
+            foreach (var type in testCaseTypes)
             {
-                if (_instance == null)
+                if (type.IsClass && !type.IsAbstract && typeof(ITestCase).IsAssignableFrom(type))
                 {
-                    _instance = (ITestCase)System.Activator.CreateInstance(type);
+
+                    var testCase = (ITestCase)System.Activator.CreateInstance(type);
+                    if (testCases.Exists(tc => tc.typeFullName == type.FullName))
+                    {
+                        var existing = testCases.FirstOrDefault(tc => tc.typeFullName == type.FullName);
+                        existing.Name = testCase.GetTestName();
+                        existing.Description = testCase.GetTestDescription();
+                        continue;
+                    }
+
+                    testCases.Add(new TestCaseEntry()
+                    {
+                        Name = testCase.GetTestName(),
+                        Description = testCase.GetTestDescription(),
+                        typeFullName = testCase.GetType().FullName,
+                    });
                 }
-                return _instance;
             }
+
+            // Sort test cases by name
+            testCases.Sort((x, y) => string.Compare(x.Name, y.Name, StringComparison.Ordinal));
+            this.testCases = testCases.ToArray();
         }
-        
-        private ITestCase _instance;
-        
-    }
-    
-    [SerializeField] protected TestExporter testExporter;
-    [SerializeField] protected TestCaseEntry[] testCases;
-    
-    public string testName = "TestName";
-    
-    public class IgnoreTestCaseAttribute : Attribute
-    {
-        public IgnoreTestCaseAttribute()
+
+        protected virtual ITestCase[] GetTests()
         {
+            return testCases.Where(tc => tc.Enabled).Select(tc => tc.instance).ToArray();
+
         }
-    }
-    
-    [ContextMenu("Generate Test List")]
-    protected virtual void GenerateTestList()
-    {
-        // Find all classes with ITestCase interface
-        var testCases = new List<TestCaseEntry>(this.testCases ?? new TestCaseEntry[0]);
-        var testCaseTypes = System.Reflection.Assembly.GetExecutingAssembly().GetTypes().Where( t => !t.HasAttribute(typeof(IgnoreTestCaseAttribute)));
-       
-        testCases.Where( tc => !testCaseTypes.Contains(tc.type)).ToList().ForEach(tc => testCases.Remove(tc));
-        
-        foreach (var type in testCaseTypes)
+
+        public virtual void ExportTests(bool exportAllInOne = true, bool exportIndividual = true)
         {
-            if (type.IsClass && !type.IsAbstract && typeof(ITestCase).IsAssignableFrom(type))
+            if (testExporter == null)
             {
-                
-                var testCase = (ITestCase)System.Activator.CreateInstance(type);
-                if (testCases.Exists(tc => tc.typeFullName == type.FullName))
-                {
-                    var existing = testCases.FirstOrDefault(tc => tc.typeFullName == type.FullName);
-                    existing.Name = testCase.GetTestName();
-                    existing.Description = testCase.GetTestDescription();
-                    continue;
-                }
-                testCases.Add(new TestCaseEntry()
-                {
-                    Name = testCase.GetTestName(),
-                    Description = testCase.GetTestDescription(),
-                    typeFullName = testCase.GetType().FullName,
-                });
+                Debug.LogError("Test Exporter is not set.");
+                return;
             }
-        }
-        
-        // Sort test cases by name
-        testCases.Sort((x, y) => string.Compare(x.Name, y.Name, StringComparison.Ordinal));
-        this.testCases = testCases.ToArray();
-    }
 
-    protected virtual ITestCase[] GetTests()
-    {
-        return testCases.Where(tc => tc.Enabled).Select(tc => tc.instance).ToArray();
-        
-    }
-    
-    public virtual void ExportTests(bool exportAllInOne = true, bool exportIndividual = true)
-    {
-        if (testExporter == null)
-        {
-            Debug.LogError("Test Exporter is not set.");
-            return;
-        }
+            var cases = GetTests();
 
-        var cases = GetTests();
-        
-        testExporter.ShowDestinationFolderDialog();
-        
-        if (exportAllInOne)
-        {
-            testExporter.ExportTest(cases, false, testName);
-        }
-        
-        if (exportIndividual)
-        {
-            testExporter.ExportTest(cases, true);
-        }
-    }
-    
-    [CustomEditor(typeof(TestCreator))]
-    public class Inspector : UnityEditor.Editor
-    {
-        public bool exportAllInOne = true;
-        public bool exportIndividual = true;
-        
-        public void OnEnable()
-        {
-            ((TestCreator)target).GenerateTestList();
-        }
+            testExporter.ShowDestinationFolderDialog();
 
-        public override void OnInspectorGUI()
-        {
-            var testCreator = (TestCreator)target;
-
-            EditorGUILayout.PropertyField(serializedObject.FindProperty(nameof(TestCreator.testExporter)));
-
-    
-            EditorGUI.BeginChangeCheck();
-            GUILayout.BeginVertical(GUI.skin.box);
-            GUILayout.Label("Test Cases", EditorStyles.boldLabel);
-            foreach (var testCase in testCreator.testCases)
-            {
-                testCase.Enabled = GUILayout.Toggle(testCase.Enabled, $"{testCase.Name} ({testCase.Description})");
-            }
-            GUILayout.EndVertical();
-            
-            exportIndividual =  GUILayout.Toggle(exportIndividual, "Export Individual Tests");
-            exportAllInOne = GUILayout.Toggle(exportAllInOne, "Export All In One");
             if (exportAllInOne)
             {
-                EditorGUI.indentLevel++;
-                EditorGUILayout.PropertyField(serializedObject.FindProperty(nameof(TestCreator.testName)));
-                EditorGUI.indentLevel--;
+                testExporter.ExportTest(cases, false, testName);
             }
-            if (EditorGUI.EndChangeCheck())
+
+            if (exportIndividual)
             {
-                serializedObject.ApplyModifiedProperties();
-            }
-            
-            if (GUILayout.Button("Export Tests"))
-            {
-                ((TestCreator)target).ExportTests(exportAllInOne, exportIndividual);
+                testExporter.ExportTest(cases, true);
             }
         }
+#if UNITY_EDITOR
+
+        [CustomEditor(typeof(TestCreator))]
+        public class Inspector : UnityEditor.Editor
+        {
+            public bool exportAllInOne = true;
+            public bool exportIndividual = true;
+
+            public void OnEnable()
+            {
+                ((TestCreator)target).GenerateTestList();
+            }
+
+            public override void OnInspectorGUI()
+            {
+                var testCreator = (TestCreator)target;
+
+                EditorGUILayout.PropertyField(serializedObject.FindProperty(nameof(TestCreator.testExporter)));
+
+
+                EditorGUI.BeginChangeCheck();
+                GUILayout.BeginVertical(GUI.skin.box);
+                GUILayout.Label("Test Cases", EditorStyles.boldLabel);
+                foreach (var testCase in testCreator.testCases)
+                {
+                    testCase.Enabled = GUILayout.Toggle(testCase.Enabled, $"{testCase.Name} ({testCase.Description})");
+                }
+
+                GUILayout.EndVertical();
+
+                exportIndividual = GUILayout.Toggle(exportIndividual, "Export Individual Tests");
+                exportAllInOne = GUILayout.Toggle(exportAllInOne, "Export All In One");
+                if (exportAllInOne)
+                {
+                    EditorGUI.indentLevel++;
+                    EditorGUILayout.PropertyField(serializedObject.FindProperty(nameof(TestCreator.testName)));
+                    EditorGUI.indentLevel--;
+                }
+
+                if (EditorGUI.EndChangeCheck())
+                {
+                    serializedObject.ApplyModifiedProperties();
+                }
+
+                if (GUILayout.Button("Export Tests"))
+                {
+                    ((TestCreator)target).ExportTests(exportAllInOne, exportIndividual);
+                }
+            }
+        }
+#endif
     }
 }

@@ -1,5 +1,3 @@
-using System;
-using Khronos_Test_Export.Core;
 using UnityGLTF.Interactivity.Export;
 using UnityGLTF.Interactivity.Schema;
 
