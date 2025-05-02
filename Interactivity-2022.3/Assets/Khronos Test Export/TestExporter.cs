@@ -238,7 +238,7 @@ namespace Khronos_Test_Export
                     //     CreateTestCaseReadmeFile(testCase, System.IO.Path.Combine(path, glbFileName));
                     // }
 
-                    CreateTestCaseJsonFile(allInOneName, cases, System.IO.Path.Combine(path, glbFileName), glbFileName);
+                    CreateTestCaseJsonFile(allInOneName, cases, System.IO.Path.Combine(path, allInOneName+".json"), glbFileName);
                 }
                 finally
                 {
