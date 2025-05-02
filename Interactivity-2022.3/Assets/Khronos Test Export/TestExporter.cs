@@ -117,14 +117,16 @@ namespace Khronos_Test_Export
             var sb = new StringBuilder();
             sb.AppendLine("Test Sample: " + testCase.GetTestName());
             sb.AppendLine("Description: " + testCase.GetTestDescription());
+            sb.AppendLine();
             sb.AppendLine("Tests:");
             var caseContext = _testCase[testCase];
             foreach (var test in caseContext.checkBoxes)
             {
                 sb.AppendLine(
-                    $"\t**{test.GetText()}** - Result saved in Variable {test.GetResultVariableName()} with Id {test.ResultValueVarId}");
+                    $"\t**{test.GetText()}** - Result saved in Variable **{test.GetResultVariableName()}** with Id **{test.ResultValueVarId}**");
             }
 
+            sb.AppendLine();
             sb.AppendLine("Schemas used in this test case:");
             foreach (var schema in _schemaUsedInCase[testCase].OrderBy(s => s))
             {
