@@ -61,7 +61,7 @@ namespace Khronos_Test_Export
             public SubTests[] subTests;
         }
 
-        private void CreateTestCaseJsonFile(string name, ITestCase[] testCases, string path, string glbFileName)
+        private void CreateTestCaseJsonFile(string name, ITestCase[] testCases, string fileName, string glbFileName)
         {
             var jsonOutput = new JsonOutput();
             jsonOutput.glbFileName = glbFileName;
@@ -108,15 +108,11 @@ namespace Khronos_Test_Export
 
             var json = JsonUtility.ToJson(jsonOutput);
 
-            var jsonPath = System.IO.Path.GetDirectoryName(path);
-            System.IO.Directory.CreateDirectory(jsonPath);
-            jsonPath = System.IO.Path.Combine(jsonPath,
-                System.IO.Path.GetFileNameWithoutExtension(glbFileName) + ".json");
-            System.IO.File.WriteAllText(jsonPath, json);
-            Debug.Log("Test case json file created at: " + jsonPath);
+              System.IO.File.WriteAllText(fileName, json);
+            Debug.Log("Test case json file created at: " + fileName);
         }
 
-        private void CreateTestCaseReadmeFile(ITestCase testCase, string path)
+        private void CreateTestCaseReadmeFile(ITestCase testCase, string filename)
         {
             var sb = new StringBuilder();
             sb.AppendLine("Test Sample: " + testCase.GetTestName());
@@ -136,10 +132,8 @@ namespace Khronos_Test_Export
             }
 
 
-            var readmePath = path + "/" + testCase.GetTestName() + ".md";
-            System.IO.Directory.CreateDirectory(System.IO.Path.GetDirectoryName(readmePath));
-            System.IO.File.WriteAllText(readmePath, sb.ToString());
-            Debug.Log("Test case md file created at: " + readmePath);
+            System.IO.File.WriteAllText(filename, sb.ToString());
+            Debug.Log("Test case md file created at: " + filename);
         }
 
         public void ShowDestinationFolderDialog()
@@ -190,15 +184,26 @@ namespace Khronos_Test_Export
                         System.IO.Directory.CreateDirectory(
                             System.IO.Path.GetDirectoryName(System.IO.Path.Combine(path, testCase.GetTestName())));
 
-                        var glbFileName = testCase.GetTestName() + ".glb";
+                        var destinationPath = path;
+                        var testName = testCase.GetTestName();
+                        if (testName.Contains("/"))
+                        {
+                             var splits = testName.Split("/"); 
+                             for (int i = 0; i < splits.Length ; i++)
+                                    destinationPath = System.IO.Path.Combine(destinationPath, splits[i]);
+                             
+                             testName = splits[splits.Length - 1];
 
+                        }
+                        var glbFileName = testName + ".glb";
+                        
                         var individualPath = System.IO.Path.Combine(path, glbFileName);
 
-                        export.SaveGLB(System.IO.Path.GetDirectoryName(individualPath),
-                            System.IO.Path.GetFileName(individualPath));
-                        CreateTestCaseReadmeFile(testCase, path);
+                        export.SaveGLB(destinationPath, glbFileName);
+                            
+                        CreateTestCaseReadmeFile(testCase, System.IO.Path.Combine(destinationPath, testName + ".md"));
                         CreateTestCaseJsonFile(testCase.GetTestName(), new[] { testCase },
-                            System.IO.Path.Combine(path, glbFileName), glbFileName);
+                            System.IO.Path.Combine(path, System.IO.Path.Combine(destinationPath, testName+".json")), glbFileName);
                         currentTestContext.Dispose();
                     }
                     finally
@@ -226,10 +231,10 @@ namespace Khronos_Test_Export
 
                     string glbFileName = allInOneName + ".glb";
                     export.SaveGLB(path, glbFileName);
-                    foreach (var testCase in cases)
-                    {
-                        CreateTestCaseReadmeFile(testCase, path);
-                    }
+                    // foreach (var testCase in cases)
+                    // {
+                    //     CreateTestCaseReadmeFile(testCase, System.IO.Path.Combine(path, glbFileName));
+                    // }
 
                     CreateTestCaseJsonFile(allInOneName, cases, System.IO.Path.Combine(path, glbFileName), glbFileName);
                 }
