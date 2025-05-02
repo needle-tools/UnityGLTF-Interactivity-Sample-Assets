@@ -85,9 +85,9 @@ namespace Khronos_Test_Export
                 {
 
                     var testCase = (ITestCase)System.Activator.CreateInstance(type);
-                    if (testCases.Exists(tc => tc.typeFullName == type.FullName))
+                    if (testCases.Exists(tc => tc.typeFullName == type.ToString()))
                     {
-                        var existing = testCases.FirstOrDefault(tc => tc.typeFullName == type.FullName);
+                        var existing = testCases.FirstOrDefault(tc => tc.typeFullName == type.ToString());
                         existing.Name = testCase.GetTestName();
                         existing.Description = testCase.GetTestDescription();
                         continue;
@@ -97,7 +97,7 @@ namespace Khronos_Test_Export
                     {
                         Name = testCase.GetTestName(),
                         Description = testCase.GetTestDescription(),
-                        typeFullName = testCase.GetType().FullName,
+                        typeFullName = testCase.GetType().ToString(),
                     });
                 }
             }
