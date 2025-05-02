@@ -6,6 +6,7 @@ using System.Reflection;
 using Khronos_Test_Export;
 using Khronos_Test_Export.Core;
 using UnityEngine;
+using UnityGLTF.Interactivity;
 using UnityGLTF.Interactivity.Schema;
 
 [TestCreator.IgnoreTestCase]
@@ -104,12 +105,20 @@ public class MathTestCase : ITestCase
         if (testNode.ValueInConnection.ContainsKey("a")) testNode.SetValueInSocket("a", a, TypeRestriction.LimitToFloat);
         if (testNode.ValueInConnection.ContainsKey("b")) testNode.SetValueInSocket("b", b, TypeRestriction.LimitToFloat);
         if (testNode.ValueInConnection.ContainsKey("c")) testNode.SetValueInSocket("c", c, TypeRestriction.LimitToFloat);
-        testNode.OutputValueSocket["value"].expectedType = ExpectedType.Float;
+
+        var schemaExpetedType = testNode.Schema.OutputValueSockets["value"].expectedType;
+        var typeRestriction = expected is float ? TypeRestriction.LimitToFloat : TypeRestriction.LimitToBool;
+        var expectedRestriction = expected is float ? ExpectedType.Float : ExpectedType.Bool;
+
+        if ((schemaExpetedType != null && schemaExpetedType.typeIndex != GltfTypes.TypeIndex(typeof(bool))
+            || schemaExpetedType == null))
+            testNode.OutputValueSocket["value"].expectedType = expectedRestriction;
+        
 
         var isSpecialValue = expected.Equals(float.NaN) || expected.Equals(float.PositiveInfinity) || expected.Equals(float.NegativeInfinity);
+        
         var testApproximateEquality = schema == "math/e" || schema == "math/pi" || expected is float && !isSpecialValue;
 
-        var expectedRestriction = expected is float ? TypeRestriction.LimitToFloat : TypeRestriction.LimitToBool;
         basicTestCheckBox.SetupCheck(context, testNode.FirstValueOut(), out var checkFlowIn, expected, testApproximateEquality);
 
         context.SetEntryPoint(checkFlowIn, "Basic float");
