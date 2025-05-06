@@ -42,13 +42,13 @@ namespace Khronos_Test_Export
             _layout.coloumnSpaceWidth = _checkBoxPrefab.CheckBoxSize.x / 10f;
         }
 
-        public void SetEntryPoint(FlowInRef flowIn, string name)
+        public void NewEntryPoint(FlowInRef flowIn, string name)
         {
-            SetEntryPoint(out var flow, name);
+            NewEntryPoint(out var flow, name);
             flow.ConnectToFlowDestination(flowIn);
         }
         
-        public void SetEntryPoint(out FlowOutRef flow, string name)
+        public void NewEntryPoint(out FlowOutRef flow, string name)
         {
             var nodeCreator = interactivityExportContext;
             var startNode = nodeCreator.CreateNode(new Event_OnStartNode());

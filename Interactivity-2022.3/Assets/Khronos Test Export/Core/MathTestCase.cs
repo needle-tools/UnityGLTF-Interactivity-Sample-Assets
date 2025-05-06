@@ -127,7 +127,7 @@ namespace Khronos_Test_Export
             basicTestCheckBox.SetupCheck(context, testNode.FirstValueOut(), out var checkFlowIn, expected,
                 testApproximateEquality);
 
-            context.SetEntryPoint(checkFlowIn, "Basic float");
+            context.NewEntryPoint(checkFlowIn, "Basic float");
         }
     }
 }

@@ -37,7 +37,7 @@ namespace Khronos_Test_Export
             var doNNode = nodeCreator.CreateNode(new Flow_DoNNode());
             
                        
-            context.SetEntryPoint(out var entry, "Do N - Iterations");
+            context.NewEntryPoint(out var entry, "Do N - Iterations");
             context.AddSequence(entry,
                 new FlowInRef[]
                 {
@@ -82,7 +82,7 @@ namespace Khronos_Test_Export
 
             var doN2Node = nodeCreator.CreateNode(new Flow_DoNNode());
             doN2Node.ValueIn(Flow_DoNNode.IdN).SetValue(2);
-            context.SetEntryPoint(out var entryReset, "Do N - Reset");
+            context.NewEntryPoint(out var entryReset, "Do N - Reset");
             
             context.AddPlusOneCounter(out var counter2, out var flowInToIncrease2);
             doN2Node.FlowOut(Flow_DoNNode.IdOut).ConnectToFlowDestination(flowInToIncrease2);
@@ -102,7 +102,7 @@ namespace Khronos_Test_Export
             
             var doN3Node = nodeCreator.CreateNode(new Flow_DoNNode());
             doN3Node.ValueIn(Flow_DoNNode.IdN).SetValue(2);
-            context.SetEntryPoint(out var entry2, "Do N - Max Iteration");
+            context.NewEntryPoint(out var entry2, "Do N - Max Iteration");
 
             context.AddPlusOneCounter(out var counter3, out var flowInToIncrease3);
             doN3Node.FlowOut(Flow_DoNNode.IdOut).ConnectToFlowDestination(flowInToIncrease3);

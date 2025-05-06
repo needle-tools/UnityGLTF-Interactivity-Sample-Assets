@@ -30,7 +30,7 @@ namespace Khronos_Test_Export
             var nodeCreator = context.interactivityExportContext;
             
             var sequenceNode = nodeCreator.CreateNode(new Flow_SequenceNode());
-            context.SetEntryPoint(sequenceNode.FlowIn(Flow_SequenceNode.IdFlowIn), _sequenceOrderCheck.GetText());
+            context.NewEntryPoint(sequenceNode.FlowIn(Flow_SequenceNode.IdFlowIn), _sequenceOrderCheck.GetText());
             sequenceNode.FlowOut("0");
             sequenceNode.FlowOut("9");
             sequenceNode.FlowOut("10");
@@ -44,7 +44,7 @@ namespace Khronos_Test_Export
 
             
             var sequenceNode2 = nodeCreator.CreateNode(new Flow_SequenceNode());
-            context.SetEntryPoint(sequenceNode2.FlowIn(Flow_SequenceNode.IdFlowIn), _sequenceOrderCheck2.GetText());
+            context.NewEntryPoint(sequenceNode2.FlowIn(Flow_SequenceNode.IdFlowIn), _sequenceOrderCheck2.GetText());
 
             sequenceNode2.FlowOut("ccc");
             sequenceNode2.FlowOut("aaa");
@@ -58,7 +58,7 @@ namespace Khronos_Test_Export
             });     
             
             var sequenceNode3 = nodeCreator.CreateNode(new Flow_SequenceNode());
-            context.SetEntryPoint(sequenceNode3.FlowIn(Flow_SequenceNode.IdFlowIn), _sequenceOrderCheck3.GetText());
+            context.NewEntryPoint(sequenceNode3.FlowIn(Flow_SequenceNode.IdFlowIn), _sequenceOrderCheck3.GetText());
 
             sequenceNode3.FlowOut("b");
             sequenceNode3.FlowOut("B");

@@ -121,7 +121,7 @@ namespace Khronos_Test_Export
                 var varId = nodeCreator.Context.AddVariableWithIdIfNeeded("VarSetTest_"+GltfTypes.allTypes[gltfType], nullValue, gltfType);
                 
                 VariablesHelpers.SetVariableStaticValue(nodeCreator, varId, valueToSet, out var setFlow, out var setOutFlow);
-                context.SetEntryPoint(setFlow, "Set Variable " + GltfTypes.allTypes[gltfType]);
+                context.NewEntryPoint(setFlow, "Set Variable " + GltfTypes.allTypes[gltfType]);
               
                 VariablesHelpers.GetVariable(nodeCreator, varId, out var getVar);
                 
@@ -137,7 +137,7 @@ namespace Khronos_Test_Export
                 VariablesHelpers.GetVariable(nodeCreator, varId, out var getVar);
                 
                 checkBox.SetupCheck(context, getVar, out var checkFlow, valueToSet, false);
-                context.SetEntryPoint(checkFlow, "Get default value from Variable " + GltfTypes.allTypes[gltfType]);
+                context.NewEntryPoint(checkFlow, "Get default value from Variable " + GltfTypes.allTypes[gltfType]);
             }     
             
             // AddSubTestInput(typeof(bool), checkBoolSet, true);

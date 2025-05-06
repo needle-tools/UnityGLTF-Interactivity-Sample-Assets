@@ -8,6 +8,7 @@ namespace Khronos_Test_Export.OpTests.TestRequirements
         private CheckBox _valueCheckBox;
         private CheckBox _valueProximityCheckBox;
         private CheckBox _counterCheckBox;
+        private CheckBox _multiFlowCheckBox;
         
         public string GetTestName()
         {
@@ -25,11 +26,12 @@ namespace Khronos_Test_Export.OpTests.TestRequirements
             _valueCheckBox = context.AddCheckBox("Value Checks");
             _valueProximityCheckBox = context.AddCheckBox("Value Proximity Checks");
             _counterCheckBox = context.AddCheckBox("Counter Checks");
+            _multiFlowCheckBox = context.AddCheckBox("Multi Flow Checks");
         }
 
         public void CreateNodes(TestContext context)
         {
-            context.SetEntryPoint(out var entryFlow, "Entry");
+            context.NewEntryPoint(out var entryFlow, "Entry");
            
             _flowCheckBox.SetupCheck(context, out var flowCheckFlowIn);
             _valueCheckBox.SetupCheck(context, out var valueCheckRef, out var flowValueCheckFlowIn, 1, false);
@@ -41,7 +43,7 @@ namespace Khronos_Test_Export.OpTests.TestRequirements
             context.AddPlusOneCounter(out var counter, out var flowInToIncrease);
             
             _counterCheckBox.SetupCheck(context, counter, out var counterCheckFlowIn, 2);
-            
+            _multiFlowCheckBox.SetupMultiFlowCheck(context, 2, out var multiFlowCheckFlowIn);
             context.AddSequence(entryFlow,
                 new FlowInRef[]
                 {
@@ -50,7 +52,9 @@ namespace Khronos_Test_Export.OpTests.TestRequirements
                     flowValueProximityCheckFlowIn,
                     flowInToIncrease,
                     flowInToIncrease,
-                    counterCheckFlowIn
+                    counterCheckFlowIn,
+                    multiFlowCheckFlowIn[0],
+                    multiFlowCheckFlowIn[1]
                 });
         }
     }
