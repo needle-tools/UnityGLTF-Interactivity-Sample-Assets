@@ -6,6 +6,7 @@ namespace Khronos_Test_Export
     {
         private CheckBox _sequenceOrderCheck;
         private CheckBox _sequenceOrderCheck2;
+        private CheckBox _sequenceOrderCheck3;
         
         public string GetTestName()
         {
@@ -21,6 +22,7 @@ namespace Khronos_Test_Export
         {
             _sequenceOrderCheck = context.AddCheckBox("Sequence Order (0,9,10) > (0,10,9)");
             _sequenceOrderCheck2 = context.AddCheckBox("Sequence Order (ccc,aaa,b) > (aaa,b,ccc)");
+            _sequenceOrderCheck3 = context.AddCheckBox("Sequence Order (b,B,a,A) > (A,B,a,b)");
         }
 
         public void CreateNodes(TestContext context)
@@ -53,7 +55,23 @@ namespace Khronos_Test_Export
                 sequenceNode2.FlowOut("aaa"),
                 sequenceNode2.FlowOut("b"),
                 sequenceNode2.FlowOut("ccc"),
-            });         
+            });     
+            
+            var sequenceNode3 = nodeCreator.CreateNode(new Flow_SequenceNode());
+            context.SetEntryPoint(sequenceNode3.FlowIn(Flow_SequenceNode.IdFlowIn), _sequenceOrderCheck3.GetText());
+
+            sequenceNode3.FlowOut("b");
+            sequenceNode3.FlowOut("B");
+            sequenceNode3.FlowOut("a");
+            sequenceNode3.FlowOut("A");
+            
+            _sequenceOrderCheck3.SetupOrderFlowCheck(context, new[]
+            {
+                sequenceNode3.FlowOut("A"),
+                sequenceNode3.FlowOut("B"),
+                sequenceNode3.FlowOut("a"),
+                sequenceNode3.FlowOut("b"),
+            });  
 
         }
     }
