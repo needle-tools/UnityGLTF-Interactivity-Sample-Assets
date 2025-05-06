@@ -24,6 +24,7 @@ namespace Khronos_Test_Export
         public int ResultValueVarId { get; private set; } = -1;
         
         private TestContext.Case _testCase;
+        private bool isNegated = false;
         
         private void OnDrawGizmosSelected()
         {
@@ -46,6 +47,7 @@ namespace Khronos_Test_Export
             
             valid.localPosition = invPos;
             invalid.localPosition = vPos;
+            isNegated = true;
         }
         
         public void SetText(string text)
@@ -66,9 +68,9 @@ namespace Khronos_Test_Export
         private void SaveResult(TestContext context, FlowOutRef flow)
         {
             if (ResultValueVarId == -1)
-                ResultValueVarId = context.interactivityExportContext.Context.AddVariableWithIdIfNeeded(GetResultVariableName(), false, GltfTypes.Bool);
+                ResultValueVarId = context.interactivityExportContext.Context.AddVariableWithIdIfNeeded(GetResultVariableName(), isNegated, GltfTypes.Bool);
             
-            VariablesHelpers.SetVariableStaticValue(context.interactivityExportContext, ResultValueVarId, true, out var setFlow, out _);
+            VariablesHelpers.SetVariableStaticValue(context.interactivityExportContext, ResultValueVarId, !isNegated, out var setFlow, out _);
             flow.ConnectToFlowDestination(setFlow);
         }
 
@@ -134,7 +136,7 @@ namespace Khronos_Test_Export
             setPosition.ValueIn(PointersHelper.IdPointerNodeIndex).SetValue(validIndex);
 
             flow = setPosition.FlowIn(Pointer_SetNode.IdFlowIn);
-            expectedValue = true;
+            expectedValue = false;
             context.AddLog(text.text+ ": Flow triggered! This should not happened!", out var logFlowIn, out var logFlowOut);
             setPosition.FlowOut(Pointer_SetNode.IdFlowOut).ConnectToFlowDestination(logFlowIn);
             SaveResult(context, logFlowOut);
