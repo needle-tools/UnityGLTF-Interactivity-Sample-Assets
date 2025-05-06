@@ -101,6 +101,61 @@ namespace Khronos_Test_Export
             }
             VariablesHelpers.SetVariable(context.interactivityExportContext, ResultValueVarId, value, flow);
         }
+
+        public void SetupOrderFlowCheck(TestContext context, FlowOutRef[] flows)
+        {
+            validIndex = context.interactivityExportContext.Context.exporter.GetTransformIndex(valid);
+            invalidIndex = context.interactivityExportContext.Context.exporter.GetTransformIndex(invalid);
+
+            var nodeCreator = context.interactivityExportContext;
+            var countVar = nodeCreator.Context.AddVariableWithIdIfNeeded("FlowSequenceCount_"+System.Guid.NewGuid().ToString(), 0, GltfTypes.Int);
+            
+            VariablesHelpers.GetVariable(nodeCreator, countVar, out var countVarRef);
+            var addCount = nodeCreator.CreateNode(new Math_AddNode());
+            addCount.ValueIn(Math_AddNode.IdValueA).ConnectToSource(countVarRef);
+            addCount.ValueIn(Math_AddNode.IdValueB).SetValue(1);
+            
+            int index = 0;
+            FlowOutRef lastFlow = null;
+            foreach (var flow in flows)
+            {
+                index++;
+                var eqNode = nodeCreator.CreateNode(new Math_EqNode());
+                eqNode.ValueIn(Math_EqNode.IdValueA).ConnectToSource(countVarRef);
+                eqNode.ValueIn(Math_EqNode.IdValueB).SetValue(index);
+
+                var setVarNode = VariablesHelpers.SetVariable(nodeCreator, countVar, addCount.FirstValueOut(), flow);
+                
+                var checkBranch = nodeCreator.CreateNode(new Flow_BranchNode());
+                checkBranch.ValueIn(Flow_BranchNode.IdCondition).ConnectToSource(eqNode.FirstValueOut());
+                setVarNode.FlowOut(Variable_SetNode.IdFlowOut).ConnectToFlowDestination(checkBranch.FlowIn(Flow_BranchNode.IdFlowIn));
+                
+                context.AddLog(text.text+ ": Incorrect flow order triggered! Expected Socket Id: "+flow.socket.Key, out var invalidLogFlowIn, out var invalidLogFlowOut);
+                checkBranch.FlowOut(Flow_BranchNode.IdFlowOutFalse)
+                    .ConnectToFlowDestination(invalidLogFlowIn);
+                
+                
+                var setInvalidVar = VariablesHelpers.SetVariable(nodeCreator, countVar);
+                setInvalidVar.ValueIn(Variable_SetNode.IdInputValue).SetValue(-1000);
+                invalidLogFlowOut.ConnectToFlowDestination(setInvalidVar.FlowIn(Variable_SetNode.IdFlowIn));
+                
+                
+                lastFlow = checkBranch.FlowOut(Flow_BranchNode.IdFlowOutTrue);
+            }
+            
+            
+            var setPosition = nodeCreator.CreateNode(new Pointer_SetNode());
+            PointersHelper.SetupPointerTemplateAndTargetInput(setPosition, PointersHelper.IdPointerNodeIndex, "/nodes/{" + PointersHelper.IdPointerNodeIndex + "}/translation", GltfTypes.Float3);
+            setPosition.ValueIn(Pointer_SetNode.IdValue).SetValue(positionWhenValid);
+            setPosition.ValueIn(PointersHelper.IdPointerNodeIndex).SetValue(validIndex);
+
+            lastFlow.ConnectToFlowDestination(setPosition.FlowIn(Pointer_SetNode.IdFlowIn));
+            expectedValue = true;
+            context.AddLog(text.text+ ": Correct flow order triggered", out var logFlowIn, out var logFlowOut);
+            setPosition.FlowOut(Pointer_SetNode.IdFlowOut).ConnectToFlowDestination(logFlowIn);
+            SaveResult(context, logFlowOut);
+            
+        }
         
         public void SetupCheck(TestContext context, out FlowInRef flow)
         {
