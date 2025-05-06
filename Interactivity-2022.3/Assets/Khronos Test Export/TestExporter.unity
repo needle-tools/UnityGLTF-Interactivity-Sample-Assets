@@ -436,13 +436,18 @@ MonoBehaviour:
   testExporter: {fileID: 1481517795}
   testCases:
   - Enabled: 1
+    Name: Testing required operations
+    Description: Tests required operations for proper test exectuion. This tests
+      should be passed before testing all other tests.
+    typeFullName: Khronos_Test_Export.OpTests.TestRequirements.TestsRelatedOps
+  - Enabled: 1
     Name: flow/for
     Description: 
     typeFullName: Khronos_Test_Export.ForLoopTest
   - Enabled: 1
     Name: variable/set and get
     Description: Set and Get variable test
-    typeFullName: Khronos_Test_Export.OpTests.Variable.VariableSetGetTest
+    typeFullName: Khronos_Test_Export.VariableSetGetTest
   testName: Overview
 --- !u!4 &1481517797
 Transform:
@@ -505,8 +510,8 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: -180, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: 0, y: -0.611}
-  m_SizeDelta: {x: 20, y: 5}
+  m_AnchoredPosition: {x: -0.0006, y: -0.6128}
+  m_SizeDelta: {x: 1.0076, y: 0.1555}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!1 &1755628705431958118
 GameObject:
@@ -848,16 +853,16 @@ MonoBehaviour:
   m_fontSize: 1
   m_fontSizeBase: 1
   m_fontWeight: 400
-  m_enableAutoSizing: 0
-  m_fontSizeMin: 18
-  m_fontSizeMax: 72
+  m_enableAutoSizing: 1
+  m_fontSizeMin: 0.1
+  m_fontSizeMax: 1
   m_fontStyle: 0
   m_HorizontalAlignment: 2
   m_VerticalAlignment: 512
   m_textAlignment: 65535
   m_characterSpacing: 0
   m_wordSpacing: 0
-  m_lineSpacing: 0
+  m_lineSpacing: -29.2
   m_lineSpacingMax: 0
   m_paragraphSpacing: 0
   m_charWidthMaxAdj: 0
