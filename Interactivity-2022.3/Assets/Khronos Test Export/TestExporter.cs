@@ -37,7 +37,7 @@ namespace Khronos_Test_Export
         public class JsonCaseOutput
         {
             public string name;
-            public string dDescription;
+            public string description;
             public string[] usedSchemas;
 
             [Serializable]
@@ -74,7 +74,7 @@ namespace Khronos_Test_Export
                 var testCaseOutput = new JsonCaseOutput();
                 tests.Add(testCaseOutput);
                 testCaseOutput.name = testCase.GetTestName();
-                testCaseOutput.dDescription = testCase.GetTestDescription();
+                testCaseOutput.description = testCase.GetTestDescription();
 
 
                 var entries = new List<JsonCaseOutput.EntryPoint>();
