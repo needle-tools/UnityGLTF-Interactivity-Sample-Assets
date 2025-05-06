@@ -106,7 +106,7 @@ namespace Khronos_Test_Export
             jsonOutput.tests = tests.ToArray();
             jsonOutput.usedSchemas = tests.SelectMany(t => t.usedSchemas).Distinct().OrderBy(s => s).ToArray();
 
-            var json = JsonUtility.ToJson(jsonOutput);
+            var json = JsonUtility.ToJson(jsonOutput, true);
 
               System.IO.File.WriteAllText(fileName, json);
             Debug.Log("Test case json file created at: " + fileName);
