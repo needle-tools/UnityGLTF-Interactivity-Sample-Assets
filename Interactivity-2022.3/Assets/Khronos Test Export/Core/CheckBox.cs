@@ -38,6 +38,15 @@ namespace Khronos_Test_Export
         {
             _testCase = testCase;
         }
+
+        public void Negate()
+        {
+            var vPos = valid.localPosition;
+            var invPos = invalid.localPosition;
+            
+            valid.localPosition = invPos;
+            invalid.localPosition = vPos;
+        }
         
         public void SetText(string text)
         {
@@ -113,7 +122,30 @@ namespace Khronos_Test_Export
             SetupCheck(context, out var flowIn);
             flow.ConnectToFlowDestination(flowIn);
         }
+        
+        public void SetupNegateCheck(TestContext context, out FlowInRef flow)
+        {
+            validIndex = context.interactivityExportContext.Context.exporter.GetTransformIndex(valid);
+            invalidIndex = context.interactivityExportContext.Context.exporter.GetTransformIndex(invalid);
+            
+            var setPosition = context.interactivityExportContext.CreateNode(new Pointer_SetNode());
+            PointersHelper.SetupPointerTemplateAndTargetInput(setPosition, PointersHelper.IdPointerNodeIndex, "/nodes/{" + PointersHelper.IdPointerNodeIndex + "}/translation", GltfTypes.Float3);
+            setPosition.ValueIn(Pointer_SetNode.IdValue).SetValue(positionWhenValid);
+            setPosition.ValueIn(PointersHelper.IdPointerNodeIndex).SetValue(validIndex);
 
+            flow = setPosition.FlowIn(Pointer_SetNode.IdFlowIn);
+            expectedValue = true;
+            context.AddLog(text.text+ ": Flow triggered! This should not happened!", out var logFlowIn, out var logFlowOut);
+            setPosition.FlowOut(Pointer_SetNode.IdFlowOut).ConnectToFlowDestination(logFlowIn);
+            SaveResult(context, logFlowOut);
+        }
+
+        public void SetupNegateCheck(TestContext context, FlowOutRef flow)
+        {
+            SetupNegateCheck(context, out var flowIn);
+            flow.ConnectToFlowDestination(flowIn);
+        }
+        
         public void SetupCheck(TestContext context, ValueOutRef inputValue, FlowOutRef flow, object valueToCompare,
             bool proximityCheck = false)
         {
