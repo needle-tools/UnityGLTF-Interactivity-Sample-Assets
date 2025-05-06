@@ -1,0 +1,57 @@
+using UnityGLTF.Interactivity.Export;
+
+namespace Khronos_Test_Export.OpTests.TestRequirements
+{
+    public class TestsRelatedOps : ITestCase
+    {
+        private CheckBox _flowCheckBox;
+        private CheckBox _valueCheckBox;
+        private CheckBox _valueProximityCheckBox;
+        private CheckBox _counterCheckBox;
+        
+        public string GetTestName()
+        {
+            return "Tests required operations";
+        }
+
+        public string GetTestDescription()
+        {
+            return "Testing required operations for proper test execution. This tests should be passed before testing all other tests.";
+        }
+
+        public void PrepareObjects(TestContext context)
+        {
+            _flowCheckBox = context.AddCheckBox("Flow Checks");
+            _valueCheckBox = context.AddCheckBox("Value Checks");
+            _valueProximityCheckBox = context.AddCheckBox("Value Proximity Checks");
+            _counterCheckBox = context.AddCheckBox("Counter Checks");
+        }
+
+        public void CreateNodes(TestContext context)
+        {
+            context.SetEntryPoint(out var entryFlow, "Entry");
+           
+            _flowCheckBox.SetupCheck(context, out var flowCheckFlowIn);
+            _valueCheckBox.SetupCheck(context, out var valueCheckRef, out var flowValueCheckFlowIn, 1, false);
+            valueCheckRef.SetValue(1);
+            float proximityValue = 33.21145566622334233f;
+            _valueProximityCheckBox.SetupCheck(context, out var valueProximityCheckRef, out var flowValueProximityCheckFlowIn, proximityValue, false);
+            valueProximityCheckRef.SetValue(proximityValue);
+            
+            context.AddPlusOneCounter(out var counter, out var flowInToIncrease);
+            
+            _counterCheckBox.SetupCheck(context, counter, out var counterCheckFlowIn, 2);
+            
+            context.AddSequence(entryFlow,
+                new FlowInRef[]
+                {
+                    flowCheckFlowIn,
+                    flowValueCheckFlowIn,
+                    flowValueProximityCheckFlowIn,
+                    flowInToIncrease,
+                    flowInToIncrease,
+                    counterCheckFlowIn
+                });
+        }
+    }
+}

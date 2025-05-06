@@ -44,22 +44,36 @@ namespace Khronos_Test_Export
 
         public void SetEntryPoint(FlowInRef flowIn, string name)
         {
+            SetEntryPoint(out var flow, name);
+            flow.ConnectToFlowDestination(flowIn);
+        }
+        
+        public void SetEntryPoint(out FlowOutRef flow, string name)
+        {
             var nodeCreator = interactivityExportContext;
             var startNode = nodeCreator.CreateNode(new Event_OnStartNode());
-            startNode.FlowOut(Event_OnStartNode.IdFlowOut).ConnectToFlowDestination(flowIn);
+            flow = startNode.FlowOut(Event_OnStartNode.IdFlowOut);
             currentCase.entryNodes.Add((startNode, name));
         }
         
         public void AddLog(string message, out FlowInRef flowIn, out FlowOutRef flowOut,params ValueOutRef[] values)
         {
+            AddLog(message, out flowIn, out flowOut, values.Length, out var valueIn);
+            for (int i = 0; i < values.Length; i++)
+                valueIn[i].ConnectToSource(values[i]);
+        }
+        
+        public void AddLog(string message, out FlowInRef flowIn, out FlowOutRef flowOut, int valueCount,  out ValueInRef[] values)
+        {
             var nodeCreator = interactivityExportContext;
             var log = nodeCreator.AddLog(GltfInteractivityExportNodes.LogLevel.Info, message);
             flowIn = log.FlowIn(Debug_LogNode.IdFlowIn);
             flowOut = log.FlowOut(Debug_LogNode.IdFlowOut);
-            for (int i = 0; i < values.Length; i++)
+            values = new ValueInRef[valueCount];
+            for (int i = 0; i < valueCount; i++)
             {
                 var value = log.ValueIn(i.ToString());
-                value.ConnectToSource(values[i]);
+                values[i] = value;
             }
         }
         

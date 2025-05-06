@@ -63,6 +63,22 @@ namespace Khronos_Test_Export
             flow.ConnectToFlowDestination(setFlow);
         }
 
+        private void SaveResult(TestContext context, out ValueInRef value, FlowOutRef flow, Type type)
+        {
+            if (ResultValueVarId == -1)
+            {
+                var gltfType = GltfTypes.TypeIndex(type);
+                var initValue = GltfTypes.GetNullByType(gltfType);
+                
+                ResultValueVarId = context.interactivityExportContext.Context.AddVariableWithIdIfNeeded(GetResultVariableName(), initValue, gltfType);
+            }
+
+            var setVar = VariablesHelpers.SetVariable(context.interactivityExportContext, ResultValueVarId);
+            value = setVar.ValueIn(Variable_SetNode.IdInputValue);
+            flow.ConnectToFlowDestination(setVar.FlowIn(Variable_SetNode.IdFlowIn));
+        }
+        
+
         private void SaveResult(TestContext context, ValueOutRef value, FlowOutRef flow, Type type)
         {
             if (ResultValueVarId == -1)
@@ -104,11 +120,11 @@ namespace Khronos_Test_Export
             SetupCheck(context, inputValue, out var flowIn, valueToCompare, proximityCheck);
             flow.ConnectToFlowDestination(flowIn);
         }
-        
-        public void SetupCheck(TestContext context, ValueOutRef inputValue, out FlowInRef flow, object valueToCompare,
+
+        public void SetupCheck(TestContext context, out ValueInRef inputValue, out FlowInRef flow, object valueToCompare,
             bool proximityCheck = false)
         {
-            var compareValueType = GltfTypes.TypeIndex(valueToCompare.GetType());
+              var compareValueType = GltfTypes.TypeIndex(valueToCompare.GetType());
             validIndex = context.interactivityExportContext.Context.exporter.GetTransformIndex(valid);
             invalidIndex = context.interactivityExportContext.Context.exporter.GetTransformIndex(invalid);
 
@@ -116,7 +132,7 @@ namespace Khronos_Test_Export
             if (proximityCheck)
             {
                 var subtractNode = context.interactivityExportContext.CreateNode(new Math_SubNode());
-                subtractNode.ValueIn("a").ConnectToSource(inputValue);
+                inputValue = subtractNode.ValueIn("a");
                 subtractNode.ValueIn("b").SetValue(valueToCompare);
             
                 var absNode = context.interactivityExportContext.CreateNode(new Math_AbsNode());
@@ -130,7 +146,7 @@ namespace Khronos_Test_Export
             else
             {
                 eqNode = context.interactivityExportContext.CreateNode(new Math_EqNode());
-                eqNode.ValueIn(Math_EqNode.IdValueA).ConnectToSource(inputValue);
+                inputValue = eqNode.ValueIn(Math_EqNode.IdValueA);
                 eqNode.ValueIn(Math_EqNode.IdValueB).SetType(TypeRestriction.LimitToType(compareValueType)).SetValue(valueToCompare);
             }
             
@@ -147,14 +163,22 @@ namespace Khronos_Test_Export
             validNode.FlowOut(Flow_BranchNode.IdFlowOutTrue)
                 .ConnectToFlowDestination(setPosition.FlowIn(Pointer_SetNode.IdFlowIn));
             
-            context.AddLog(text.text+ ": Value is {0}, should be "+valueToCompare.ToString(), out var logFlowIn, out var logFlowOut, inputValue);
+            context.AddLog(text.text+ ": Value is {0}, should be "+valueToCompare.ToString(), out var logFlowIn, out var logFlowOut, 1, out var logValueRef);
+            inputValue = inputValue.Link(logValueRef[0]);
             validNode.FlowOut(Flow_BranchNode.IdFlowOutFalse).ConnectToFlowDestination(logFlowIn);
             
             setPosition.FlowOut(Pointer_SetNode.IdFlowOut).ConnectToFlowDestination(logFlowIn);
             
             expectedValue = valueToCompare;
-            SaveResult(context, inputValue, logFlowOut, valueToCompare.GetType());
-            
+            SaveResult(context, out var saveResultInputValue, logFlowOut, valueToCompare.GetType());
+            inputValue = inputValue.Link(saveResultInputValue);
+        }
+
+        public void SetupCheck(TestContext context, ValueOutRef inputValue, out FlowInRef flow, object valueToCompare,
+            bool proximityCheck = false)
+        {
+            SetupCheck(context, out var inputValueRef, out flow, valueToCompare, proximityCheck);
+            inputValueRef.ConnectToSource(inputValue);
         }
     }
 }
