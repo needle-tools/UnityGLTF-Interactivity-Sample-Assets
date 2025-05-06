@@ -2,11 +2,14 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 using TMPro;
 using UnityEditor;
 using UnityEngine;
 using UnityGLTF;
 using UnityGLTF.Interactivity.Export;
+using UnityGLTF.Interactivity.Schema;
 using UnityGLTF.Interactivity.VisualScripting;
 
 
@@ -50,15 +53,37 @@ namespace Khronos_Test_Export
             public EntryPoint[] entryPoints;
 
             [Serializable]
+            [JsonConverter(typeof(SubTestsJsonConverter))]
             public class SubTests
             {
                 public string name;
                 public string resultVarName;
                 public int resultVarId;
-                public string expectedResultValue;
+                public object expectedResultValue;
             }
 
             public SubTests[] subTests;
+            
+            public class SubTestsJsonConverter : JsonConverter<SubTests>
+            {
+                public override void WriteJson(JsonWriter writer, SubTests value, JsonSerializer serializer)
+                {
+                    var obj = new JObject();
+                    obj[nameof(SubTests.name)] = value.name;
+                    obj[nameof(SubTests.resultVarName)] = value.resultVarName;
+                    obj[nameof(SubTests.resultVarId)] = value.resultVarId;
+                    GltfInteractivityNode.ValueSerializer.Serialize(value.expectedResultValue, obj);
+                    obj[nameof(SubTests.expectedResultValue)] = obj["value"];
+                    obj.Remove("value");
+                    obj.WriteTo(writer);
+                }
+
+                public override SubTests ReadJson(JsonReader reader, Type objectType, SubTests existingValue, bool hasExistingValue,
+                    JsonSerializer serializer)
+                {
+                    throw new NotImplementedException();
+                }
+            }
         }
 
         private void CreateTestCaseJsonFile(string name, ITestCase[] testCases, string fileName, string glbFileName)
@@ -96,7 +121,7 @@ namespace Khronos_Test_Export
                     subTest.name = check.GetText();
                     subTest.resultVarName = check.GetResultVariableName();
                     subTest.resultVarId = check.ResultValueVarId;
-                    subTest.expectedResultValue = check.expectedValue.ToString();
+                    subTest.expectedResultValue = check.expectedValue;
                     subTests.Add(subTest);
                 }
 
@@ -105,10 +130,13 @@ namespace Khronos_Test_Export
 
             jsonOutput.tests = tests.ToArray();
             jsonOutput.usedSchemas = tests.SelectMany(t => t.usedSchemas).Distinct().OrderBy(s => s).ToArray();
-
-            var json = JsonUtility.ToJson(jsonOutput, true);
-
-              System.IO.File.WriteAllText(fileName, json);
+            var settings = new JsonSerializerSettings
+            {
+                TypeNameHandling = TypeNameHandling.All
+            };
+            string json = JsonConvert.SerializeObject(jsonOutput, Formatting.Indented, new JsonCaseOutput.SubTestsJsonConverter());
+          
+            System.IO.File.WriteAllText(fileName, json);
             Debug.Log("Test case json file created at: " + fileName);
         }
 
