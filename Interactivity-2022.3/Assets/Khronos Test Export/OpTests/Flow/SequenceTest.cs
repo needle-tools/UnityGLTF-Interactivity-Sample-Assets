@@ -29,7 +29,10 @@ namespace Khronos_Test_Export
             
             var sequenceNode = nodeCreator.CreateNode(new Flow_SequenceNode());
             context.SetEntryPoint(sequenceNode.FlowIn(Flow_SequenceNode.IdFlowIn), _sequenceOrderCheck.GetText());
-
+            sequenceNode.FlowOut("0");
+            sequenceNode.FlowOut("9");
+            sequenceNode.FlowOut("10");
+            
             _sequenceOrderCheck.SetupOrderFlowCheck(context, new[]
             {
                 sequenceNode.FlowOut("0"),
@@ -41,6 +44,10 @@ namespace Khronos_Test_Export
             var sequenceNode2 = nodeCreator.CreateNode(new Flow_SequenceNode());
             context.SetEntryPoint(sequenceNode2.FlowIn(Flow_SequenceNode.IdFlowIn), _sequenceOrderCheck2.GetText());
 
+            sequenceNode2.FlowOut("ccc");
+            sequenceNode2.FlowOut("aaa");
+            sequenceNode2.FlowOut("b");
+            
             _sequenceOrderCheck2.SetupOrderFlowCheck(context, new[]
             {
                 sequenceNode2.FlowOut("aaa"),
