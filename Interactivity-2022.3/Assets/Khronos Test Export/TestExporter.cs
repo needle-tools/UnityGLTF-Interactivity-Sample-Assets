@@ -12,9 +12,6 @@ using UnityGLTF.Interactivity.Export;
 using UnityGLTF.Interactivity.Schema;
 using UnityGLTF.Interactivity.VisualScripting;
 
-
-// TODO FIX: exptected value "+unendlich"
-
 namespace Khronos_Test_Export
 {
     public class TestExporter : MonoBehaviour, IInteractivityExport
