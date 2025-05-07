@@ -6,6 +6,7 @@ namespace Khronos_Test_Export
     public class WaitAllTest : ITestCase
     {
         private CheckBox _completedCheckBox;
+        private CheckBox _remainingInputOnCompletedCheckBox;
         private CheckBox _remainingInputCheckBox;
         private CheckBox _resetCheckBox;
         private CheckBox _resetCompletedCheckBox;
@@ -23,6 +24,7 @@ namespace Khronos_Test_Export
         public void PrepareObjects(TestContext context)
         {
             _completedCheckBox = context.AddCheckBox("Completed");
+            _remainingInputOnCompletedCheckBox = context.AddCheckBox("Remaining Input on Completed");
             _remainingInputCheckBox = context.AddCheckBox("Remaining Input");
             _resetCheckBox = context.AddCheckBox("Reset");
             _resetCompletedCheckBox = context.AddCheckBox("Reset Completed");
@@ -37,16 +39,20 @@ namespace Khronos_Test_Export
             waitAllNode.Configuration[Flow_WaitAllNode.IdConfigInputFlows].Value = 3;
             
             context.NewEntryPoint(out var entryFlow, "Wait All - Completed");
+            _remainingInputOnCompletedCheckBox.SetupCheck(context, waitAllNode.ValueOut(Flow_WaitAllNode.IdOutRemainingInputs),
+                out var remCheckFlowCompleted, 0);
+
             context.AddSequence(entryFlow,
                 new FlowInRef[]
                 {
                     waitAllNode.FlowIn("0"),
                     waitAllNode.FlowIn("1"),
                     waitAllNode.FlowIn("2"),
+                    remCheckFlowCompleted
                 });
             
             _completedCheckBox.SetupCheck(context, waitAllNode.FlowOut(Flow_WaitAllNode.IdFlowOutCompleted));
-         
+            
             // Remaining
             
             var waitAllNodeRemaining = nodeCreator.CreateNode(new Flow_WaitAllNode());
