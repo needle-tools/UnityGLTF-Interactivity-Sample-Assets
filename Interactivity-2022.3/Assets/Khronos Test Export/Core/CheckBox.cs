@@ -102,17 +102,24 @@ namespace Khronos_Test_Export
             VariablesHelpers.SetVariable(context.interactivityExportContext, ResultValueVarId, value, flow);
         }
 
-        private void AddFallbackFlowCheck(TestContext context, Func<TestContext, FlowInRef> fallbackFlowCheck)
+        private void AddFallbackFlowCheck(TestContext context, Func<TestContext, FlowInRef> fallbackFlowCheck, bool withResultCheck = true)
         {
-            VariablesHelpers.GetVariable(context.interactivityExportContext, ResultValueVarId, out var resultVarRef);
-            var eqNode = context.interactivityExportContext.CreateNode(new Math_EqNode());
-            eqNode.ValueIn(Math_EqNode.IdValueA).ConnectToSource(resultVarRef);
-            eqNode.ValueIn(Math_EqNode.IdValueB).SetValue(expectedValue);
-            var branchNode = context.interactivityExportContext.CreateNode(new Flow_BranchNode());
-            branchNode.ValueIn(Flow_BranchNode.IdCondition).ConnectToSource(eqNode.FirstValueOut());
-            branchNode.FlowOut(Flow_BranchNode.IdFlowOutFalse).ConnectToFlowDestination(fallbackFlowCheck(context));
-            context.AddFallbackToLastEntryPoint(branchNode.FlowIn(Flow_BranchNode.IdFlowIn));
-    }
+            if (withResultCheck)
+            {
+                VariablesHelpers.GetVariable(context.interactivityExportContext, ResultValueVarId, out var resultVarRef);
+                var eqNode = context.interactivityExportContext.CreateNode(new Math_EqNode());
+                eqNode.ValueIn(Math_EqNode.IdValueA).ConnectToSource(resultVarRef);
+                eqNode.ValueIn(Math_EqNode.IdValueB).SetValue(expectedValue);
+                var branchNode = context.interactivityExportContext.CreateNode(new Flow_BranchNode());
+                branchNode.ValueIn(Flow_BranchNode.IdCondition).ConnectToSource(eqNode.FirstValueOut());
+                branchNode.FlowOut(Flow_BranchNode.IdFlowOutFalse).ConnectToFlowDestination(fallbackFlowCheck(context));
+                context.AddFallbackToLastEntryPoint(branchNode.FlowIn(Flow_BranchNode.IdFlowIn));
+            }
+            else
+            {
+                context.AddFallbackToLastEntryPoint(fallbackFlowCheck(context));
+            }
+        }
         
         public void SetupMultiFlowCheck(TestContext context, int count, out FlowInRef[] flows, string[] flowNames = null)
         {
@@ -238,6 +245,44 @@ namespace Khronos_Test_Export
                 testContext.AddLog(text.text+ ": Correct flow order not triggered! This should not happened!", out var logFlowInFallback, out var _);
                 return logFlowInFallback;
             });
+        }
+        
+        public void SetupCheckFlowTimes(TestContext context, out FlowInRef flow, int callTimes)
+        {
+            validIndex = context.interactivityExportContext.Context.exporter.GetTransformIndex(valid);
+            invalidIndex = context.interactivityExportContext.Context.exporter.GetTransformIndex(invalid);
+            
+            var setPosition = context.interactivityExportContext.CreateNode(new Pointer_SetNode());
+            PointersHelper.SetupPointerTemplateAndTargetInput(setPosition, PointersHelper.IdPointerNodeIndex, "/nodes/{" + PointersHelper.IdPointerNodeIndex + "}/translation", GltfTypes.Float3);
+            setPosition.ValueIn(Pointer_SetNode.IdValue).SetValue(positionWhenValid);
+            setPosition.ValueIn(PointersHelper.IdPointerNodeIndex).SetValue(validIndex);
+
+            context.AddPlusOneCounter(out var counter, out var flowInToIncrease);
+            flow = flowInToIncrease;
+            
+            expectedValue = callTimes;
+            
+            AddFallbackFlowCheck(context, testContext =>
+            {
+                var eq = testContext.interactivityExportContext.CreateNode(new Math_EqNode());
+                eq.ValueIn(Math_EqNode.IdValueA).ConnectToSource(counter);
+                eq.ValueIn(Math_EqNode.IdValueB).SetValue(callTimes);
+                
+                var branchNode = testContext.interactivityExportContext.CreateNode(new Flow_BranchNode());
+                branchNode.ValueIn(Flow_BranchNode.IdCondition).ConnectToSource(eq.FirstValueOut());
+                
+                branchNode.FlowOut(Flow_BranchNode.IdFlowOutTrue).ConnectToFlowDestination(setPosition.FlowIn(Pointer_SetNode.IdFlowIn));
+                context.AddLog(text.text+ ": Flow got triggered correct amount", out var logFlowIn, out var logFlowOut);
+                setPosition.FlowOut(Pointer_SetNode.IdFlowOut).ConnectToFlowDestination(logFlowIn);
+                SaveResult(context, counter, logFlowOut, typeof(int));
+                
+                
+                testContext.AddLog(text.text+ ": Flow got triggered {0} times from "+callTimes.ToString()+ ". This should not happened!", out var logFlowInFallback, out var _, counter);
+                branchNode.FlowOut(Flow_BranchNode.IdFlowOutFalse)
+                    .ConnectToFlowDestination(logFlowInFallback);
+                
+                return branchNode.FlowIn(Flow_BranchNode.IdFlowIn);
+            }, false);
         }
         
         public void SetupCheck(TestContext context, out FlowInRef flow)
