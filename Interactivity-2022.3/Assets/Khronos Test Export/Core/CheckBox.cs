@@ -112,7 +112,10 @@ namespace Khronos_Test_Export
                 eqNode.ValueIn(Math_EqNode.IdValueB).SetValue(expectedValue);
                 var branchNode = context.interactivityExportContext.CreateNode(new Flow_BranchNode());
                 branchNode.ValueIn(Flow_BranchNode.IdCondition).ConnectToSource(eqNode.FirstValueOut());
-                branchNode.FlowOut(Flow_BranchNode.IdFlowOutFalse).ConnectToFlowDestination(fallbackFlowCheck(context));
+                if (isNegated)
+                    branchNode.FlowOut(Flow_BranchNode.IdFlowOutTrue).ConnectToFlowDestination(fallbackFlowCheck(context));
+                else
+                    branchNode.FlowOut(Flow_BranchNode.IdFlowOutFalse).ConnectToFlowDestination(fallbackFlowCheck(context));
                 context.AddFallbackToLastEntryPoint(branchNode.FlowIn(Flow_BranchNode.IdFlowIn));
             }
             else
@@ -329,6 +332,12 @@ namespace Khronos_Test_Export
             context.AddLog(text.text+ ": Flow triggered! This should not happened!", out var logFlowIn, out var logFlowOut);
             setPosition.FlowOut(Pointer_SetNode.IdFlowOut).ConnectToFlowDestination(logFlowIn);
             SaveResult(context, logFlowOut);
+            
+            AddFallbackFlowCheck(context, testContext =>
+            {
+                context.AddLog(text.text+ ": Test Successful", out var logSuccessFlowIn, out _);
+                return logSuccessFlowIn;
+            });
         }
 
         public void SetupNegateCheck(TestContext context, FlowOutRef flow)
@@ -390,11 +399,20 @@ namespace Khronos_Test_Export
             inputValue = inputValue.Link(logValueRef[0]);
             validNode.FlowOut(Flow_BranchNode.IdFlowOutFalse).ConnectToFlowDestination(logFlowIn);
             
-            setPosition.FlowOut(Pointer_SetNode.IdFlowOut).ConnectToFlowDestination(logFlowIn);
+            context.AddLog(text.text+ ": Test Successful", out var logSuccesFlowIn, out var logSuccessFlowOut);
+
+            setPosition.FlowOut(Pointer_SetNode.IdFlowOut).ConnectToFlowDestination(logSuccesFlowIn);
+            logSuccessFlowOut.ConnectToFlowDestination(logFlowIn);
             
             expectedValue = valueToCompare;
             SaveResult(context, out var saveResultInputValue, logFlowOut, valueToCompare.GetType());
             inputValue = inputValue.Link(saveResultInputValue);
+            
+            AddFallbackFlowCheck(context, testContext =>
+            {
+                context.AddLog(text.text+ ": Test Failed", out var logFailedFlowIn, out _);
+                return logFailedFlowIn;
+            });
         }
 
         public void SetupCheck(TestContext context, ValueOutRef inputValue, out FlowInRef flow, object valueToCompare,
