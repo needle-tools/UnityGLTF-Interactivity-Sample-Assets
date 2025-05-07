@@ -33,6 +33,8 @@ namespace Khronos_Test_Export
         
         public List<Case> cases = new List<Case>();
         private Case currentCase => cases[cases.Count - 1];
+        private GltfInteractivityExportNode _lastEntryPoint;
+        private GltfInteractivityExportNode _lastEntryPointFallbackSequence = null;
 
         public TestContext(CheckBox defaultCheckBox, TextMeshPro caseLabelPrefab, Transform root)
         {
@@ -54,6 +56,33 @@ namespace Khronos_Test_Export
             var startNode = nodeCreator.CreateNode(new Event_OnStartNode());
             flow = startNode.FlowOut(Event_OnStartNode.IdFlowOut);
             currentCase.entryNodes.Add((startNode, name));
+            _lastEntryPoint = startNode;
+            _lastEntryPointFallbackSequence = null;
+        }
+
+        public void AddFallbackToLastEntryPoint(FlowInRef flow)
+        {
+            if (_lastEntryPoint == null)
+            {
+                Debug.LogError("AddFallbackToLastEntryPoint requires a call of NewEntryPoint before.");
+                return;
+            }
+            
+            if (_lastEntryPointFallbackSequence == null)
+            {
+                var nodeCreator = interactivityExportContext;
+                _lastEntryPointFallbackSequence = nodeCreator.CreateNode(new Flow_SequenceNode());
+                var socket = _lastEntryPoint.FlowOut(Event_OnStartNode.IdFlowOut).socket;
+                _lastEntryPointFallbackSequence.FlowOut("000").socket.Value.Socket = socket.Value.Socket;
+                _lastEntryPointFallbackSequence.FlowOut("000").socket.Value.Node = socket.Value.Node;
+                _lastEntryPointFallbackSequence.FlowOut("001").ConnectToFlowDestination(flow);
+                _lastEntryPoint.FlowOut(Event_OnStartNode.IdFlowOut).ConnectToFlowDestination(_lastEntryPointFallbackSequence.FlowIn(Flow_SequenceNode.IdFlowIn));
+            }
+            else
+            {
+                var count = _lastEntryPointFallbackSequence.FlowConnections.Count;
+                _lastEntryPointFallbackSequence.FlowOut(count.ToString("D3")).ConnectToFlowDestination(flow);
+            }
         }
         
         public void AddLog(string message, out FlowInRef flowIn, out FlowOutRef flowOut,params ValueOutRef[] values)
