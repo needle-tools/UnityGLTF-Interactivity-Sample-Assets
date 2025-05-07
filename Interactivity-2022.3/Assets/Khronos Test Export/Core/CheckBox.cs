@@ -114,13 +114,14 @@ namespace Khronos_Test_Export
             context.AddFallbackToLastEntryPoint(branchNode.FlowIn(Flow_BranchNode.IdFlowIn));
     }
         
-        public void SetupMultiFlowCheck(TestContext context, int count, out FlowInRef[] flows)
+        public void SetupMultiFlowCheck(TestContext context, int count, out FlowInRef[] flows, string[] flowNames = null)
         {
             flows = new FlowInRef[count];
 
             var branchNode = context.interactivityExportContext.CreateNode(new Flow_BranchNode());
             GltfInteractivityExportNode lastAndNode = null;
 
+            var stateValues = new ValueOutRef[count];
             for (int i = 0; i < count; i++)
             {
                 var triggeredVarId = context.interactivityExportContext.Context.AddVariableWithIdIfNeeded(
@@ -130,6 +131,7 @@ namespace Khronos_Test_Export
                 flows[i] = setFlow;
             
                 VariablesHelpers.GetVariable(context.interactivityExportContext, triggeredVarId, out var triggeredVarRef);
+                stateValues[i] = triggeredVarRef;
                 var andNode = context.interactivityExportContext.CreateNode(new Math_AndNode());
                 andNode.ValueIn(Math_AndNode.IdValueA).ConnectToSource(triggeredVarRef);
                 
@@ -160,7 +162,19 @@ namespace Khronos_Test_Export
             
             AddFallbackFlowCheck(context, testContext =>
             {
-                testContext.AddLog(text.text+ ": Not all flows got triggered! This should not happened!", out var logFlowInFallback, out var _);
+                testContext.AddLog(text.text+ ": Not all flows got triggered! This should not happened!", out var logFlowInFallback, out var nextFlowOut);
+                FlowInRef flowIn = null;
+                FlowOutRef flowOut = null;
+                for (int i = 0; i < count; i++)
+                {
+                    if (flowNames != null)
+                        testContext.AddLog("   State "+i.ToString() + $" {flowNames[i]}: " + " {0}", out flowIn, out flowOut, stateValues[i]);
+                    else
+                        testContext.AddLog("   State "+i.ToString() + " {0}", out flowIn, out flowOut, stateValues[i]);
+                    nextFlowOut.ConnectToFlowDestination(flowIn);
+                    nextFlowOut = flowOut;
+
+                }
                 return logFlowInFallback;
             });
             
