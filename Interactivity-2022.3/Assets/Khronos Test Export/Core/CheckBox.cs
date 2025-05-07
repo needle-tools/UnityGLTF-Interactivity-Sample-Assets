@@ -26,10 +26,6 @@ namespace Khronos_Test_Export
         private TestContext.Case _testCase;
         private bool isNegated = false;
         
-        private Func<TestContext, FlowInRef> _fallbackFlowCheck;
-        
-        public bool FallbackFlowCheckAvailable => _fallbackFlowCheck != null;
-        
         private void OnDrawGizmosSelected()
         {
             Gizmos.color = Color.green;
@@ -106,28 +102,18 @@ namespace Khronos_Test_Export
             VariablesHelpers.SetVariable(context.interactivityExportContext, ResultValueVarId, value, flow);
         }
 
-        /// <summary>
-        /// In case a flow was not triggered, we can here log the error
-        /// </summary>
-        public bool FallbackFlowCheck(TestContext context, out FlowInRef flowIn)
+        private void AddFallbackFlowCheck(TestContext context, Func<TestContext, FlowInRef> fallbackFlowCheck)
         {
-            flowIn = null;
-            if (_fallbackFlowCheck != null)
-            {
-                VariablesHelpers.GetVariable(context.interactivityExportContext, ResultValueVarId, out var resultVarRef);
-                var eqNode = context.interactivityExportContext.CreateNode(new Math_EqNode());
-                eqNode.ValueIn(Math_EqNode.IdValueA).ConnectToSource(resultVarRef);
-                eqNode.ValueIn(Math_EqNode.IdValueB).SetValue(expectedValue);
-                var branchNode = context.interactivityExportContext.CreateNode(new Flow_BranchNode());
-                branchNode.ValueIn(Flow_BranchNode.IdCondition).ConnectToSource(eqNode.FirstValueOut());
-                branchNode.FlowOut(Flow_BranchNode.IdFlowOutFalse).ConnectToFlowDestination(_fallbackFlowCheck(context));
-                flowIn = branchNode.FlowIn(Flow_BranchNode.IdFlowIn);  
-                return true;
-            }
-
-            return false;
-        }
-
+            VariablesHelpers.GetVariable(context.interactivityExportContext, ResultValueVarId, out var resultVarRef);
+            var eqNode = context.interactivityExportContext.CreateNode(new Math_EqNode());
+            eqNode.ValueIn(Math_EqNode.IdValueA).ConnectToSource(resultVarRef);
+            eqNode.ValueIn(Math_EqNode.IdValueB).SetValue(expectedValue);
+            var branchNode = context.interactivityExportContext.CreateNode(new Flow_BranchNode());
+            branchNode.ValueIn(Flow_BranchNode.IdCondition).ConnectToSource(eqNode.FirstValueOut());
+            branchNode.FlowOut(Flow_BranchNode.IdFlowOutFalse).ConnectToFlowDestination(fallbackFlowCheck(context));
+            context.AddFallbackToLastEntryPoint(branchNode.FlowIn(Flow_BranchNode.IdFlowIn));
+    }
+        
         public void SetupMultiFlowCheck(TestContext context, int count, out FlowInRef[] flows)
         {
             flows = new FlowInRef[count];
@@ -172,11 +158,11 @@ namespace Khronos_Test_Export
             setPosition.FlowOut(Pointer_SetNode.IdFlowOut).ConnectToFlowDestination(logFlowIn);
             SaveResult(context, logFlowOut);
             
-            _fallbackFlowCheck = testContext =>
+            AddFallbackFlowCheck(context, testContext =>
             {
                 testContext.AddLog(text.text+ ": Not all flows got triggered! This should not happened!", out var logFlowInFallback, out var _);
                 return logFlowInFallback;
-            };
+            });
             
         }
 
@@ -233,11 +219,11 @@ namespace Khronos_Test_Export
             setPosition.FlowOut(Pointer_SetNode.IdFlowOut).ConnectToFlowDestination(logFlowIn);
             SaveResult(context, logFlowOut);
             
-            _fallbackFlowCheck = testContext =>
+            AddFallbackFlowCheck(context, testContext =>
             {
                 testContext.AddLog(text.text+ ": Correct flow order not triggered! This should not happened!", out var logFlowInFallback, out var _);
                 return logFlowInFallback;
-            };
+            });
         }
         
         public void SetupCheck(TestContext context, out FlowInRef flow)
@@ -256,11 +242,11 @@ namespace Khronos_Test_Export
             setPosition.FlowOut(Pointer_SetNode.IdFlowOut).ConnectToFlowDestination(logFlowIn);
             SaveResult(context, logFlowOut);
 
-            _fallbackFlowCheck = testContext =>
+            AddFallbackFlowCheck(context, testContext =>
             {
                 testContext.AddLog(text.text+ ": Flow not triggered! This should not happened!", out var logFlowInFallback, out var _);
                 return logFlowInFallback;
-            };
+            });
         }
 
         public void SetupCheck(TestContext context, FlowOutRef flow)
