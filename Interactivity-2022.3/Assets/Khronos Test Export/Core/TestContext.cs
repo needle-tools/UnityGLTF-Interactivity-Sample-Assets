@@ -108,6 +108,14 @@ namespace Khronos_Test_Export
         
         public void AddSequence(FlowOutRef flowIn, FlowInRef[] sequences)
         {
+            if (_lastEntryPoint != null && flowIn.socket.Value.Node == _lastEntryPoint.FlowOut(Event_OnStartNode.IdFlowOut).socket.Value.Node)
+            {
+                if (_lastEntryPointFallbackSequence != null)
+                {
+                    flowIn = _lastEntryPointFallbackSequence.FlowOut("000");
+                }
+            }
+            
             var nodeCreator = interactivityExportContext;
             
             var sequenceNode = nodeCreator.CreateNode(new Flow_SequenceNode());
