@@ -1,4 +1,3 @@
-using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using Unity.Collections;
@@ -9,7 +8,6 @@ using System.Runtime.InteropServices;
 [RequireComponent(typeof(MeshFilter), typeof(MeshRenderer))]
 public class RoundedQuad : MonoBehaviour
 {
-    // Create a properly aligned interleaved buffer structure
     [StructLayout(LayoutKind.Sequential)]
     private struct VertexData
     {
@@ -19,26 +17,22 @@ public class RoundedQuad : MonoBehaviour
         public Vector2 uv;
     }
 
-    [SerializeField, Min(0.000f)]
-    private float _cornerRadius = 0.1f;
-    
-    [SerializeField, Range(4, 32)]
-    private int _cornerSegments = 8;
-    
-    [SerializeField]
-    private Color _color = Color.white;
-    
-    [SerializeField, Min(0.000f)]
-    private float _outlineWidth = 0.01f;
-    
-    [SerializeField]
-    private Color _outlineColor = Color.black;
-    
-    [SerializeField]
-    private Color _outlineInnerColor = Color.black;
-    
-    [SerializeField, Range(1, 5)]
-    private int _outlineLoopCount = 1;
+    [Min(0.000f)]
+    public float _cornerRadius = 0.1f;
+    public Color _color = Color.white;
+    [Range(4, 32)]
+    public int _cornerSegments = 8;
+
+    public Material contentMaterial;
+    public Material outlineMaterial;
+
+    [Min(0.000f)]
+    public float _outlineWidth = 0.01f;
+    public Color _outlineColor = Color.black;
+    public Color _outlineInnerColor = Color.black;
+    [Range(1, 5)]
+    public int _outlineLoopCount = 1;
+    public Vector2 _outlineOffset = Vector2.zero;
     
     private Mesh _mesh;
     private Vector3 _lastScale;
@@ -487,8 +481,8 @@ public class RoundedQuad : MonoBehaviour
                     colors[outlineVertIndex] = Color32.Lerp(_outlineInnerColor, _outlineColor, t);
                     
                     uvs[outlineVertIndex] = new Vector2(
-                        Mathf.InverseLerp(-halfWidth - loopOutlineWidth, halfWidth + loopOutlineWidth, x),
-                        Mathf.InverseLerp(-halfHeight - loopOutlineWidth, halfHeight + loopOutlineWidth, y)
+                        Mathf.InverseLerp(-halfWidth, halfWidth, x),
+                        Mathf.InverseLerp(-halfHeight, halfHeight, y)
                     );
                     
                     // Store outer outline vertex index for triangulation
@@ -587,6 +581,15 @@ public class RoundedQuad : MonoBehaviour
         colors.Dispose();
         triangles.Dispose();
         outlineTrianglesArray.Dispose();
+        
+        // Assign the materials
+        var materials = new List<Material>();
+        materials.Add(contentMaterial);
+        if (generateOutline)
+        {
+            materials.Add(outlineMaterial);
+        }
+        GetComponent<MeshRenderer>().sharedMaterials = materials.ToArray();
     }
     
     // Creates a simple quad mesh when cornerRadius is 0
@@ -599,7 +602,10 @@ public class RoundedQuad : MonoBehaviour
         // Determine if we need to add outline
         bool generateOutline = _outlineWidth > 0.001f;
         int actualLoopCount = generateOutline ? Mathf.Max(1, _outlineLoopCount) : 0;
-        int totalVertices = 4 + (generateOutline ? 4 * actualLoopCount : 0); // 4 base vertices + 4 outline vertices per loop
+        
+        // For each outline loop, we need 8 vertices: 4 for inner edge and 4 for outer edge
+        // Base mesh has 4 vertices
+        int totalVertices = 4 + (generateOutline ? 8 * actualLoopCount : 0);
         
         // Clear the mesh
         _mesh.Clear();
@@ -682,9 +688,10 @@ public class RoundedQuad : MonoBehaviour
         // Create outline vertices and triangles if needed
         if (generateOutline)
         {
-            // Calculate world scale for outline sizing
+            // Apply world scale to the outline sizing
             Vector3 worldScale = transform.lossyScale;
-            float scaleMinimum = Mathf.Min(Mathf.Abs(worldScale.x), Mathf.Abs(worldScale.y));
+            float scaleX = Mathf.Abs(worldScale.x);
+            float scaleY = Mathf.Abs(worldScale.y);
             
             int outlineIndex = 6;
             
@@ -693,92 +700,127 @@ public class RoundedQuad : MonoBehaviour
             {
                 // Calculate the outline width for this loop
                 float loopOutlineWidth = _outlineWidth * (loopIndex + 1) / actualLoopCount;
-                float outlineOffset = loopOutlineWidth / scaleMinimum;
+                // We need to divide the width by X and Y scales separately
+                float outlineOffsetX = loopOutlineWidth / scaleX;
+                float outlineOffsetY = loopOutlineWidth / scaleY;
                 
                 // Calculate color gradient for this loop
                 float t = (float)(loopIndex + 1) / actualLoopCount;
+                t = Mathf.Pow(t, 0.75f);
                 Color loopColor = Color.Lerp(_outlineInnerColor, _outlineColor, t);
                 
-                // Current loop's vertex indices (base index for this loop's vertices)
-                int loopBaseIndex = 4 + (loopIndex * 4);
+                // Inner vertices for this loop - start after the base quad and all previous loop vertices
+                int innerBaseIndex = 4 + (loopIndex * 8);
                 
-                // Add outline vertices for this loop
-                // Bottom-left outline
-                vertexBuffer[loopBaseIndex] = new VertexData
+                // Duplicate the quad vertices for the inner outline edge
+                // If this is the first loop, copy from base quad vertices
+                // If this is a subsequent loop, copy from the previous loop's outer vertices
+                if (loopIndex == 0)
                 {
-                    position = new Vector3(-halfWidth - outlineOffset, -halfHeight - outlineOffset, 0),
+                    // First loop: duplicate the quad vertices with outline inner color
+                    for (int i = 0; i < 4; i++)
+                    {
+                        vertexBuffer[innerBaseIndex + i] = new VertexData
+                        {
+                            position = vertexBuffer[i].position,
+                            normal = Vector3.forward,
+                            color = _outlineInnerColor,
+                            uv = vertexBuffer[i].uv
+                        };
+                    }
+                }
+                else
+                {
+                    // Subsequent loops: copy from previous loop's outer vertices
+                    int prevOuterBaseIndex = 4 + ((loopIndex - 1) * 8) + 4; // +4 to get to the outer vertices
+                    for (int i = 0; i < 4; i++)
+                    {
+                        vertexBuffer[innerBaseIndex + i] = new VertexData
+                        {
+                            position = vertexBuffer[prevOuterBaseIndex + i].position,
+                            normal = Vector3.forward,
+                            color = loopColor,
+                            uv = vertexBuffer[prevOuterBaseIndex + i].uv
+                        };
+                    }
+                }
+                
+                // Calculate outer vertices for this loop
+                int outerBaseIndex = innerBaseIndex + 4;
+                
+                // Bottom-left outline - apply outlineOffsetX and outlineOffsetY separately
+                vertexBuffer[outerBaseIndex] = new VertexData
+                {
+                    position = new Vector3(-halfWidth - outlineOffsetX, -halfHeight - outlineOffsetY, 0),
                     normal = Vector3.forward,
                     color = loopColor,
                     uv = new Vector2(0, 0)
                 };
                 
-                // Top-left outline
-                vertexBuffer[loopBaseIndex + 1] = new VertexData
+                // Top-left outline - apply outlineOffsetX and outlineOffsetY separately
+                vertexBuffer[outerBaseIndex + 1] = new VertexData
                 {
-                    position = new Vector3(-halfWidth - outlineOffset, halfHeight + outlineOffset, 0),
+                    position = new Vector3(-halfWidth - outlineOffsetX, halfHeight + outlineOffsetY, 0),
                     normal = Vector3.forward,
                     color = loopColor,
                     uv = new Vector2(0, 1)
                 };
                 
-                // Top-right outline
-                vertexBuffer[loopBaseIndex + 2] = new VertexData
+                // Top-right outline - apply outlineOffsetX and outlineOffsetY separately
+                vertexBuffer[outerBaseIndex + 2] = new VertexData
                 {
-                    position = new Vector3(halfWidth + outlineOffset, halfHeight + outlineOffset, 0),
+                    position = new Vector3(halfWidth + outlineOffsetX, halfHeight + outlineOffsetY, 0),
                     normal = Vector3.forward,
                     color = loopColor,
                     uv = new Vector2(1, 1)
                 };
                 
-                // Bottom-right outline
-                vertexBuffer[loopBaseIndex + 3] = new VertexData
+                // Bottom-right outline - apply outlineOffsetX and outlineOffsetY separately
+                vertexBuffer[outerBaseIndex + 3] = new VertexData
                 {
-                    position = new Vector3(halfWidth + outlineOffset, -halfHeight - outlineOffset, 0),
+                    position = new Vector3(halfWidth + outlineOffsetX, -halfHeight - outlineOffsetY, 0),
                     normal = Vector3.forward,
                     color = loopColor,
                     uv = new Vector2(1, 0)
                 };
                 
-                // Source vertices - either the base quad or the previous outline loop
-                int sourceBaseIndex = loopIndex == 0 ? 0 : 4 + ((loopIndex - 1) * 4);
-                
-                // Add outline triangles (8 triangles forming 4 quads around the base quad or previous loop)
+                // Add outline triangles (8 triangles forming 4 quads using the dedicated inner and outer vertices)
                 
                 // Bottom edge
-                indexData[outlineIndex++] = sourceBaseIndex; // Source bottom-left
-                indexData[outlineIndex++] = loopBaseIndex; // Current outline bottom-left
-                indexData[outlineIndex++] = sourceBaseIndex + 3; // Source bottom-right
+                indexData[outlineIndex++] = innerBaseIndex; // Inner bottom-left
+                indexData[outlineIndex++] = outerBaseIndex; // Outer bottom-left
+                indexData[outlineIndex++] = innerBaseIndex + 3; // Inner bottom-right
                 
-                indexData[outlineIndex++] = sourceBaseIndex + 3; // Source bottom-right
-                indexData[outlineIndex++] = loopBaseIndex; // Current outline bottom-left
-                indexData[outlineIndex++] = loopBaseIndex + 3; // Current outline bottom-right
+                indexData[outlineIndex++] = innerBaseIndex + 3; // Inner bottom-right
+                indexData[outlineIndex++] = outerBaseIndex; // Outer bottom-left
+                indexData[outlineIndex++] = outerBaseIndex + 3; // Outer bottom-right
                 
                 // Left edge
-                indexData[outlineIndex++] = sourceBaseIndex; // Source bottom-left
-                indexData[outlineIndex++] = sourceBaseIndex + 1; // Source top-left
-                indexData[outlineIndex++] = loopBaseIndex; // Current outline bottom-left
+                indexData[outlineIndex++] = innerBaseIndex; // Inner bottom-left
+                indexData[outlineIndex++] = innerBaseIndex + 1; // Inner top-left
+                indexData[outlineIndex++] = outerBaseIndex; // Outer bottom-left
                 
-                indexData[outlineIndex++] = sourceBaseIndex + 1; // Source top-left
-                indexData[outlineIndex++] = loopBaseIndex + 1; // Current outline top-left
-                indexData[outlineIndex++] = loopBaseIndex; // Current outline bottom-left
+                indexData[outlineIndex++] = innerBaseIndex + 1; // Inner top-left
+                indexData[outlineIndex++] = outerBaseIndex + 1; // Outer top-left
+                indexData[outlineIndex++] = outerBaseIndex; // Outer bottom-left
                 
                 // Top edge
-                indexData[outlineIndex++] = sourceBaseIndex + 1; // Source top-left
-                indexData[outlineIndex++] = sourceBaseIndex + 2; // Source top-right
-                indexData[outlineIndex++] = loopBaseIndex + 1; // Current outline top-left
+                indexData[outlineIndex++] = innerBaseIndex + 1; // Inner top-left
+                indexData[outlineIndex++] = innerBaseIndex + 2; // Inner top-right
+                indexData[outlineIndex++] = outerBaseIndex + 1; // Outer top-left
                 
-                indexData[outlineIndex++] = sourceBaseIndex + 2; // Source top-right
-                indexData[outlineIndex++] = loopBaseIndex + 2; // Current outline top-right
-                indexData[outlineIndex++] = loopBaseIndex + 1; // Current outline top-left
+                indexData[outlineIndex++] = innerBaseIndex + 2; // Inner top-right
+                indexData[outlineIndex++] = outerBaseIndex + 2; // Outer top-right
+                indexData[outlineIndex++] = outerBaseIndex + 1; // Outer top-left
                 
                 // Right edge
-                indexData[outlineIndex++] = sourceBaseIndex + 2; // Source top-right
-                indexData[outlineIndex++] = sourceBaseIndex + 3; // Source bottom-right
-                indexData[outlineIndex++] = loopBaseIndex + 2; // Current outline top-right
+                indexData[outlineIndex++] = innerBaseIndex + 2; // Inner top-right
+                indexData[outlineIndex++] = innerBaseIndex + 3; // Inner bottom-right
+                indexData[outlineIndex++] = outerBaseIndex + 2; // Outer top-right
                 
-                indexData[outlineIndex++] = sourceBaseIndex + 3; // Source bottom-right
-                indexData[outlineIndex++] = loopBaseIndex + 3; // Current outline bottom-right
-                indexData[outlineIndex++] = loopBaseIndex + 2; // Current outline top-right
+                indexData[outlineIndex++] = innerBaseIndex + 3; // Inner bottom-right
+                indexData[outlineIndex++] = outerBaseIndex + 3; // Outer bottom-right
+                indexData[outlineIndex++] = outerBaseIndex + 2; // Outer top-right
             }
         }
         
@@ -797,5 +839,14 @@ public class RoundedQuad : MonoBehaviour
         // Set bounds, optimize the mesh
         _mesh.RecalculateBounds();
         _mesh.Optimize();
+        
+        // Assign the materials
+        var materials = new List<Material>();
+        materials.Add(contentMaterial);
+        if (generateOutline)
+        {
+            materials.Add(outlineMaterial);
+        }
+        GetComponent<MeshRenderer>().sharedMaterials = materials.ToArray();
     }
 }
