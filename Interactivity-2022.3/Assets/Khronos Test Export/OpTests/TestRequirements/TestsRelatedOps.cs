@@ -9,6 +9,7 @@ namespace Khronos_Test_Export.OpTests.TestRequirements
         private CheckBox _valueProximityCheckBox;
         private CheckBox _counterCheckBox;
         private CheckBox _multiFlowCheckBox;
+        private CheckBox _delayedCheckBox;
         
         public string GetTestName()
         {
@@ -27,6 +28,7 @@ namespace Khronos_Test_Export.OpTests.TestRequirements
             _valueProximityCheckBox = context.AddCheckBox("Value Proximity Checks");
             _counterCheckBox = context.AddCheckBox("Counter Checks");
             _multiFlowCheckBox = context.AddCheckBox("Multi Flow Checks");
+            _delayedCheckBox = context.AddCheckBox("Delayed Checks", true);
         }
 
         public void CreateNodes(TestContext context)
@@ -55,6 +57,14 @@ namespace Khronos_Test_Export.OpTests.TestRequirements
                     counterCheckFlowIn,
                     multiFlowCheckFlowIn[0],
                     multiFlowCheckFlowIn[1]
+                });
+            
+            context.NewEntryPoint(out var delayedEntry, "Delayed Check", 1f);
+            _delayedCheckBox.SetupCheck(context, out var delayedCheckFlow);
+            context.AddSequence(delayedEntry,
+                new FlowInRef[]
+                {
+                    delayedCheckFlow,
                 });
         }
     }

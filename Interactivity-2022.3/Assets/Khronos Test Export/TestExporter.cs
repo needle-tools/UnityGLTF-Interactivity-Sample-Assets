@@ -41,10 +41,13 @@ namespace Khronos_Test_Export
             public string[] usedSchemas;
 
             [Serializable]
+            [JsonConverter(typeof(EntryPointJsonConverter))]
             public class EntryPoint
             {
                 public string name;
                 public int nodeId;
+                public float? delayedExecutionTime;
+                public bool requiresUserInteraction;
             }
 
             public EntryPoint[] entryPoints;
@@ -60,6 +63,27 @@ namespace Khronos_Test_Export
             }
 
             public SubTests[] subTests;
+            
+            public class EntryPointJsonConverter : JsonConverter<EntryPoint>
+            {
+                public override void WriteJson(JsonWriter writer, EntryPoint value, JsonSerializer serializer)
+                {
+                    var obj = new JObject();
+                    obj[nameof(EntryPoint.name)] = value.name;
+                    obj[nameof(EntryPoint.nodeId)] = value.nodeId;
+                    if (value.delayedExecutionTime != null)
+                        obj[nameof(EntryPoint.delayedExecutionTime)] = value.delayedExecutionTime;
+                    if (value.requiresUserInteraction)
+                        obj[nameof(EntryPoint.requiresUserInteraction)] = value.requiresUserInteraction;
+                    obj.WriteTo(writer);
+                }
+
+                public override EntryPoint ReadJson(JsonReader reader, Type objectType, EntryPoint existingValue, bool hasExistingValue,
+                    JsonSerializer serializer)
+                {
+                    throw new NotImplementedException();
+                }
+            }
             
             public class SubTestsJsonConverter : JsonConverter<SubTests>
             {
@@ -103,8 +127,16 @@ namespace Khronos_Test_Export
                 foreach (var entry in test.entryNodes)
                 {
                     var entryPoint = new JsonCaseOutput.EntryPoint();
-                    entryPoint.name = entry.caseName;
+                    entryPoint.name = entry.name;
                     entryPoint.nodeId = entry.node.Index;
+                    if (entry.delayedExecutionTime.HasValue)
+                    {
+                        entryPoint.name += " (delayed execution)";
+                    }
+                    if (entry.requiresUserInteraction)
+                    {
+                        entryPoint.name += " (requires user interaction)";
+                    }
                     entries.Add(entryPoint);
                 }
 
