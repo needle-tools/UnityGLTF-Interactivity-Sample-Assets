@@ -20,7 +20,7 @@ public class RoundedQuad : MonoBehaviour
     [Min(0.000f)]
     public float _cornerRadius = 0.1f;
     public Color _color = Color.white;
-    [Range(4, 32)]
+    [Range(3, 32)]
     public int _cornerSegments = 8;
 
     public Material contentMaterial;
@@ -34,6 +34,10 @@ public class RoundedQuad : MonoBehaviour
     public int _outlineLoopCount = 1;
     public Vector2 _outlineOffset = Vector2.zero;
     
+    // Debug visualization options
+    [HideInInspector]
+    public bool _debugDistances = false;
+    
     private Mesh _mesh;
     private Vector3 _lastScale;
     private float _lastCornerRadius;
@@ -43,6 +47,27 @@ public class RoundedQuad : MonoBehaviour
     private Color _lastOutlineColor;
     private Color _lastOutlineInnerColor;
     private int _lastOutlineLoopCount;
+    private Vector2 _lastOutlineOffset;
+    private bool _lastDebugDistances;
+    
+    // Helper function to calculate colors for outline vertices using percentage-based approach
+    private Color32 CalculateColor(float percentageToEdge)
+    {
+        // In debug mode, show a gradient from red to green
+        if (_debugDistances)
+        {
+            return new Color32(
+                (byte)(255 * (1f - percentageToEdge)), 
+                (byte)(255 * percentageToEdge), 
+                0,
+                255); // Full alpha
+        }
+        else
+        {
+            // Simple linear interpolation based on the loop percentage
+            return Color32.Lerp(_outlineInnerColor, _outlineColor, percentageToEdge);
+        }
+    }
     
     private void OnEnable()
     {
@@ -59,6 +84,8 @@ public class RoundedQuad : MonoBehaviour
         _lastOutlineColor = _outlineColor;
         _lastOutlineInnerColor = _outlineInnerColor;
         _lastOutlineLoopCount = _outlineLoopCount;
+        _lastOutlineOffset = _outlineOffset;
+        _lastDebugDistances = _debugDistances;
         
         GenerateMesh(1f, _color.linear, _color.linear);
     }
@@ -95,13 +122,20 @@ public class RoundedQuad : MonoBehaviour
             _lastColor = _color;
         }
         
-        if (_outlineWidth != _lastOutlineWidth || _outlineColor != _lastOutlineColor || _outlineInnerColor != _lastOutlineInnerColor || _outlineLoopCount != _lastOutlineLoopCount)
+        if (_outlineWidth != _lastOutlineWidth || _outlineColor != _lastOutlineColor || _outlineInnerColor != _lastOutlineInnerColor || _outlineLoopCount != _lastOutlineLoopCount || _outlineOffset != _lastOutlineOffset)
         {
             needsUpdate = true;
             _lastOutlineWidth = _outlineWidth;
             _lastOutlineColor = _outlineColor;
             _lastOutlineInnerColor = _outlineInnerColor;
             _lastOutlineLoopCount = _outlineLoopCount;
+            _lastOutlineOffset = _outlineOffset;
+        }
+        
+        if (_debugDistances != _lastDebugDistances)
+        {
+            needsUpdate = true;
+            _lastDebugDistances = _debugDistances;
         }
         
         if (needsUpdate)
@@ -127,12 +161,8 @@ public class RoundedQuad : MonoBehaviour
         float minRadius = Mathf.Min(scaleX * 0.5f, scaleY * 0.5f);
         float clampedCornerRadius = Mathf.Min(_cornerRadius, minRadius);
         
-        // SPECIAL CASE: When cornerRadius is 0, create a simple quad
-        if (clampedCornerRadius <= 0.0001f)
-        {
-            CreateSimpleQuad(scale, innerColor);
-            return;
-        }
+        // Ensure we have at least 3 segments even with zero corner radius
+        int segments = _cornerRadius > 0 ? Mathf.Max(3, _cornerSegments) : 3;
         
         // SPECIAL CASE: When cornerRadius equals the minimum radius (fully rounded on shorter side)
         bool isMaximumRounding = Mathf.Approximately(clampedCornerRadius, minRadius);
@@ -161,7 +191,7 @@ public class RoundedQuad : MonoBehaviour
         }
         
         // Center + 4 corner centers + corner segments
-        int totalVertices = 5 + (_cornerSegments * 4);
+        int totalVertices = 5 + (segments * 4);
         
         // Determine if we need to add outline
         bool generateOutline = _outlineWidth > 0.001f;
@@ -173,7 +203,7 @@ public class RoundedQuad : MonoBehaviour
             // Cap the loop count to valid range
             actualLoopCount = Mathf.Max(1, _outlineLoopCount);
             // We need twice the edge vertices for each loop - once for inner edge and once for outer edge
-            outlineVertexCount = _cornerSegments * 4 * 2 * actualLoopCount; 
+            outlineVertexCount = segments * 4 * 2 * actualLoopCount; 
         }
         
         // Use the new Mesh API with NativeArrays
@@ -213,7 +243,7 @@ public class RoundedQuad : MonoBehaviour
         int vertexIndex = 5;
         
         // Store the outer edge vertices indices for the outline
-        var outerEdgeVertices = new List<int>(_cornerSegments * 4);
+        var outerEdgeVertices = new List<int>(segments * 4);
         
         // Generate the corners
         for (int corner = 0; corner < 4; corner++)
@@ -228,10 +258,10 @@ public class RoundedQuad : MonoBehaviour
             
             Vector3 cornerCenter = vertices[corner + 1];
             
-            for (int i = 0; i < _cornerSegments; i++)
+            for (int i = 0; i < segments; i++)
             {
                 // Create a proper arc that spans exactly 90 degrees
-                float angle = startAngle + (i * 90f * Mathf.Deg2Rad / (_cornerSegments - 1));
+                float angle = startAngle + (i * 90f * Mathf.Deg2Rad / (segments - 1));
                 
                 // Calculate the corner vertex position properly
                 float x = cornerCenter.x + Mathf.Cos(angle) * clampedCornerRadius / scaleX;
@@ -255,7 +285,7 @@ public class RoundedQuad : MonoBehaviour
         // Calculate appropriate triangle count based on geometry
         // For maximum rounding case, we'll skip some triangles
         int centerTriangles = isMaximumRounding ? 0 : 4;
-        int cornerTrianglesPerCorner = (_cornerSegments - 1);
+        int cornerTrianglesPerCorner = (segments - 1);
         
         // Calculate connecting triangles based on the constraint
         int connectingTriangles;
@@ -284,8 +314,8 @@ public class RoundedQuad : MonoBehaviour
         int outlineTriangles = 0;
         if (generateOutline)
         {
-            // Each loop needs _cornerSegments*4*6 triangles (2 triangles per segment, 3 indices per triangle)
-            outlineTriangles = _cornerSegments * 4 * 6 * actualLoopCount;
+            // Each loop needs segments*4*6 triangles (2 triangles per segment, 3 indices per triangle)
+            outlineTriangles = segments * 4 * 6 * actualLoopCount;
         }
         
         var triangles = new NativeArray<int>(totalTriangles, Allocator.Temp);
@@ -314,10 +344,10 @@ public class RoundedQuad : MonoBehaviour
             int cornerCenter = corner + 1;
             int nextCorner = (corner + 1) % 4;
             int nextCornerCenter = nextCorner + 1;
-            int nextCornerFirstVertex = 5 + (nextCorner * _cornerSegments);
+            int nextCornerFirstVertex = 5 + (nextCorner * segments);
             
             // Fan triangles for each corner segment
-            for (int i = 0; i < _cornerSegments - 1; i++)
+            for (int i = 0; i < segments - 1; i++)
             {
                 // Triangle between corner center, current segment and next segment
                 triangles[triangleIndex++] = cornerCenter;
@@ -352,7 +382,7 @@ public class RoundedQuad : MonoBehaviour
             {
                 // Connect the last point of this corner to the first point of the next corner
                 // using TWO triangles to form a quad between corners
-                int lastPointOfCorner = cornerStartVertex + _cornerSegments - 1;
+                int lastPointOfCorner = cornerStartVertex + segments - 1;
                 int firstPointOfNextCorner = nextCornerFirstVertex;
                 
                 // First triangle: last corner point, next corner center, corner center (flipped winding order)
@@ -366,7 +396,7 @@ public class RoundedQuad : MonoBehaviour
                 triangles[triangleIndex++] = nextCornerCenter;
             }
             
-            cornerStartVertex += _cornerSegments;
+            cornerStartVertex += segments;
         }
         
         // Generate outline mesh if needed
@@ -374,118 +404,96 @@ public class RoundedQuad : MonoBehaviour
         {
             // Create the outline vertices using the same angle calculation as the inner vertices
             int outlinesIndex = 0;
-            
+
             // Create multiple outline loops
             for (int loopIndex = 0; loopIndex < actualLoopCount; loopIndex++)
             {
-                int currentCorner = 0;
-                Vector3 currentCornerCenter = Vector3.zero;
-                
-                // Calculate the base inner edge - for the first loop it's the base object edge
-                // For subsequent loops, it's the outer edge of the previous loop
-                var innerEdgeVertices = new List<int>(_cornerSegments * 4);
-                int innerEdgeStartIndex;
-                
-                if (loopIndex == 0)
-                {
-                    // For the first loop, inner edge is the original mesh edge (duplicate vertices with different color)
-                    innerEdgeStartIndex = totalVertices + (loopIndex * outerEdgeVertices.Count * 2);
-                    
-                    // Generate inner outline edge vertices (duplicates of the outer edge vertices)
-                    for (int i = 0; i < outerEdgeVertices.Count; i++)
-                    {
-                        int edgeVertexIndex = outerEdgeVertices[i];
-                        
-                        // Create a new vertex with the same position but different color
-                        int innerOutlineIndex = innerEdgeStartIndex + i;
-                        vertices[innerOutlineIndex] = vertices[edgeVertexIndex];
-                        normals[innerOutlineIndex] = normals[edgeVertexIndex];
-                        uvs[innerOutlineIndex] = uvs[edgeVertexIndex];
-                        colors[innerOutlineIndex] = _outlineInnerColor; // Apply inner outline color
-                        
-                        // Store inner outline vertex index for triangulation
-                        innerEdgeVertices.Add(innerOutlineIndex);
-                    }
-                }
-                else
-                {
-                    // For subsequent loops, inner edge is the outer edge of the previous loop
-                    // Use the outer vertices from the previous loop
-                    int previousLoopOuterStartIndex = totalVertices + ((loopIndex - 1) * outerEdgeVertices.Count * 2) + outerEdgeVertices.Count;
-                    innerEdgeStartIndex = totalVertices + (loopIndex * outerEdgeVertices.Count * 2);
-                    
-                    // Copy the outer vertices from the previous loop as our inner vertices
-                    for (int i = 0; i < outerEdgeVertices.Count; i++)
-                    {
-                        int previousOuterIndex = previousLoopOuterStartIndex + i;
-                        int currentInnerIndex = innerEdgeStartIndex + i;
-                        
-                        // Copy from previous outer to current inner
-                        vertices[currentInnerIndex] = vertices[previousOuterIndex];
-                        normals[currentInnerIndex] = normals[previousOuterIndex];
-                        uvs[currentInnerIndex] = uvs[previousOuterIndex];
-                        
-                        // Use a color between inner and outer color based on loop index
-                        float t = (float)(loopIndex) / actualLoopCount;
-                        t = Mathf.Sqrt(t);
-                        colors[currentInnerIndex] = Color32.Lerp(_outlineInnerColor, _outlineColor, t);
-                        
-                        // Store inner outline vertex index for triangulation
-                        innerEdgeVertices.Add(currentInnerIndex);
-                    }
-                }
-                
-                // Now create outer edge vertices for this outline loop
+                // Calculate inner and outer edge indices for this loop
+                int innerEdgeStartIndex = totalVertices + (loopIndex * outerEdgeVertices.Count * 2);
                 int outerEdgeStartIndex = innerEdgeStartIndex + outerEdgeVertices.Count;
-                var outerOutlineVertices = new List<int>(_cornerSegments * 4);
+                
+                var innerEdgeVertices = new List<int>(segments * 4);
+                var outerOutlineVertices = new List<int>(segments * 4);
                 
                 // Calculate the width of this outline loop (increasing with each loop)
                 float loopOutlineWidth = _outlineWidth * (loopIndex + 1) / actualLoopCount;
                 
-                // Generate outline vertices following the same angle logic as the inner mesh
+                // Calculate the percentage for this loop (0-1 from inner to outer edge)
+                float loopPercentage = (float)(loopIndex + 1) / actualLoopCount;
+                
+                // Generate inner and outer edges for this loop
                 for (int i = 0; i < outerEdgeVertices.Count; i++)
                 {
-                    Vector3 basePos = vertices[outerEdgeVertices[i]];
-                    Vector3 normal = normals[outerEdgeVertices[i]];
+                    int segmentInCorner = i % segments;
+                    int currentCorner = i / segments;
+                    Vector3 currentCornerCenter = vertices[currentCorner + 1]; // Corner center is at index corner+1
                     
-                    // Determine which corner we're in and get its center
-                    int segmentInCorner = i % _cornerSegments;
-                    if (segmentInCorner == 0) {
-                        currentCorner = i / _cornerSegments;
-                        currentCornerCenter = vertices[currentCorner + 1]; // Corner center is at index corner+1
-                    }
-                    
-                    // Calculate the angle for this vertex the same way we did for the inner vertices
+                    // Calculate angle for this segment
                     float startAngle = 0;
                     if (currentCorner == 0) startAngle = 0; // Top-right: start at 0 degrees
                     if (currentCorner == 1) startAngle = 90 * Mathf.Deg2Rad; // Top-left: start at 90 degrees
                     if (currentCorner == 2) startAngle = 180 * Mathf.Deg2Rad; // Bottom-left: start at 180 degrees
                     if (currentCorner == 3) startAngle = 270 * Mathf.Deg2Rad; // Bottom-right: start at 270 degrees
                     
-                    float angle = startAngle + (segmentInCorner * 90f * Mathf.Deg2Rad / (_cornerSegments - 1));
+                    float angle = startAngle + (segmentInCorner * 90f * Mathf.Deg2Rad / (segments - 1));
                     
-                    // Calculate outline vertex position using the same corner center and angle as inner vertex
-                    // but with increased radius - each loop gets wider
-                    float outlineRadius = clampedCornerRadius + (loopOutlineWidth / Mathf.Min(scaleX, scaleY));
-                    float x = currentCornerCenter.x + Mathf.Cos(angle) * outlineRadius / scaleX;
-                    float y = currentCornerCenter.y + Mathf.Sin(angle) * outlineRadius / scaleY;
+                    // Calculate outline offset percentage
+                    float offsetPercentage = (float)(loopIndex + 1) / actualLoopCount;
+                    if (_debugDistances) offsetPercentage = 1;
+                    float offsetX = _outlineOffset.x * offsetPercentage * _outlineWidth;
+                    float offsetY = _outlineOffset.y * offsetPercentage * _outlineWidth;
                     
-                    // Set the vertex
+                    // 1. Create inner vertex for this loop
+                    int innerVertexIndex = innerEdgeStartIndex + i;
+                    Vector3 sourceVertexPos;
+                    Vector3 sourceVertexNormal;
+                    Vector2 sourceVertexUV;
+                    
+                    if (loopIndex == 0) {
+                        // For first loop, use the original mesh edge vertex
+                        int sourceIndex = outerEdgeVertices[i];
+                        sourceVertexPos = vertices[sourceIndex];
+                        sourceVertexNormal = normals[sourceIndex];
+                        sourceVertexUV = uvs[sourceIndex];
+                    } else {
+                        // For subsequent loops, use previous loop's outer edge
+                        int previousOuterIndex = (innerEdgeStartIndex - outerEdgeVertices.Count) + i;
+                        sourceVertexPos = vertices[previousOuterIndex];
+                        sourceVertexNormal = normals[previousOuterIndex];
+                        sourceVertexUV = uvs[previousOuterIndex];
+                    }
+                    
+                    // Set inner vertex properties
+                    vertices[innerVertexIndex] = sourceVertexPos;
+                    normals[innerVertexIndex] = sourceVertexNormal;
+                    uvs[innerVertexIndex] = sourceVertexUV;
+                    
+                    // Calculate color for inner vertex based on percentage
+                    colors[innerVertexIndex] = CalculateColor(offsetPercentage - 1f / actualLoopCount);
+                    
+                    innerEdgeVertices.Add(innerVertexIndex);
+                    
+                    // 2. Create outer vertex for this loop
                     int outlineVertIndex = outerEdgeStartIndex + i;
+                    
+                    // Calculate radius for this outline loop
+                    float outlineRadius = clampedCornerRadius + loopOutlineWidth;
+                    
+                    // Calculate position
+                    float x = currentCornerCenter.x + Mathf.Cos(angle) * outlineRadius / scaleX + offsetX;
+                    float y = currentCornerCenter.y + Mathf.Sin(angle) * outlineRadius / scaleY + offsetY;
+                    
+                    // Set outer vertex properties
                     vertices[outlineVertIndex] = new Vector3(x, y, 0);
-                    normals[outlineVertIndex] = normal;
-                    
-                    // Use gradient color between inner and outer based on loop index 
-                    float t = (float)(loopIndex + 1) / actualLoopCount;
-                    t = Mathf.Sqrt(t);
-                    colors[outlineVertIndex] = Color32.Lerp(_outlineInnerColor, _outlineColor, t);
-                    
+                    normals[outlineVertIndex] = sourceVertexNormal;
                     uvs[outlineVertIndex] = new Vector2(
                         Mathf.InverseLerp(-halfWidth, halfWidth, x),
                         Mathf.InverseLerp(-halfHeight, halfHeight, y)
                     );
                     
-                    // Store outer outline vertex index for triangulation
+                    // Calculate color for outer vertex
+                    colors[outlineVertIndex] = CalculateColor(offsetPercentage);
+                    
                     outerOutlineVertices.Add(outlineVertIndex);
                 }
                 
@@ -581,264 +589,6 @@ public class RoundedQuad : MonoBehaviour
         colors.Dispose();
         triangles.Dispose();
         outlineTrianglesArray.Dispose();
-        
-        // Assign the materials
-        var materials = new List<Material>();
-        materials.Add(contentMaterial);
-        if (generateOutline)
-        {
-            materials.Add(outlineMaterial);
-        }
-        GetComponent<MeshRenderer>().sharedMaterials = materials.ToArray();
-    }
-    
-    // Creates a simple quad mesh when cornerRadius is 0
-    private void CreateSimpleQuad(float scale, Color color)
-    {
-        // Fixed size of 1x1 unit quad
-        float halfWidth = scale * 0.5f;
-        float halfHeight = scale * 0.5f;
-        
-        // Determine if we need to add outline
-        bool generateOutline = _outlineWidth > 0.001f;
-        int actualLoopCount = generateOutline ? Mathf.Max(1, _outlineLoopCount) : 0;
-        
-        // For each outline loop, we need 8 vertices: 4 for inner edge and 4 for outer edge
-        // Base mesh has 4 vertices
-        int totalVertices = 4 + (generateOutline ? 8 * actualLoopCount : 0);
-        
-        // Clear the mesh
-        _mesh.Clear();
-        
-        // Create a simple quad with 4 vertices and 2 triangles
-        var meshDataArray = Mesh.AllocateWritableMeshData(1);
-        var meshData = meshDataArray[0];
-        
-        // Set vertex buffer
-        var vertexAttributes = new NativeArray<VertexAttributeDescriptor>(4, Allocator.Temp);
-        vertexAttributes[0] = new VertexAttributeDescriptor(VertexAttribute.Position, VertexAttributeFormat.Float32, 3);
-        vertexAttributes[1] = new VertexAttributeDescriptor(VertexAttribute.Normal, VertexAttributeFormat.Float32, 3);
-        vertexAttributes[2] = new VertexAttributeDescriptor(VertexAttribute.Color, VertexAttributeFormat.UNorm8, 4);
-        vertexAttributes[3] = new VertexAttributeDescriptor(VertexAttribute.TexCoord0, VertexAttributeFormat.Float32, 2);
-        
-        // Set buffer size based on whether we're generating an outline
-        meshData.SetVertexBufferParams(totalVertices, vertexAttributes);
-        vertexAttributes.Dispose();
-        
-        // Define the four corners of the quad
-        var vertexBuffer = meshData.GetVertexData<VertexData>(0);
-        
-        // Base quad vertices
-        // Bottom-left
-        vertexBuffer[0] = new VertexData
-        {
-            position = new Vector3(-halfWidth, -halfHeight, 0),
-            normal = Vector3.forward,
-            color = color,
-            uv = new Vector2(0, 0)
-        };
-        
-        // Top-left
-        vertexBuffer[1] = new VertexData
-        {
-            position = new Vector3(-halfWidth, halfHeight, 0),
-            normal = Vector3.forward,
-            color = color,
-            uv = new Vector2(0, 1)
-        };
-        
-        // Top-right
-        vertexBuffer[2] = new VertexData
-        {
-            position = new Vector3(halfWidth, halfHeight, 0),
-            normal = Vector3.forward,
-            color = color,
-            uv = new Vector2(1, 1)
-        };
-        
-        // Bottom-right
-        vertexBuffer[3] = new VertexData
-        {
-            position = new Vector3(halfWidth, -halfHeight, 0),
-            normal = Vector3.forward,
-            color = color,
-            uv = new Vector2(1, 0)
-        };
-        
-        // Calculate indices count (base quad + outline if enabled)
-        int indicesCount = 6; // 6 indices for base quad 
-        if (generateOutline) {
-            // Each outline loop adds 8 triangles (24 indices)
-            indicesCount += 24 * actualLoopCount;
-        }
-        
-        meshData.SetIndexBufferParams(indicesCount, IndexFormat.UInt32);
-        var indexData = meshData.GetIndexData<int>();
-        
-        // Triangle 1
-        indexData[0] = 0; // Bottom-left
-        indexData[1] = 2; // Top-right
-        indexData[2] = 1; // Top-left
-        
-        // Triangle 2
-        indexData[3] = 0; // Bottom-left
-        indexData[4] = 3; // Bottom-right
-        indexData[5] = 2; // Top-right
-        
-        // Create outline vertices and triangles if needed
-        if (generateOutline)
-        {
-            // Apply world scale to the outline sizing
-            Vector3 worldScale = transform.lossyScale;
-            float scaleX = Mathf.Abs(worldScale.x);
-            float scaleY = Mathf.Abs(worldScale.y);
-            
-            int outlineIndex = 6;
-            
-            // Create each outline loop
-            for (int loopIndex = 0; loopIndex < actualLoopCount; loopIndex++)
-            {
-                // Calculate the outline width for this loop
-                float loopOutlineWidth = _outlineWidth * (loopIndex + 1) / actualLoopCount;
-                // We need to divide the width by X and Y scales separately
-                float outlineOffsetX = loopOutlineWidth / scaleX;
-                float outlineOffsetY = loopOutlineWidth / scaleY;
-                
-                // Calculate color gradient for this loop
-                float t = (float)(loopIndex + 1) / actualLoopCount;
-                t = Mathf.Pow(t, 0.75f);
-                Color loopColor = Color.Lerp(_outlineInnerColor, _outlineColor, t);
-                
-                // Inner vertices for this loop - start after the base quad and all previous loop vertices
-                int innerBaseIndex = 4 + (loopIndex * 8);
-                
-                // Duplicate the quad vertices for the inner outline edge
-                // If this is the first loop, copy from base quad vertices
-                // If this is a subsequent loop, copy from the previous loop's outer vertices
-                if (loopIndex == 0)
-                {
-                    // First loop: duplicate the quad vertices with outline inner color
-                    for (int i = 0; i < 4; i++)
-                    {
-                        vertexBuffer[innerBaseIndex + i] = new VertexData
-                        {
-                            position = vertexBuffer[i].position,
-                            normal = Vector3.forward,
-                            color = _outlineInnerColor,
-                            uv = vertexBuffer[i].uv
-                        };
-                    }
-                }
-                else
-                {
-                    // Subsequent loops: copy from previous loop's outer vertices
-                    int prevOuterBaseIndex = 4 + ((loopIndex - 1) * 8) + 4; // +4 to get to the outer vertices
-                    for (int i = 0; i < 4; i++)
-                    {
-                        vertexBuffer[innerBaseIndex + i] = new VertexData
-                        {
-                            position = vertexBuffer[prevOuterBaseIndex + i].position,
-                            normal = Vector3.forward,
-                            color = loopColor,
-                            uv = vertexBuffer[prevOuterBaseIndex + i].uv
-                        };
-                    }
-                }
-                
-                // Calculate outer vertices for this loop
-                int outerBaseIndex = innerBaseIndex + 4;
-                
-                // Bottom-left outline - apply outlineOffsetX and outlineOffsetY separately
-                vertexBuffer[outerBaseIndex] = new VertexData
-                {
-                    position = new Vector3(-halfWidth - outlineOffsetX, -halfHeight - outlineOffsetY, 0),
-                    normal = Vector3.forward,
-                    color = loopColor,
-                    uv = new Vector2(0, 0)
-                };
-                
-                // Top-left outline - apply outlineOffsetX and outlineOffsetY separately
-                vertexBuffer[outerBaseIndex + 1] = new VertexData
-                {
-                    position = new Vector3(-halfWidth - outlineOffsetX, halfHeight + outlineOffsetY, 0),
-                    normal = Vector3.forward,
-                    color = loopColor,
-                    uv = new Vector2(0, 1)
-                };
-                
-                // Top-right outline - apply outlineOffsetX and outlineOffsetY separately
-                vertexBuffer[outerBaseIndex + 2] = new VertexData
-                {
-                    position = new Vector3(halfWidth + outlineOffsetX, halfHeight + outlineOffsetY, 0),
-                    normal = Vector3.forward,
-                    color = loopColor,
-                    uv = new Vector2(1, 1)
-                };
-                
-                // Bottom-right outline - apply outlineOffsetX and outlineOffsetY separately
-                vertexBuffer[outerBaseIndex + 3] = new VertexData
-                {
-                    position = new Vector3(halfWidth + outlineOffsetX, -halfHeight - outlineOffsetY, 0),
-                    normal = Vector3.forward,
-                    color = loopColor,
-                    uv = new Vector2(1, 0)
-                };
-                
-                // Add outline triangles (8 triangles forming 4 quads using the dedicated inner and outer vertices)
-                
-                // Bottom edge
-                indexData[outlineIndex++] = innerBaseIndex; // Inner bottom-left
-                indexData[outlineIndex++] = outerBaseIndex; // Outer bottom-left
-                indexData[outlineIndex++] = innerBaseIndex + 3; // Inner bottom-right
-                
-                indexData[outlineIndex++] = innerBaseIndex + 3; // Inner bottom-right
-                indexData[outlineIndex++] = outerBaseIndex; // Outer bottom-left
-                indexData[outlineIndex++] = outerBaseIndex + 3; // Outer bottom-right
-                
-                // Left edge
-                indexData[outlineIndex++] = innerBaseIndex; // Inner bottom-left
-                indexData[outlineIndex++] = innerBaseIndex + 1; // Inner top-left
-                indexData[outlineIndex++] = outerBaseIndex; // Outer bottom-left
-                
-                indexData[outlineIndex++] = innerBaseIndex + 1; // Inner top-left
-                indexData[outlineIndex++] = outerBaseIndex + 1; // Outer top-left
-                indexData[outlineIndex++] = outerBaseIndex; // Outer bottom-left
-                
-                // Top edge
-                indexData[outlineIndex++] = innerBaseIndex + 1; // Inner top-left
-                indexData[outlineIndex++] = innerBaseIndex + 2; // Inner top-right
-                indexData[outlineIndex++] = outerBaseIndex + 1; // Outer top-left
-                
-                indexData[outlineIndex++] = innerBaseIndex + 2; // Inner top-right
-                indexData[outlineIndex++] = outerBaseIndex + 2; // Outer top-right
-                indexData[outlineIndex++] = outerBaseIndex + 1; // Outer top-left
-                
-                // Right edge
-                indexData[outlineIndex++] = innerBaseIndex + 2; // Inner top-right
-                indexData[outlineIndex++] = innerBaseIndex + 3; // Inner bottom-right
-                indexData[outlineIndex++] = outerBaseIndex + 2; // Outer top-right
-                
-                indexData[outlineIndex++] = innerBaseIndex + 3; // Inner bottom-right
-                indexData[outlineIndex++] = outerBaseIndex + 3; // Outer bottom-right
-                indexData[outlineIndex++] = outerBaseIndex + 2; // Outer top-right
-            }
-        }
-        
-        // Set submeshes
-        meshData.subMeshCount = generateOutline ? 2 : 1;
-        meshData.SetSubMesh(0, new SubMeshDescriptor(0, 6, MeshTopology.Triangles));
-        
-        if (generateOutline)
-        {
-            meshData.SetSubMesh(1, new SubMeshDescriptor(6, indicesCount - 6, MeshTopology.Triangles));
-        }
-        
-        // Apply the mesh data
-        Mesh.ApplyAndDisposeWritableMeshData(meshDataArray, _mesh);
-        
-        // Set bounds, optimize the mesh
-        _mesh.RecalculateBounds();
-        _mesh.Optimize();
         
         // Assign the materials
         var materials = new List<Material>();
