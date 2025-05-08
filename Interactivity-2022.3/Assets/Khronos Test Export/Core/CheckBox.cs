@@ -12,6 +12,7 @@ namespace Khronos_Test_Export
         [SerializeField] private TextMeshPro text;
         [SerializeField] private Transform valid;
         [SerializeField] private Transform invalid;
+        [SerializeField] private Transform waiting;
         [SerializeField] private Vector3 positionWhenValid;
         [SerializeField] private Vector2 size;
         
@@ -22,9 +23,12 @@ namespace Khronos_Test_Export
         public object expectedValue = null;
 
         public int ResultValueVarId { get; private set; } = -1;
-        
+
+        public float proximityCheckDistance = 0.0001f;
+
         private TestContext.Case _testCase;
         private bool isNegated = false;
+        private bool isWaiting = false;
         
         private void OnDrawGizmosSelected()
         {
@@ -33,13 +37,18 @@ namespace Khronos_Test_Export
             Gizmos.color = Color.red;
             Gizmos.DrawWireCube(invalid.position, size);
         }
-
         
         public void SetCase(TestContext.Case testCase)
         {
             _testCase = testCase;
         }
 
+        public void Waiting()
+        {
+            waiting.localPosition = positionWhenValid;
+            isWaiting = true;
+        }
+        
         public void Negate()
         {
             var vPos = valid.localPosition;
@@ -63,6 +72,19 @@ namespace Khronos_Test_Export
         public string GetResultVariableName()
         {
             return "TestResult_" + _testCase.CaseName + "_" + text.text;
+        }
+
+        private void DeactivateWaiting(TestContext context, out FlowInRef flowIn, out FlowOutRef flowOut)
+        {
+            var waitingIndex = context.interactivityExportContext.Context.exporter.GetTransformIndex(waiting);
+            
+            var setPosition = context.interactivityExportContext.CreateNode(new Pointer_SetNode());
+            PointersHelper.SetupPointerTemplateAndTargetInput(setPosition, PointersHelper.IdPointerNodeIndex, "/nodes/{" + PointersHelper.IdPointerNodeIndex + "}/translation", GltfTypes.Float3);
+            setPosition.ValueIn(Pointer_SetNode.IdValue).SetValue(Vector3.zero);
+            setPosition.ValueIn(PointersHelper.IdPointerNodeIndex).SetValue(waitingIndex);  
+            
+            flowIn = setPosition.FlowIn(Pointer_SetNode.IdFlowIn); 
+            flowOut = setPosition.FlowOut(Pointer_SetNode.IdFlowOut);
         }
         
         private void SaveResult(TestContext context, FlowOutRef flow)
@@ -116,11 +138,26 @@ namespace Khronos_Test_Export
                     branchNode.FlowOut(Flow_BranchNode.IdFlowOutTrue).ConnectToFlowDestination(fallbackFlowCheck(context));
                 else
                     branchNode.FlowOut(Flow_BranchNode.IdFlowOutFalse).ConnectToFlowDestination(fallbackFlowCheck(context));
-                context.AddFallbackToLastEntryPoint(branchNode.FlowIn(Flow_BranchNode.IdFlowIn));
+
+                if (isWaiting)
+                {
+                    DeactivateWaiting(context, out var flowIn, out var flowOut);
+                    flowOut.ConnectToFlowDestination(branchNode.FlowIn(Flow_BranchNode.IdFlowIn));
+                    context.AddFallbackToLastEntryPoint(flowIn);
+                }
+                else
+                    context.AddFallbackToLastEntryPoint(branchNode.FlowIn(Flow_BranchNode.IdFlowIn));
             }
             else
             {
-                context.AddFallbackToLastEntryPoint(fallbackFlowCheck(context));
+                if (isWaiting)
+                {
+                    DeactivateWaiting(context, out var flowIn, out var flowOut);
+                    context.AddFallbackToLastEntryPoint(flowIn);
+                    flowOut.ConnectToFlowDestination(fallbackFlowCheck(context));
+                }
+                else
+                    context.AddFallbackToLastEntryPoint(fallbackFlowCheck(context));
             }
         }
         
