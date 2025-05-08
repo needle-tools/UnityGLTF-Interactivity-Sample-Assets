@@ -3,6 +3,9 @@ using UnityEngine;
 using Unity.Collections;
 using UnityEngine.Rendering;
 using System.Runtime.InteropServices;
+#if UNITY_EDITOR
+using UnityEditor;
+#endif
 
 [ExecuteAlways]
 [RequireComponent(typeof(MeshFilter), typeof(MeshRenderer))]
@@ -28,8 +31,8 @@ public class RoundedQuad : MonoBehaviour
 
     [Min(0.000f)]
     public float _outlineWidth = 0.01f;
-    public Color _outlineColor = Color.black;
-    public Color _outlineInnerColor = Color.black;
+    public Color _outlineColor = new Color(0,0,0,0);
+    public Color _outlineInnerColor = new Color(0,0,0,0.5f);
     [Range(1, 5)]
     public int _outlineLoopCount = 1;
     public Vector2 _outlineOffset = Vector2.zero;
@@ -600,3 +603,149 @@ public class RoundedQuad : MonoBehaviour
         GetComponent<MeshRenderer>().sharedMaterials = materials.ToArray();
     }
 }
+
+#if UNITY_EDITOR
+
+[CustomEditor(typeof(RoundedQuad))]
+public class RoundedQuadEditor : UnityEditor.Editor
+{
+    private SerializedProperty cornerRadiusProp;
+    private SerializedProperty outlineWidthProp;
+    private SerializedProperty outlineOffsetProp;
+    
+    private void OnEnable()
+    {
+        cornerRadiusProp = serializedObject.FindProperty("_cornerRadius");
+        outlineWidthProp = serializedObject.FindProperty("_outlineWidth");
+        outlineOffsetProp = serializedObject.FindProperty("_outlineOffset");
+    }
+    
+    public override void OnInspectorGUI()
+    {
+        // Draw the default inspector
+        base.OnInspectorGUI();
+    }
+    
+    private void OnSceneGUI()
+    {
+        RoundedQuad quad = (RoundedQuad)target;
+        Transform transform = quad.transform;
+        
+        // Get world space size
+        Vector3 worldScale = transform.lossyScale;
+        Vector3 worldPos = transform.position;
+        
+        // Cache some values for handle drawing
+        float halfWidth = 0.5f * worldScale.x;
+        float halfHeight = 0.5f * worldScale.y;
+        float maxPossibleRadius = Mathf.Min(halfWidth, halfHeight);
+        float cornerRadius = Mathf.Min(quad._cornerRadius, maxPossibleRadius);
+        
+        // Ensure handle size is consistent in screen space
+        float handleSize = HandleUtility.GetHandleSize(worldPos) * 0.05f;
+        
+        // Draw corner radius handle
+        Vector3 topRightCorner = worldPos + transform.right * halfWidth + transform.up * halfHeight;
+        Vector3 topRightInnerCorner = worldPos + transform.right * (halfWidth - cornerRadius) + transform.up * (halfHeight - cornerRadius);
+        
+        // Draw simple visual indicator for the corner radius
+        Handles.DrawWireArc(topRightInnerCorner, transform.forward, transform.right, 90f, cornerRadius);
+        
+        // Use ScaleValueHandle for direct radius adjustment
+        EditorGUI.BeginChangeCheck();
+        
+        // Position the handle in the middle of the arc (45 degrees)
+        Vector3 handlePos = topRightInnerCorner + transform.right * cornerRadius * 0.7071f + transform.up * cornerRadius * 0.7071f;
+        
+        Handles.color = Color.green;
+        float newRadius = Handles.ScaleValueHandle(
+            cornerRadius,
+            handlePos,
+            Quaternion.LookRotation(transform.forward, transform.right + transform.up),
+            HandleUtility.GetHandleSize(handlePos) * 0.5f,
+            Handles.DotHandleCap,
+            0
+        );
+        
+        if (EditorGUI.EndChangeCheck())
+        {
+            Undo.RecordObject(quad, "Change Corner Radius");
+            // Clamp to maximum possible radius
+            cornerRadiusProp.floatValue = Mathf.Max(0, Mathf.Min(newRadius, maxPossibleRadius));
+            serializedObject.ApplyModifiedProperties();
+        }
+        
+        // Outline width handle
+        EditorGUI.BeginChangeCheck();
+        
+        // Calculate position for outline width handle
+        Vector3 outlineWidthPos = worldPos + transform.right * (halfWidth + quad._outlineWidth * worldScale.x * 0.5f);
+        
+        // Draw outline width handle
+        outlineWidthPos = Handles.Slider(
+            outlineWidthPos, 
+            transform.right, 
+            handleSize, 
+            Handles.DotHandleCap, 
+            0f
+        );
+        
+        // Apply outline width changes
+        if (EditorGUI.EndChangeCheck())
+        {
+            Undo.RecordObject(quad, "Change Outline Width");
+            
+            float newOutlineWidth = ((outlineWidthPos - worldPos).magnitude - halfWidth) * 2 / worldScale.x;
+            outlineWidthProp.floatValue = Mathf.Max(0.001f, newOutlineWidth);
+            
+            serializedObject.ApplyModifiedProperties();
+        }
+        
+        // Outline offset handle
+        Handles.color = Color.magenta;
+        EditorGUI.BeginChangeCheck();
+        
+        // Calculate position for outline offset handle
+        Vector2 outlineOffset = quad._outlineOffset;
+        Vector3 outlineOffsetPos = worldPos + 
+            transform.right * outlineOffset.x * quad._outlineWidth * worldScale.x + 
+            transform.up * outlineOffset.y * quad._outlineWidth * worldScale.y;
+        
+        // Draw outline offset handle
+        outlineOffsetPos = Handles.Slider2D(
+            outlineOffsetPos, 
+            transform.forward, 
+            transform.right, 
+            transform.up, 
+            handleSize, 
+            Handles.CircleHandleCap, 
+            0f
+        );
+        
+        // Apply outline offset changes
+        if (EditorGUI.EndChangeCheck())
+        {
+            Undo.RecordObject(quad, "Change Outline Offset");
+            
+            // Calculate new offset values
+            Vector3 newOffsetVector = outlineOffsetPos - worldPos;
+            
+            // Convert to normalized offset values
+            if (quad._outlineWidth > 0)
+            {
+                float newOffsetX = newOffsetVector.x / (quad._outlineWidth * worldScale.x);
+                float newOffsetY = newOffsetVector.y / (quad._outlineWidth * worldScale.y);
+                
+                // Set the new values
+                outlineOffsetProp.vector2Value = new Vector2(newOffsetX, newOffsetY);
+                
+                serializedObject.ApplyModifiedProperties();
+            }
+        }
+        
+        // Draw guide lines to help visualize the outline offset
+        Handles.color = new Color(1f, 0.5f, 0.8f, 0.3f);
+        Handles.DrawLine(worldPos, outlineOffsetPos);
+    }
+}
+#endif
