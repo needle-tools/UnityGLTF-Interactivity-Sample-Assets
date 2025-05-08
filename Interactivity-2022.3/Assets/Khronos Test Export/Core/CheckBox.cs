@@ -409,7 +409,7 @@ namespace Khronos_Test_Export
 
                 var lessThanNode = context.interactivityExportContext.CreateNode(new Math_LtNode());
                 lessThanNode.ValueIn("a").ConnectToSource(absNode.FirstValueOut());
-                lessThanNode.SetValueInSocket("b", 0.0001f);
+                lessThanNode.SetValueInSocket("b", proximityCheckDistance);
                 eqNode = lessThanNode; 
             }
             else
