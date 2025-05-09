@@ -164,10 +164,12 @@ namespace Khronos_Test_Export
                     if (entry.delayedExecutionTime.HasValue)
                     {
                         entryPoint.name += " (delayed execution)";
+                        entryPoint.delayedExecutionTime = entry.delayedExecutionTime;
                     }
                     if (entry.requiresUserInteraction)
                     {
                         entryPoint.name += " (requires user interaction)";
+                        entryPoint.requiresUserInteraction = entry.requiresUserInteraction;
                     }
                     entries.Add(entryPoint);
                 }
