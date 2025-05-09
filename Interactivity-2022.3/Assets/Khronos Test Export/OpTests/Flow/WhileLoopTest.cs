@@ -24,13 +24,13 @@ namespace Khronos_Test_Export
 
         public void PrepareObjects(TestContext context)
         {
-            _bodyFlowCheck = context.AddCheckBox("Body flow");
-            _completedFlowCheck = context.AddCheckBox("Completed flow");
-            _bodyIterationCheck = context.AddCheckBox("Body iteration (2)");
+            _bodyFlowCheck = context.AddCheckBox("[body] flow");
+            _completedFlowCheck = context.AddCheckBox("[completed] flow");
+            _bodyIterationCheck = context.AddCheckBox("[body] iteration (2)");
             
-            _bodyFlowChechWhenFalse = context.AddCheckBox("Body flow when false");
+            _bodyFlowChechWhenFalse = context.AddCheckBox("[body] flow when false");
             _bodyFlowChechWhenFalse.Negate();
-            _completedFlowCheckWhenFalse = context.AddCheckBox("Completed flow when false");
+            _completedFlowCheckWhenFalse = context.AddCheckBox("[completed] flow when false");
         }
 
         public void CreateNodes(TestContext context)

@@ -24,14 +24,14 @@ namespace Khronos_Test_Export
 
         public void PrepareObjects(TestContext context)
         {
-            _outThrottleCheckBox = context.AddCheckBox("Out Throttle");
-            _lastRemainingTimeCheckBox = context.AddCheckBox("Last Remaining Time");
+            _outThrottleCheckBox = context.AddCheckBox("[out] flow");
+            _lastRemainingTimeCheckBox = context.AddCheckBox("[lastRemainingTime]");
             _flowOutAfterDelayCheckBox = context.AddCheckBox("Flow Out After Delay", true);
             _setDelayCheckBox = context.AddCheckBox("SubTest: setDelay", true);
-            _errFlowCheckBox = context.AddCheckBox("Error Flow on -1 Duration");
-            _errFlowOutCheckBox = context.AddCheckBox("Ignore Flow Out when Error");
+            _errFlowCheckBox = context.AddCheckBox("[err] Flow on -1 Duration");
+            _errFlowOutCheckBox = context.AddCheckBox("Ignore [out] when error");
             _errFlowOutCheckBox.Negate();
-            _resetCheckBox = context.AddCheckBox("Reset");
+            _resetCheckBox = context.AddCheckBox("[reset]");
         }
 
         public void CreateNodes(TestContext context)

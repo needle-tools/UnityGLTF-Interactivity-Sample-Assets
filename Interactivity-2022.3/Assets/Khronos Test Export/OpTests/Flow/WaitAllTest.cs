@@ -23,11 +23,11 @@ namespace Khronos_Test_Export
 
         public void PrepareObjects(TestContext context)
         {
-            _completedCheckBox = context.AddCheckBox("Completed");
-            _remainingInputOnCompletedCheckBox = context.AddCheckBox("Remaining Input on Completed");
-            _remainingInputCheckBox = context.AddCheckBox("Remaining Input");
-            _resetCheckBox = context.AddCheckBox("Reset");
-            _resetCompletedCheckBox = context.AddCheckBox("Reset Completed");
+            _completedCheckBox = context.AddCheckBox("[completed]");
+            _remainingInputOnCompletedCheckBox = context.AddCheckBox("[remainingInputs] on completed");
+            _remainingInputCheckBox = context.AddCheckBox("[remainingInputs]");
+            _resetCheckBox = context.AddCheckBox("[reset]");
+            _resetCompletedCheckBox = context.AddCheckBox("[reset] [completed]");
         }
 
         public void CreateNodes(TestContext context)

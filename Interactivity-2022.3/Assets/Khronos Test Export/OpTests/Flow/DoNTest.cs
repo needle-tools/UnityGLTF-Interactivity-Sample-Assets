@@ -23,10 +23,10 @@ namespace Khronos_Test_Export
 
         public void PrepareObjects(TestContext context)
         {
-            _bodyFlowCheck = context.AddCheckBox("Out flow");
-            _bodyIterationCheck = context.AddCheckBox("Out iteration (5)");
-            _currentCountCheck = context.AddCheckBox("Current count");
-            _resetCheck = context.AddCheckBox("Reset flow (N = 2, out/out/out/reset/out/out)");
+            _bodyFlowCheck = context.AddCheckBox("[out] flow");
+            _bodyIterationCheck = context.AddCheckBox("[out] iteration (5)");
+            _currentCountCheck = context.AddCheckBox("[currentCount]");
+            _resetCheck = context.AddCheckBox("[reset] flow (N = 2, out/out/out/reset/out/out)");
             _limitCheck = context.AddCheckBox("Max Iteration flow");
         }
 

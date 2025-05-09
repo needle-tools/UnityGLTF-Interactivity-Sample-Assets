@@ -15,7 +15,8 @@ namespace Khronos_Test_Export
         [SerializeField] private Transform waiting;
         [SerializeField] private Vector3 positionWhenValid;
         [SerializeField] private Vector2 size;
-        
+
+        public string logText => $"<{_testCase.CaseName} - {text.text}>";
         public Vector2 CheckBoxSize => size;
         
         private int validIndex;
@@ -104,7 +105,10 @@ namespace Khronos_Test_Export
                 var gltfType = GltfTypes.TypeIndex(type);
                 var initValue = GltfTypes.GetNullByType(gltfType);
                 
-                ResultValueVarId = context.interactivityExportContext.Context.AddVariableWithIdIfNeeded(GetResultVariableName(), initValue, gltfType);
+                var resultVarName = GetResultVariableName();
+                if (context.interactivityExportContext.Context.variables.Exists(v => v.Id == resultVarName))
+                    throw new Exception("Variable with the same name already exists: " + resultVarName);
+                ResultValueVarId = context.interactivityExportContext.Context.AddVariableWithIdIfNeeded(resultVarName, initValue, gltfType);
             }
 
             var setVar = VariablesHelpers.SetVariable(context.interactivityExportContext, ResultValueVarId);
@@ -112,7 +116,6 @@ namespace Khronos_Test_Export
             flow.ConnectToFlowDestination(setVar.FlowIn(Variable_SetNode.IdFlowIn));
         }
         
-
         private void SaveResult(ValueOutRef value, FlowOutRef flow, Type type)
         {
             if (ResultValueVarId == -1)
@@ -120,7 +123,11 @@ namespace Khronos_Test_Export
                 var gltfType = GltfTypes.TypeIndex(type);
                 var initValue = GltfTypes.GetNullByType(gltfType);
                 
-                ResultValueVarId = context.interactivityExportContext.Context.AddVariableWithIdIfNeeded(GetResultVariableName(), initValue, gltfType);
+                var resultVarName = GetResultVariableName();
+                if (context.interactivityExportContext.Context.variables.Exists(v => v.Id == resultVarName))
+                    throw new Exception("Variable with the same name already exists: " + resultVarName);
+                ResultValueVarId = context.interactivityExportContext.Context.AddVariableWithIdIfNeeded(resultVarName, initValue, gltfType);
+
             }
             VariablesHelpers.SetVariable(context.interactivityExportContext, ResultValueVarId, value, flow);
         }
@@ -242,13 +249,13 @@ namespace Khronos_Test_Export
             branchNode.FlowOut(Flow_BranchNode.IdFlowOutTrue).ConnectToFlowDestination(flowSetValid);
             
             expectedValue = true;
-            context.AddLog(text.text+ $": All Flows triggered (Number: {count})", out var logFlowIn, out var logFlowOut);
+            context.AddLog(logText+ $": All Flows triggered (Number: {count})", out var logFlowIn, out var logFlowOut);
             flowOutSetValid.ConnectToFlowDestination(logFlowIn);
             SaveResult(logFlowOut);
             
             PostCheck(() =>
             {
-                context.AddLog(text.text+ ": Not all flows got triggered! This should not happened!", out var logFlowInFallback, out var nextFlowOut);
+                context.AddLog("ERROR! "+logText+ ": Not all flows got triggered! This should not happened!", out var logFlowInFallback, out var nextFlowOut);
                 FlowInRef flowIn = null;
                 FlowOutRef flowOut = null;
                 for (int i = 0; i < count; i++)
@@ -291,7 +298,7 @@ namespace Khronos_Test_Export
                 checkBranch.ValueIn(Flow_BranchNode.IdCondition).ConnectToSource(eqNode.FirstValueOut());
                 setVarNode.FlowOut(Variable_SetNode.IdFlowOut).ConnectToFlowDestination(checkBranch.FlowIn(Flow_BranchNode.IdFlowIn));
                 
-                context.AddLog(text.text+ ": Incorrect flow order triggered! Expected Socket Id: "+flow.socket.Key, out var invalidLogFlowIn, out var invalidLogFlowOut);
+                context.AddLog("ERROR! "+logText+ ": Incorrect flow order triggered! Expected Socket Id: "+flow.socket.Key, out var invalidLogFlowIn, out var invalidLogFlowOut);
                 checkBranch.FlowOut(Flow_BranchNode.IdFlowOutFalse)
                     .ConnectToFlowDestination(invalidLogFlowIn);
                 
@@ -307,13 +314,13 @@ namespace Khronos_Test_Export
             SetPassed(out var flowSetValid, out var flowOutSetValid);
             lastFlow.ConnectToFlowDestination(flowSetValid);
             expectedValue = true;
-            context.AddLog(text.text+ ": Correct flow order triggered", out var logFlowIn, out var logFlowOut);
+            context.AddLog(logText+ ": Correct flow order triggered", out var logFlowIn, out var logFlowOut);
             flowOutSetValid.ConnectToFlowDestination(logFlowIn);
             SaveResult(logFlowOut);
             
             PostCheck(() =>
             {
-                context.AddLog(text.text+ ": Correct flow order not triggered! This should not happened!", out var logFlowInFallback, out var _);
+                context.AddLog("ERROR! "+logText+ ": Correct flow order not triggered! This should not happened!", out var logFlowInFallback, out var _);
                 return logFlowInFallback;
             });
         }
@@ -337,12 +344,12 @@ namespace Khronos_Test_Export
                 branchNode.ValueIn(Flow_BranchNode.IdCondition).ConnectToSource(eq.FirstValueOut());
                 
                 branchNode.FlowOut(Flow_BranchNode.IdFlowOutTrue).ConnectToFlowDestination(flowSetValid);
-                context.AddLog(text.text+ ": Flow got triggered correct amount", out var logFlowIn, out var logFlowOut);
+                context.AddLog(logText+ ": Flow got triggered correct amount", out var logFlowIn, out var logFlowOut);
                 flowOutSetValid.ConnectToFlowDestination(logFlowIn);
                 SaveResult( counter, logFlowOut, typeof(int));
                 
                 
-                context.AddLog(text.text+ ": Flow got triggered {0} times from "+callTimes.ToString()+ ". This should not happened!", out var logFlowInFallback, out var _, counter);
+                context.AddLog("ERROR! "+logText+ ": Flow got triggered {0} times from "+callTimes.ToString()+ ". This should not happened!", out var logFlowInFallback, out var _, counter);
                 branchNode.FlowOut(Flow_BranchNode.IdFlowOutFalse)
                     .ConnectToFlowDestination(logFlowInFallback);
                 
@@ -356,13 +363,13 @@ namespace Khronos_Test_Export
 
             flow =  flowSetValid;
             expectedValue = true;
-            context.AddLog(text.text+ ": Flow triggered", out var logFlowIn, out var logFlowOut);
+            context.AddLog(logText+ ": Flow triggered", out var logFlowIn, out var logFlowOut);
             flowOutSetValid.ConnectToFlowDestination(logFlowIn);
             SaveResult(logFlowOut);
 
             PostCheck(() =>
             {
-                context.AddLog(text.text+ ": Flow not triggered! This should not happened!", out var logFlowInFallback, out var _);
+                context.AddLog("ERROR! "+logText+ ": Flow not triggered! This should not happened!", out var logFlowInFallback, out var _);
                 return logFlowInFallback;
             });
         }
@@ -379,13 +386,13 @@ namespace Khronos_Test_Export
 
             flow = flowSetValid;
             expectedValue = false;
-            context.AddLog(text.text+ ": Flow triggered! This should not happened!", out var logFlowIn, out var logFlowOut);
+            context.AddLog("ERROR! "+logText+ ": Flow triggered! This should not happened!", out var logFlowIn, out var logFlowOut);
             flowOutSetValid.ConnectToFlowDestination(logFlowIn);
             SaveResult(logFlowOut);
             
             PostCheck(() =>
             {
-                context.AddLog(text.text+ ": Test Successful", out var logSuccessFlowIn, out _);
+                context.AddLog(logText+ ": Test Successful", out var logSuccessFlowIn, out _);
                 return logSuccessFlowIn;
             });
         }
@@ -407,7 +414,7 @@ namespace Khronos_Test_Export
             bool proximityCheck = false)
         {
             this.proximityCheck = proximityCheck;
-              var compareValueType = GltfTypes.TypeIndex(valueToCompare.GetType());
+            var compareValueType = GltfTypes.TypeIndex(valueToCompare.GetType());
         
             GltfInteractivityExportNode eqNode;
             if (proximityCheck)
@@ -441,11 +448,11 @@ namespace Khronos_Test_Export
             validNode.FlowOut(Flow_BranchNode.IdFlowOutTrue)
                 .ConnectToFlowDestination(setPosition);
             
-            context.AddLog(text.text+ ": Value is {0}, should be "+valueToCompare.ToString(), out var logFlowIn, out var logFlowOut, 1, out var logValueRef);
+            context.AddLog(logText+ ": Value is {0}, should be "+valueToCompare.ToString(), out var logFlowIn, out var logFlowOut, 1, out var logValueRef);
             inputValue = inputValue.Link(logValueRef[0]);
             validNode.FlowOut(Flow_BranchNode.IdFlowOutFalse).ConnectToFlowDestination(logFlowIn);
             
-            context.AddLog(text.text+ ": Test Successful", out var logSuccesFlowIn, out var logSuccessFlowOut);
+            context.AddLog(logText+ ": Test Successful", out var logSuccesFlowIn, out var logSuccessFlowOut);
 
             flowOutSetValid.ConnectToFlowDestination(logSuccesFlowIn);
             logSuccessFlowOut.ConnectToFlowDestination(logFlowIn);
@@ -456,7 +463,7 @@ namespace Khronos_Test_Export
             
             PostCheck(() =>
             {
-                context.AddLog(text.text+ ": Test Failed", out var logFailedFlowIn, out _);
+                context.AddLog("ERROR! "+logText+ ": Test Failed", out var logFailedFlowIn, out _);
                 return logFailedFlowIn;
             });
         }

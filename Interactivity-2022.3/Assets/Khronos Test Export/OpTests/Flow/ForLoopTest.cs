@@ -23,11 +23,11 @@ namespace Khronos_Test_Export
         
         public void PrepareObjects(TestContext context)
         {
-            _bodyCheck = context.AddCheckBox("Body flow");
+            _bodyCheck = context.AddCheckBox("[body] flow");
             _loopRangeCheck = context.AddCheckBox("Loop range (0..10)");
-            _completeCheck = context.AddCheckBox("Completed flow");
+            _completeCheck = context.AddCheckBox("[completed] flow");
             _initialIndexCheck = context.AddCheckBox("Initial index");
-            _completedIndexCheck = context.AddCheckBox("Index when completed");
+            _completedIndexCheck = context.AddCheckBox("[index] when completed");
         }
 
         public void CreateNodes(TestContext context)
