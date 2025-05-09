@@ -19,7 +19,6 @@ namespace Khronos_Test_Export
         public Vector2 CheckBoxSize => size;
         
         private int validIndex;
-        private int invalidIndex;
         public object expectedValue = null;
 
         public int ResultValueVarId { get; private set; } = -1;
@@ -30,6 +29,7 @@ namespace Khronos_Test_Export
         private bool isNegated = false;
         private bool isWaiting = false;
         public TestContext context;
+        private bool proximityCheck = false;
         
         private void OnDrawGizmosSelected()
         {
@@ -93,7 +93,7 @@ namespace Khronos_Test_Export
             if (ResultValueVarId == -1)
                 ResultValueVarId = context.interactivityExportContext.Context.AddVariableWithIdIfNeeded(GetResultVariableName(), isNegated, GltfTypes.Bool);
             
-            VariablesHelpers.SetVariableStaticValue(context.interactivityExportContext, ResultValueVarId, !isNegated, out var setFlow, out _);
+            VariablesHelpers.SetVariableStaticValue(context.interactivityExportContext, ResultValueVarId, true, out var setFlow, out _);
             flow.ConnectToFlowDestination(setFlow);
         }
 
@@ -125,14 +125,48 @@ namespace Khronos_Test_Export
             VariablesHelpers.SetVariable(context.interactivityExportContext, ResultValueVarId, value, flow);
         }
 
+        private void SetPassed(out FlowInRef flowIn, out FlowOutRef flowOut)
+        {
+            validIndex = context.interactivityExportContext.Context.exporter.GetTransformIndex(valid);
+
+            var setPosition = context.interactivityExportContext.CreateNode(new Pointer_SetNode());
+            PointersHelper.SetupPointerTemplateAndTargetInput(setPosition, PointersHelper.IdPointerNodeIndex, "/nodes/{" + PointersHelper.IdPointerNodeIndex + "}/translation", GltfTypes.Float3);
+            setPosition.ValueIn(Pointer_SetNode.IdValue).SetValue(positionWhenValid);
+            setPosition.ValueIn(PointersHelper.IdPointerNodeIndex).SetValue(validIndex);  
+            
+            flowIn = setPosition.FlowIn(); 
+            flowOut = setPosition.FlowOut();
+        }
+        
         private void AddFallbackFlowCheck(Func<FlowInRef> fallbackFlowCheck, bool withResultCheck = true)
         {
             if (withResultCheck)
             {
-                VariablesHelpers.GetVariable(context.interactivityExportContext, ResultValueVarId, out var resultVarRef);
-                var eqNode = context.interactivityExportContext.CreateNode(new Math_EqNode());
-                eqNode.ValueIn(Math_EqNode.IdValueA).ConnectToSource(resultVarRef);
-                eqNode.ValueIn(Math_EqNode.IdValueB).SetValue(expectedValue);
+                VariablesHelpers.GetVariable(context.interactivityExportContext, ResultValueVarId,
+                    out var resultVarRef);
+
+                GltfInteractivityExportNode eqNode = null;
+                if (proximityCheck)
+                {
+                    var subtractNode = context.interactivityExportContext.CreateNode(new Math_SubNode());
+                    subtractNode.ValueIn(Math_SubNode.IdValueA).ConnectToSource(resultVarRef);
+                    subtractNode.ValueIn("b").SetValue(expectedValue);
+
+                    var absNode = context.interactivityExportContext.CreateNode(new Math_AbsNode());
+                    absNode.ValueIn("a").ConnectToSource(subtractNode.FirstValueOut());
+
+                    var lessThanNode = context.interactivityExportContext.CreateNode(new Math_LtNode());
+                    lessThanNode.ValueIn("a").ConnectToSource(absNode.FirstValueOut());
+                    lessThanNode.SetValueInSocket("b", proximityCheckDistance);
+                    eqNode = lessThanNode;
+                }
+                else
+                {
+                    eqNode = context.interactivityExportContext.CreateNode(new Math_EqNode());
+                    eqNode.ValueIn(Math_EqNode.IdValueA).ConnectToSource(resultVarRef);
+                    eqNode.ValueIn(Math_EqNode.IdValueB).SetValue(expectedValue);
+                }
+
                 var branchNode = context.interactivityExportContext.CreateNode(new Flow_BranchNode());
                 branchNode.ValueIn(Flow_BranchNode.IdCondition).ConnectToSource(eqNode.FirstValueOut());
                 if (isNegated)
@@ -193,19 +227,13 @@ namespace Khronos_Test_Export
             
             branchNode.ValueIn(Flow_BranchNode.IdCondition).ConnectToSource(lastAndNode.FirstValueOut());
             
-            validIndex = context.interactivityExportContext.Context.exporter.GetTransformIndex(valid);
-            invalidIndex = context.interactivityExportContext.Context.exporter.GetTransformIndex(invalid);
-            
-            var setPosition = context.interactivityExportContext.CreateNode(new Pointer_SetNode());
-            PointersHelper.SetupPointerTemplateAndTargetInput(setPosition, PointersHelper.IdPointerNodeIndex, "/nodes/{" + PointersHelper.IdPointerNodeIndex + "}/translation", GltfTypes.Float3);
-            setPosition.ValueIn(Pointer_SetNode.IdValue).SetValue(positionWhenValid);
-            setPosition.ValueIn(PointersHelper.IdPointerNodeIndex).SetValue(validIndex);
+            SetPassed(out var flowSetValid, out var flowOutSetValid);
                 
-            branchNode.FlowOut(Flow_BranchNode.IdFlowOutTrue).ConnectToFlowDestination(setPosition.FlowIn(Pointer_SetNode.IdFlowIn));
+            branchNode.FlowOut(Flow_BranchNode.IdFlowOutTrue).ConnectToFlowDestination(flowSetValid);
             
             expectedValue = true;
             context.AddLog(text.text+ $": All Flows triggered (Number: {count})", out var logFlowIn, out var logFlowOut);
-            setPosition.FlowOut(Pointer_SetNode.IdFlowOut).ConnectToFlowDestination(logFlowIn);
+            flowOutSetValid.ConnectToFlowDestination(logFlowIn);
             SaveResult(logFlowOut);
             
             AddFallbackFlowCheck(() =>
@@ -230,9 +258,6 @@ namespace Khronos_Test_Export
 
         public void SetupOrderFlowCheck(FlowOutRef[] flows)
         {
-            validIndex = context.interactivityExportContext.Context.exporter.GetTransformIndex(valid);
-            invalidIndex = context.interactivityExportContext.Context.exporter.GetTransformIndex(invalid);
-
             var nodeCreator = context.interactivityExportContext;
             var countVar = nodeCreator.Context.AddVariableWithIdIfNeeded("FlowSequenceCount_"+System.Guid.NewGuid().ToString(), 0, GltfTypes.Int);
             
@@ -269,16 +294,11 @@ namespace Khronos_Test_Export
                 lastFlow = checkBranch.FlowOut(Flow_BranchNode.IdFlowOutTrue);
             }
             
-            
-            var setPosition = nodeCreator.CreateNode(new Pointer_SetNode());
-            PointersHelper.SetupPointerTemplateAndTargetInput(setPosition, PointersHelper.IdPointerNodeIndex, "/nodes/{" + PointersHelper.IdPointerNodeIndex + "}/translation", GltfTypes.Float3);
-            setPosition.ValueIn(Pointer_SetNode.IdValue).SetValue(positionWhenValid);
-            setPosition.ValueIn(PointersHelper.IdPointerNodeIndex).SetValue(validIndex);
-
-            lastFlow.ConnectToFlowDestination(setPosition.FlowIn(Pointer_SetNode.IdFlowIn));
+            SetPassed(out var flowSetValid, out var flowOutSetValid);
+            lastFlow.ConnectToFlowDestination(flowSetValid);
             expectedValue = true;
             context.AddLog(text.text+ ": Correct flow order triggered", out var logFlowIn, out var logFlowOut);
-            setPosition.FlowOut(Pointer_SetNode.IdFlowOut).ConnectToFlowDestination(logFlowIn);
+            flowOutSetValid.ConnectToFlowDestination(logFlowIn);
             SaveResult(logFlowOut);
             
             AddFallbackFlowCheck(() =>
@@ -290,13 +310,7 @@ namespace Khronos_Test_Export
         
         public void SetupCheckFlowTimes(out FlowInRef flow, int callTimes)
         {
-            validIndex = context.interactivityExportContext.Context.exporter.GetTransformIndex(valid);
-            invalidIndex = context.interactivityExportContext.Context.exporter.GetTransformIndex(invalid);
-            
-            var setPosition = context.interactivityExportContext.CreateNode(new Pointer_SetNode());
-            PointersHelper.SetupPointerTemplateAndTargetInput(setPosition, PointersHelper.IdPointerNodeIndex, "/nodes/{" + PointersHelper.IdPointerNodeIndex + "}/translation", GltfTypes.Float3);
-            setPosition.ValueIn(Pointer_SetNode.IdValue).SetValue(positionWhenValid);
-            setPosition.ValueIn(PointersHelper.IdPointerNodeIndex).SetValue(validIndex);
+            SetPassed(out var flowSetValid, out var flowOutSetValid);
 
             context.AddPlusOneCounter(out var counter, out var flowInToIncrease);
             flow = flowInToIncrease;
@@ -312,9 +326,9 @@ namespace Khronos_Test_Export
                 var branchNode = context.interactivityExportContext.CreateNode(new Flow_BranchNode());
                 branchNode.ValueIn(Flow_BranchNode.IdCondition).ConnectToSource(eq.FirstValueOut());
                 
-                branchNode.FlowOut(Flow_BranchNode.IdFlowOutTrue).ConnectToFlowDestination(setPosition.FlowIn(Pointer_SetNode.IdFlowIn));
+                branchNode.FlowOut(Flow_BranchNode.IdFlowOutTrue).ConnectToFlowDestination(flowSetValid);
                 context.AddLog(text.text+ ": Flow got triggered correct amount", out var logFlowIn, out var logFlowOut);
-                setPosition.FlowOut(Pointer_SetNode.IdFlowOut).ConnectToFlowDestination(logFlowIn);
+                flowOutSetValid.ConnectToFlowDestination(logFlowIn);
                 SaveResult( counter, logFlowOut, typeof(int));
                 
                 
@@ -322,24 +336,18 @@ namespace Khronos_Test_Export
                 branchNode.FlowOut(Flow_BranchNode.IdFlowOutFalse)
                     .ConnectToFlowDestination(logFlowInFallback);
                 
-                return branchNode.FlowIn(Flow_BranchNode.IdFlowIn);
+                return branchNode.FlowIn();
             }, false);
         }
         
         public void SetupCheck(out FlowInRef flow)
         {
-            validIndex = context.interactivityExportContext.Context.exporter.GetTransformIndex(valid);
-            invalidIndex = context.interactivityExportContext.Context.exporter.GetTransformIndex(invalid);
-            
-            var setPosition = context.interactivityExportContext.CreateNode(new Pointer_SetNode());
-            PointersHelper.SetupPointerTemplateAndTargetInput(setPosition, PointersHelper.IdPointerNodeIndex, "/nodes/{" + PointersHelper.IdPointerNodeIndex + "}/translation", GltfTypes.Float3);
-            setPosition.ValueIn(Pointer_SetNode.IdValue).SetValue(positionWhenValid);
-            setPosition.ValueIn(PointersHelper.IdPointerNodeIndex).SetValue(validIndex);
+            SetPassed(out var flowSetValid, out var flowOutSetValid);
 
-            flow = setPosition.FlowIn(Pointer_SetNode.IdFlowIn);
+            flow =  flowSetValid;
             expectedValue = true;
             context.AddLog(text.text+ ": Flow triggered", out var logFlowIn, out var logFlowOut);
-            setPosition.FlowOut(Pointer_SetNode.IdFlowOut).ConnectToFlowDestination(logFlowIn);
+            flowOutSetValid.ConnectToFlowDestination(logFlowIn);
             SaveResult(logFlowOut);
 
             AddFallbackFlowCheck(() =>
@@ -357,18 +365,12 @@ namespace Khronos_Test_Export
         
         public void SetupNegateCheck(out FlowInRef flow)
         {
-            validIndex = context.interactivityExportContext.Context.exporter.GetTransformIndex(valid);
-            invalidIndex = context.interactivityExportContext.Context.exporter.GetTransformIndex(invalid);
-            
-            var setPosition = context.interactivityExportContext.CreateNode(new Pointer_SetNode());
-            PointersHelper.SetupPointerTemplateAndTargetInput(setPosition, PointersHelper.IdPointerNodeIndex, "/nodes/{" + PointersHelper.IdPointerNodeIndex + "}/translation", GltfTypes.Float3);
-            setPosition.ValueIn(Pointer_SetNode.IdValue).SetValue(positionWhenValid);
-            setPosition.ValueIn(PointersHelper.IdPointerNodeIndex).SetValue(validIndex);
+            SetPassed(out var flowSetValid, out var flowOutSetValid);
 
-            flow = setPosition.FlowIn(Pointer_SetNode.IdFlowIn);
+            flow = flowSetValid;
             expectedValue = false;
             context.AddLog(text.text+ ": Flow triggered! This should not happened!", out var logFlowIn, out var logFlowOut);
-            setPosition.FlowOut(Pointer_SetNode.IdFlowOut).ConnectToFlowDestination(logFlowIn);
+            flowOutSetValid.ConnectToFlowDestination(logFlowIn);
             SaveResult(logFlowOut);
             
             AddFallbackFlowCheck(() =>
@@ -394,10 +396,9 @@ namespace Khronos_Test_Export
         public void SetupCheck(out ValueInRef inputValue, out FlowInRef flow, object valueToCompare,
             bool proximityCheck = false)
         {
+            this.proximityCheck = proximityCheck;
               var compareValueType = GltfTypes.TypeIndex(valueToCompare.GetType());
-            validIndex = context.interactivityExportContext.Context.exporter.GetTransformIndex(valid);
-            invalidIndex = context.interactivityExportContext.Context.exporter.GetTransformIndex(invalid);
-
+        
             GltfInteractivityExportNode eqNode;
             if (proximityCheck)
             {
@@ -423,15 +424,12 @@ namespace Khronos_Test_Export
             var validNode = context.interactivityExportContext.CreateNode(new Flow_BranchNode());
             validNode.ValueIn(Flow_BranchNode.IdCondition).ConnectToSource(eqNode.FirstValueOut());
 
-            var setPosition = context.interactivityExportContext.CreateNode(new Pointer_SetNode());
-            PointersHelper.SetupPointerTemplateAndTargetInput(setPosition, PointersHelper.IdPointerNodeIndex, "/nodes/{" + PointersHelper.IdPointerNodeIndex + "}/translation", GltfTypes.Float3);
-            setPosition.ValueIn(Pointer_SetNode.IdValue).SetValue(positionWhenValid);
-            setPosition.ValueIn(PointersHelper.IdPointerNodeIndex).SetValue(validIndex);
-
+            SetPassed(out var setPosition, out var flowOutSetValid);
+           
             flow = validNode.FlowIn(Flow_BranchNode.IdFlowIn);
             
             validNode.FlowOut(Flow_BranchNode.IdFlowOutTrue)
-                .ConnectToFlowDestination(setPosition.FlowIn(Pointer_SetNode.IdFlowIn));
+                .ConnectToFlowDestination(setPosition);
             
             context.AddLog(text.text+ ": Value is {0}, should be "+valueToCompare.ToString(), out var logFlowIn, out var logFlowOut, 1, out var logValueRef);
             inputValue = inputValue.Link(logValueRef[0]);
@@ -439,7 +437,7 @@ namespace Khronos_Test_Export
             
             context.AddLog(text.text+ ": Test Successful", out var logSuccesFlowIn, out var logSuccessFlowOut);
 
-            setPosition.FlowOut(Pointer_SetNode.IdFlowOut).ConnectToFlowDestination(logSuccesFlowIn);
+            flowOutSetValid.ConnectToFlowDestination(logSuccesFlowIn);
             logSuccessFlowOut.ConnectToFlowDestination(logFlowIn);
             
             expectedValue = valueToCompare;

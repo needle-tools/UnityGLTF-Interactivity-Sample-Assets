@@ -186,7 +186,7 @@ namespace Khronos_Test_Export
         public void AddLog(string message, out FlowInRef flowIn, out FlowOutRef flowOut, int valueCount,  out ValueInRef[] values)
         {
             var nodeCreator = interactivityExportContext;
-            var log = nodeCreator.AddLog(GltfInteractivityExportNodes.LogLevel.Info, message);
+            var log = nodeCreator.AddLog(GltfInteractivityExportNodes.LogLevel.Info, message.Replace("\n",""));
             flowIn = log.FlowIn(Debug_LogNode.IdFlowIn);
             flowOut = log.FlowOut(Debug_LogNode.IdFlowOut);
             values = new ValueInRef[valueCount];
