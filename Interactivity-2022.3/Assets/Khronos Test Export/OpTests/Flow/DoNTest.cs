@@ -53,7 +53,7 @@ namespace Khronos_Test_Export
             
             context.AddPlusOneCounter(out var counter, out var flowInToIncrease);
             
-            _bodyFlowCheck.SetupCheck(context, out var bodyCheckFlowIn);
+            _bodyFlowCheck.SetupCheck(out var bodyCheckFlowIn);
             
             var conditionNode = nodeCreator.CreateNode(new Math_EqNode());
             conditionNode.ValueIn(Math_EqNode.IdValueA).ConnectToSource(counter);
@@ -61,8 +61,8 @@ namespace Khronos_Test_Export
             var branchNode = nodeCreator.CreateNode(new Flow_BranchNode());
             branchNode.ValueIn(Flow_BranchNode.IdCondition).ConnectToSource(conditionNode.FirstValueOut());
                  
-            _bodyIterationCheck.SetupCheck(context, counter, out var bodyIterationCheckFlowIn, 5);
-            _currentCountCheck.SetupCheck(context, doNNode.ValueOut(Flow_DoNNode.IdCurrentExecutionCount), out var currentCountCheckFlowIn, 5);
+            _bodyIterationCheck.SetupCheck(counter, out var bodyIterationCheckFlowIn, 5);
+            _currentCountCheck.SetupCheck(doNNode.ValueOut(Flow_DoNNode.IdCurrentExecutionCount), out var currentCountCheckFlowIn, 5);
 
             context.AddSequence(branchNode.FlowOut(Flow_BranchNode.IdFlowOutTrue),
                 new FlowInRef[]
@@ -86,7 +86,7 @@ namespace Khronos_Test_Export
             
             context.AddPlusOneCounter(out var counter2, out var flowInToIncrease2);
             doN2Node.FlowOut(Flow_DoNNode.IdOut).ConnectToFlowDestination(flowInToIncrease2);
-            _resetCheck.SetupCheck(context, counter2, out var checkCountFlow, 4);
+            _resetCheck.SetupCheck(counter2, out var checkCountFlow, 4);
 
             context.AddToCurrentEntrySequence(
                 new FlowInRef[]
@@ -106,7 +106,7 @@ namespace Khronos_Test_Export
 
             context.AddPlusOneCounter(out var counter3, out var flowInToIncrease3);
             doN3Node.FlowOut(Flow_DoNNode.IdOut).ConnectToFlowDestination(flowInToIncrease3);
-            _limitCheck.SetupCheck(context, counter3, out var checkCountFlow2, 2);
+            _limitCheck.SetupCheck(counter3, out var checkCountFlow2, 2);
             context.AddToCurrentEntrySequence(
                 new FlowInRef[]
                 {

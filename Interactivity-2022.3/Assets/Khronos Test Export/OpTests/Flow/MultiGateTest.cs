@@ -38,7 +38,7 @@ namespace Khronos_Test_Export
             multiGateNode.FlowOut("008");
             multiGateNode.FlowOut("004");
             multiGateNode.FlowOut("001");
-            _orderCheckBox.SetupOrderFlowCheck(context, new FlowOutRef[]
+            _orderCheckBox.SetupOrderFlowCheck(new FlowOutRef[]
             {
                 multiGateNode.FlowOut("001"),
                 multiGateNode.FlowOut("004"),
@@ -67,7 +67,7 @@ namespace Khronos_Test_Export
                 });
             
             multiGateRandomNode.Configuration[Flow_MultiGateNode.IdConfigIsRandom].Value = true;
-            _randomCheckBox.SetupMultiFlowCheck(context, 4, out var randomCheckFlowIn);
+            _randomCheckBox.SetupMultiFlowCheck(4, out var randomCheckFlowIn);
             multiGateRandomNode.FlowOut("001").ConnectToFlowDestination(randomCheckFlowIn[0]);
             multiGateRandomNode.FlowOut("002").ConnectToFlowDestination(randomCheckFlowIn[1]);
             multiGateRandomNode.FlowOut("003").ConnectToFlowDestination(randomCheckFlowIn[2]);
@@ -87,7 +87,7 @@ namespace Khronos_Test_Export
                 });
             
             multiGateLoopNode.Configuration[Flow_MultiGateNode.IdConfigIsLoop].Value = true;
-            _loopCheckBox.SetupMultiFlowCheck(context, 4, out var loopCheckFlowIn, new string[] {"Flow0", "Flow1", "Flow2", "Flow0 (2.)"});
+            _loopCheckBox.SetupMultiFlowCheck(4, out var loopCheckFlowIn, new string[] {"Flow0", "Flow1", "Flow2", "Flow0 (2.)"});
             
             context.AddPlusOneCounter(out var loopCounter, out var flowInToIncrease);
             var branchConditionSecondFlow = nodeCreator.CreateNode(new Math_EqNode());
@@ -122,7 +122,7 @@ namespace Khronos_Test_Export
                 });
 
             multiGateResetLoopNode.Configuration[Flow_MultiGateNode.IdConfigIsLoop].Value = true;
-            _resetCheckBox.SetupMultiFlowCheck(context, 3, out var loopResetCheckFlowIn);
+            _resetCheckBox.SetupMultiFlowCheck(3, out var loopResetCheckFlowIn);
             
             context.AddPlusOneCounter(out var loopCounterReset, out var flowInToIncreaseReset);
             var branchConditionSecondFlowReset = nodeCreator.CreateNode(new Math_EqNode());

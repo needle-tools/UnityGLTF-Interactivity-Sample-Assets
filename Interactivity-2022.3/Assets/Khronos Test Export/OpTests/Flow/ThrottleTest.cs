@@ -43,7 +43,7 @@ namespace Khronos_Test_Export
             context.NewEntryPoint(_outThrottleCheckBox.GetText());
             
             _lastRemainingTimeCheckBox.proximityCheckDistance = 0.01f;
-            _lastRemainingTimeCheckBox.SetupCheck(context, throttleNode.ValueOut(Flow_ThrottleNode.IdOutElapsedTime),
+            _lastRemainingTimeCheckBox.SetupCheck(throttleNode.ValueOut(Flow_ThrottleNode.IdOutElapsedTime),
                 out var lastRemainingTimeCheckFlow, 1f, true);
 
             
@@ -53,7 +53,7 @@ namespace Khronos_Test_Export
                 throttleNode.FlowIn(Flow_ThrottleNode.IdFlowIn),
                 lastRemainingTimeCheckFlow,
             });
-            _outThrottleCheckBox.SetupCheckFlowTimes(context, out var outThrottleCheckFlow, 1);
+            _outThrottleCheckBox.SetupCheckFlowTimes(out var outThrottleCheckFlow, 1);
             throttleNode.FlowOut(Flow_ThrottleNode.IdFlowOut).ConnectToFlowDestination(outThrottleCheckFlow);
             throttleNode.ValueIn(Flow_ThrottleNode.IdInputDuration).SetValue(1f);
         
@@ -65,7 +65,7 @@ namespace Khronos_Test_Export
             var delayNode = nodeCreator.CreateNode(new Flow_SetDelayNode());
             delayNode.ValueIn(Flow_SetDelayNode.IdDuration).SetValue(1.5f);
 
-            _setDelayCheckBox.SetupCheck(context, out var setDelayCheckFlow);
+            _setDelayCheckBox.SetupCheck(out var setDelayCheckFlow);
             context.AddSequence(delayNode.FlowOut(Flow_SetDelayNode.IdFlowDone),
                 new []
                 {
@@ -83,7 +83,7 @@ namespace Khronos_Test_Export
 
             throttleNode2.ValueIn(Flow_ThrottleNode.IdInputDuration).SetValue(1f);
 
-            _flowOutAfterDelayCheckBox.SetupCheckFlowTimes(context, out var flowOutAfterDelayCheckFlow, 2);
+            _flowOutAfterDelayCheckBox.SetupCheckFlowTimes(out var flowOutAfterDelayCheckFlow, 2);
             throttleNode2.FlowOut(Flow_ThrottleNode.IdFlowOut).ConnectToFlowDestination(flowOutAfterDelayCheckFlow);
             
             // Error flow
@@ -91,8 +91,8 @@ namespace Khronos_Test_Export
             context.NewEntryPoint(throttleNode3.FlowIn(Flow_ThrottleNode.IdFlowIn), _errFlowCheckBox.GetText());
             throttleNode3.ValueIn(Flow_ThrottleNode.IdInputDuration).SetValue(-1);
             
-            _errFlowCheckBox.SetupCheck(context, throttleNode3.FlowOut(Flow_ThrottleNode.IdFlowOutError));
-            _errFlowOutCheckBox.SetupNegateCheck(context, throttleNode3.FlowOut(Flow_ThrottleNode.IdFlowOut));
+            _errFlowCheckBox.SetupCheck(throttleNode3.FlowOut(Flow_ThrottleNode.IdFlowOutError));
+            _errFlowOutCheckBox.SetupNegateCheck(throttleNode3.FlowOut(Flow_ThrottleNode.IdFlowOut));
             
             // Reset
             var throttleNode4 = nodeCreator.CreateNode(new Flow_ThrottleNode());
@@ -108,7 +108,7 @@ namespace Khronos_Test_Export
                 throttleNode4.FlowIn(Flow_ThrottleNode.IdFlowIn),
                 throttleNode4.FlowIn(Flow_ThrottleNode.IdFlowIn),
             });
-            _resetCheckBox.SetupCheckFlowTimes(context, out var resetCheckFlow, 3);
+            _resetCheckBox.SetupCheckFlowTimes(out var resetCheckFlow, 3);
             throttleNode4.FlowOut(Flow_ThrottleNode.IdFlowOut).ConnectToFlowDestination(resetCheckFlow);
         }
     }

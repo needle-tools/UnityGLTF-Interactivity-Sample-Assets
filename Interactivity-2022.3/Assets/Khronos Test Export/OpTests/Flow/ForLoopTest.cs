@@ -41,7 +41,7 @@ namespace Khronos_Test_Export
             forLoop.ValueIn(Flow_ForLoopNode.IdStartIndex).SetValue(0);
             forLoop.ValueIn(Flow_ForLoopNode.IdEndIndex).SetValue(10);
             
-            _initialIndexCheck.SetupCheck(context, forLoop.ValueOut(Flow_ForLoopNode.IdIndex), out var initialIndexCheckFlow, 1);
+            _initialIndexCheck.SetupCheck(forLoop.ValueOut(Flow_ForLoopNode.IdIndex), out var initialIndexCheckFlow, 1);
             context.AddToCurrentEntrySequence(
                 new FlowInRef[]
                 {
@@ -49,14 +49,14 @@ namespace Khronos_Test_Export
                     forLoop.FlowIn(Flow_ForLoopNode.IdFlowIn),
                 });
             
-            _bodyCheck.SetupCheck(context, out var bodyCheckFlowIn);
+            _bodyCheck.SetupCheck(out var bodyCheckFlowIn);
             
             context.AddPlusOneCounter(out var loopRangeCounter, out var flowInToIncrease);
-            _loopRangeCheck.SetupCheck(context, loopRangeCounter, out var loopRangeCheckFlowIn, 10);
+            _loopRangeCheck.SetupCheck(loopRangeCounter, out var loopRangeCheckFlowIn, 10);
 
-            _completeCheck.SetupCheck(context, out var completeCheckFlowIn);
+            _completeCheck.SetupCheck(out var completeCheckFlowIn);
             
-            _completedIndexCheck.SetupCheck(context, forLoop.ValueOut(Flow_ForLoopNode.IdIndex), out var completedIndexCheckFlowIn, 10);
+            _completedIndexCheck.SetupCheck(forLoop.ValueOut(Flow_ForLoopNode.IdIndex), out var completedIndexCheckFlowIn, 10);
             
             context.AddSequence( forLoop.FlowOut(Flow_ForLoopNode.IdCompleted),
                 new FlowInRef[]

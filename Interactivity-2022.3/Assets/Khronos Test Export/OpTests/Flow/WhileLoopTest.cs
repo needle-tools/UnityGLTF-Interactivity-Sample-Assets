@@ -41,7 +41,7 @@ namespace Khronos_Test_Export
             context.NewEntryPoint(whileLoop.FlowIn(Flow_WhileNode.IdFlowIn), "While Loop flowIn");
             
             context.AddPlusOneCounter(out var counter, out var flowInToIncrease);
-            _bodyFlowCheck.SetupCheck(context, out var bodyCheckFlowIn);
+            _bodyFlowCheck.SetupCheck(out var bodyCheckFlowIn);
             
             var conditionNode = nodeCreator.CreateNode(new Math_LtNode());
             whileLoop.ValueIn(Flow_WhileNode.IdCondition).ConnectToSource(conditionNode.FirstValueOut());
@@ -56,9 +56,9 @@ namespace Khronos_Test_Export
                 });
             
             
-            _bodyIterationCheck.SetupCheck(context, counter, out var bodyIterationCheckFlowIn, 2);
+            _bodyIterationCheck.SetupCheck(counter, out var bodyIterationCheckFlowIn, 2);
             
-            _completedFlowCheck.SetupCheck(context, out var completedFlowCheckFlowIn);
+            _completedFlowCheck.SetupCheck(out var completedFlowCheckFlowIn);
             
             context.AddSequence(whileLoop.FlowOut(Flow_WhileNode.IdCompleted),
                 new FlowInRef[]
@@ -71,8 +71,8 @@ namespace Khronos_Test_Export
             context.NewEntryPoint(whileLoop2.FlowIn(Flow_WhileNode.IdFlowIn), "While Loop flowIn (false Condition)");
             whileLoop2.ValueIn(Flow_WhileNode.IdCondition).SetValue(false);
             
-            _bodyFlowChechWhenFalse.SetupNegateCheck(context, whileLoop2.FlowOut(Flow_WhileNode.IdLoopBody));
-            _completedFlowCheckWhenFalse.SetupCheck(context, whileLoop2.FlowOut(Flow_WhileNode.IdCompleted));
+            _bodyFlowChechWhenFalse.SetupNegateCheck(whileLoop2.FlowOut(Flow_WhileNode.IdLoopBody));
+            _completedFlowCheckWhenFalse.SetupCheck(whileLoop2.FlowOut(Flow_WhileNode.IdCompleted));
             
         }
     }

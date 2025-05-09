@@ -288,6 +288,7 @@ namespace Khronos_Test_Export
             newCheckBox.gameObject.name = "CheckBox_" + name;
             newCheckBox.SetText(name);
             newCheckBox.SetCase(currentCase);
+            newCheckBox.context = this;
             currentCase.checkBoxes.Add(newCheckBox);
             if (asWaiting)
                 newCheckBox.Waiting();

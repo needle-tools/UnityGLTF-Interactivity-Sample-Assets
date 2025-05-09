@@ -35,7 +35,7 @@ namespace Khronos_Test_Export
             sequenceNode.FlowOut("9");
             sequenceNode.FlowOut("10");
             
-            _sequenceOrderCheck.SetupOrderFlowCheck(context, new[]
+            _sequenceOrderCheck.SetupOrderFlowCheck(new[]
             {
                 sequenceNode.FlowOut("0"),
                 sequenceNode.FlowOut("10"),
@@ -50,7 +50,7 @@ namespace Khronos_Test_Export
             sequenceNode2.FlowOut("aaa");
             sequenceNode2.FlowOut("b");
             
-            _sequenceOrderCheck2.SetupOrderFlowCheck(context, new[]
+            _sequenceOrderCheck2.SetupOrderFlowCheck(new[]
             {
                 sequenceNode2.FlowOut("aaa"),
                 sequenceNode2.FlowOut("b"),
@@ -65,7 +65,7 @@ namespace Khronos_Test_Export
             sequenceNode3.FlowOut("a");
             sequenceNode3.FlowOut("A");
             
-            _sequenceOrderCheck3.SetupOrderFlowCheck(context, new[]
+            _sequenceOrderCheck3.SetupOrderFlowCheck(new[]
             {
                 sequenceNode3.FlowOut("A"),
                 sequenceNode3.FlowOut("B"),

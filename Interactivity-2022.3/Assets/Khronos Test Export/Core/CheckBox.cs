@@ -29,6 +29,7 @@ namespace Khronos_Test_Export
         private TestContext.Case _testCase;
         private bool isNegated = false;
         private bool isWaiting = false;
+        public TestContext context;
         
         private void OnDrawGizmosSelected()
         {
@@ -74,7 +75,7 @@ namespace Khronos_Test_Export
             return "TestResult_" + _testCase.CaseName + "_" + text.text;
         }
 
-        private void DeactivateWaiting(TestContext context, out FlowInRef flowIn, out FlowOutRef flowOut)
+        private void DeactivateWaiting(out FlowInRef flowIn, out FlowOutRef flowOut)
         {
             var waitingIndex = context.interactivityExportContext.Context.exporter.GetTransformIndex(waiting);
             
@@ -87,7 +88,7 @@ namespace Khronos_Test_Export
             flowOut = setPosition.FlowOut(Pointer_SetNode.IdFlowOut);
         }
         
-        private void SaveResult(TestContext context, FlowOutRef flow)
+        private void SaveResult(FlowOutRef flow)
         {
             if (ResultValueVarId == -1)
                 ResultValueVarId = context.interactivityExportContext.Context.AddVariableWithIdIfNeeded(GetResultVariableName(), isNegated, GltfTypes.Bool);
@@ -96,7 +97,7 @@ namespace Khronos_Test_Export
             flow.ConnectToFlowDestination(setFlow);
         }
 
-        private void SaveResult(TestContext context, out ValueInRef value, FlowOutRef flow, Type type)
+        private void SaveResult(out ValueInRef value, FlowOutRef flow, Type type)
         {
             if (ResultValueVarId == -1)
             {
@@ -112,7 +113,7 @@ namespace Khronos_Test_Export
         }
         
 
-        private void SaveResult(TestContext context, ValueOutRef value, FlowOutRef flow, Type type)
+        private void SaveResult(ValueOutRef value, FlowOutRef flow, Type type)
         {
             if (ResultValueVarId == -1)
             {
@@ -124,7 +125,7 @@ namespace Khronos_Test_Export
             VariablesHelpers.SetVariable(context.interactivityExportContext, ResultValueVarId, value, flow);
         }
 
-        private void AddFallbackFlowCheck(TestContext context, Func<TestContext, FlowInRef> fallbackFlowCheck, bool withResultCheck = true)
+        private void AddFallbackFlowCheck(Func<FlowInRef> fallbackFlowCheck, bool withResultCheck = true)
         {
             if (withResultCheck)
             {
@@ -135,13 +136,13 @@ namespace Khronos_Test_Export
                 var branchNode = context.interactivityExportContext.CreateNode(new Flow_BranchNode());
                 branchNode.ValueIn(Flow_BranchNode.IdCondition).ConnectToSource(eqNode.FirstValueOut());
                 if (isNegated)
-                    branchNode.FlowOut(Flow_BranchNode.IdFlowOutTrue).ConnectToFlowDestination(fallbackFlowCheck(context));
+                    branchNode.FlowOut(Flow_BranchNode.IdFlowOutTrue).ConnectToFlowDestination(fallbackFlowCheck());
                 else
-                    branchNode.FlowOut(Flow_BranchNode.IdFlowOutFalse).ConnectToFlowDestination(fallbackFlowCheck(context));
+                    branchNode.FlowOut(Flow_BranchNode.IdFlowOutFalse).ConnectToFlowDestination(fallbackFlowCheck());
 
                 if (isWaiting)
                 {
-                    DeactivateWaiting(context, out var flowIn, out var flowOut);
+                    DeactivateWaiting(out var flowIn, out var flowOut);
                     flowOut.ConnectToFlowDestination(branchNode.FlowIn(Flow_BranchNode.IdFlowIn));
                     context.AddFallbackToLastEntryPoint(flowIn);
                 }
@@ -152,16 +153,16 @@ namespace Khronos_Test_Export
             {
                 if (isWaiting)
                 {
-                    DeactivateWaiting(context, out var flowIn, out var flowOut);
+                    DeactivateWaiting(out var flowIn, out var flowOut);
                     context.AddFallbackToLastEntryPoint(flowIn);
-                    flowOut.ConnectToFlowDestination(fallbackFlowCheck(context));
+                    flowOut.ConnectToFlowDestination(fallbackFlowCheck());
                 }
                 else
-                    context.AddFallbackToLastEntryPoint(fallbackFlowCheck(context));
+                    context.AddFallbackToLastEntryPoint(fallbackFlowCheck());
             }
         }
         
-        public void SetupMultiFlowCheck(TestContext context, int count, out FlowInRef[] flows, string[] flowNames = null)
+        public void SetupMultiFlowCheck(int count, out FlowInRef[] flows, string[] flowNames = null)
         {
             flows = new FlowInRef[count];
 
@@ -205,19 +206,19 @@ namespace Khronos_Test_Export
             expectedValue = true;
             context.AddLog(text.text+ $": All Flows triggered (Number: {count})", out var logFlowIn, out var logFlowOut);
             setPosition.FlowOut(Pointer_SetNode.IdFlowOut).ConnectToFlowDestination(logFlowIn);
-            SaveResult(context, logFlowOut);
+            SaveResult(logFlowOut);
             
-            AddFallbackFlowCheck(context, testContext =>
+            AddFallbackFlowCheck(() =>
             {
-                testContext.AddLog(text.text+ ": Not all flows got triggered! This should not happened!", out var logFlowInFallback, out var nextFlowOut);
+                context.AddLog(text.text+ ": Not all flows got triggered! This should not happened!", out var logFlowInFallback, out var nextFlowOut);
                 FlowInRef flowIn = null;
                 FlowOutRef flowOut = null;
                 for (int i = 0; i < count; i++)
                 {
                     if (flowNames != null)
-                        testContext.AddLog("   State "+i.ToString() + $" {flowNames[i]}: " + " {0}", out flowIn, out flowOut, stateValues[i]);
+                        context.AddLog("   State "+i.ToString() + $" {flowNames[i]}: " + " {0}", out flowIn, out flowOut, stateValues[i]);
                     else
-                        testContext.AddLog("   State "+i.ToString() + " {0}", out flowIn, out flowOut, stateValues[i]);
+                        context.AddLog("   State "+i.ToString() + " {0}", out flowIn, out flowOut, stateValues[i]);
                     nextFlowOut.ConnectToFlowDestination(flowIn);
                     nextFlowOut = flowOut;
 
@@ -227,7 +228,7 @@ namespace Khronos_Test_Export
             
         }
 
-        public void SetupOrderFlowCheck(TestContext context, FlowOutRef[] flows)
+        public void SetupOrderFlowCheck(FlowOutRef[] flows)
         {
             validIndex = context.interactivityExportContext.Context.exporter.GetTransformIndex(valid);
             invalidIndex = context.interactivityExportContext.Context.exporter.GetTransformIndex(invalid);
@@ -278,16 +279,16 @@ namespace Khronos_Test_Export
             expectedValue = true;
             context.AddLog(text.text+ ": Correct flow order triggered", out var logFlowIn, out var logFlowOut);
             setPosition.FlowOut(Pointer_SetNode.IdFlowOut).ConnectToFlowDestination(logFlowIn);
-            SaveResult(context, logFlowOut);
+            SaveResult(logFlowOut);
             
-            AddFallbackFlowCheck(context, testContext =>
+            AddFallbackFlowCheck(() =>
             {
-                testContext.AddLog(text.text+ ": Correct flow order not triggered! This should not happened!", out var logFlowInFallback, out var _);
+                context.AddLog(text.text+ ": Correct flow order not triggered! This should not happened!", out var logFlowInFallback, out var _);
                 return logFlowInFallback;
             });
         }
         
-        public void SetupCheckFlowTimes(TestContext context, out FlowInRef flow, int callTimes)
+        public void SetupCheckFlowTimes(out FlowInRef flow, int callTimes)
         {
             validIndex = context.interactivityExportContext.Context.exporter.GetTransformIndex(valid);
             invalidIndex = context.interactivityExportContext.Context.exporter.GetTransformIndex(invalid);
@@ -302,22 +303,22 @@ namespace Khronos_Test_Export
             
             expectedValue = callTimes;
             
-            AddFallbackFlowCheck(context, testContext =>
+            AddFallbackFlowCheck(() =>
             {
-                var eq = testContext.interactivityExportContext.CreateNode(new Math_EqNode());
+                var eq = context.interactivityExportContext.CreateNode(new Math_EqNode());
                 eq.ValueIn(Math_EqNode.IdValueA).ConnectToSource(counter);
                 eq.ValueIn(Math_EqNode.IdValueB).SetValue(callTimes);
                 
-                var branchNode = testContext.interactivityExportContext.CreateNode(new Flow_BranchNode());
+                var branchNode = context.interactivityExportContext.CreateNode(new Flow_BranchNode());
                 branchNode.ValueIn(Flow_BranchNode.IdCondition).ConnectToSource(eq.FirstValueOut());
                 
                 branchNode.FlowOut(Flow_BranchNode.IdFlowOutTrue).ConnectToFlowDestination(setPosition.FlowIn(Pointer_SetNode.IdFlowIn));
                 context.AddLog(text.text+ ": Flow got triggered correct amount", out var logFlowIn, out var logFlowOut);
                 setPosition.FlowOut(Pointer_SetNode.IdFlowOut).ConnectToFlowDestination(logFlowIn);
-                SaveResult(context, counter, logFlowOut, typeof(int));
+                SaveResult( counter, logFlowOut, typeof(int));
                 
                 
-                testContext.AddLog(text.text+ ": Flow got triggered {0} times from "+callTimes.ToString()+ ". This should not happened!", out var logFlowInFallback, out var _, counter);
+                context.AddLog(text.text+ ": Flow got triggered {0} times from "+callTimes.ToString()+ ". This should not happened!", out var logFlowInFallback, out var _, counter);
                 branchNode.FlowOut(Flow_BranchNode.IdFlowOutFalse)
                     .ConnectToFlowDestination(logFlowInFallback);
                 
@@ -325,7 +326,7 @@ namespace Khronos_Test_Export
             }, false);
         }
         
-        public void SetupCheck(TestContext context, out FlowInRef flow)
+        public void SetupCheck(out FlowInRef flow)
         {
             validIndex = context.interactivityExportContext.Context.exporter.GetTransformIndex(valid);
             invalidIndex = context.interactivityExportContext.Context.exporter.GetTransformIndex(invalid);
@@ -339,22 +340,22 @@ namespace Khronos_Test_Export
             expectedValue = true;
             context.AddLog(text.text+ ": Flow triggered", out var logFlowIn, out var logFlowOut);
             setPosition.FlowOut(Pointer_SetNode.IdFlowOut).ConnectToFlowDestination(logFlowIn);
-            SaveResult(context, logFlowOut);
+            SaveResult(logFlowOut);
 
-            AddFallbackFlowCheck(context, testContext =>
+            AddFallbackFlowCheck(() =>
             {
-                testContext.AddLog(text.text+ ": Flow not triggered! This should not happened!", out var logFlowInFallback, out var _);
+                context.AddLog(text.text+ ": Flow not triggered! This should not happened!", out var logFlowInFallback, out var _);
                 return logFlowInFallback;
             });
         }
 
-        public void SetupCheck(TestContext context, FlowOutRef flow)
+        public void SetupCheck(FlowOutRef flow)
         {
-            SetupCheck(context, out var flowIn);
+            SetupCheck(out var flowIn);
             flow.ConnectToFlowDestination(flowIn);
         }
         
-        public void SetupNegateCheck(TestContext context, out FlowInRef flow)
+        public void SetupNegateCheck(out FlowInRef flow)
         {
             validIndex = context.interactivityExportContext.Context.exporter.GetTransformIndex(valid);
             invalidIndex = context.interactivityExportContext.Context.exporter.GetTransformIndex(invalid);
@@ -368,29 +369,29 @@ namespace Khronos_Test_Export
             expectedValue = false;
             context.AddLog(text.text+ ": Flow triggered! This should not happened!", out var logFlowIn, out var logFlowOut);
             setPosition.FlowOut(Pointer_SetNode.IdFlowOut).ConnectToFlowDestination(logFlowIn);
-            SaveResult(context, logFlowOut);
+            SaveResult(logFlowOut);
             
-            AddFallbackFlowCheck(context, testContext =>
+            AddFallbackFlowCheck(() =>
             {
                 context.AddLog(text.text+ ": Test Successful", out var logSuccessFlowIn, out _);
                 return logSuccessFlowIn;
             });
         }
 
-        public void SetupNegateCheck(TestContext context, FlowOutRef flow)
+        public void SetupNegateCheck(FlowOutRef flow)
         {
-            SetupNegateCheck(context, out var flowIn);
+            SetupNegateCheck(out var flowIn);
             flow.ConnectToFlowDestination(flowIn);
         }
         
-        public void SetupCheck(TestContext context, ValueOutRef inputValue, FlowOutRef flow, object valueToCompare,
+        public void SetupCheck(ValueOutRef inputValue, FlowOutRef flow, object valueToCompare,
             bool proximityCheck = false)
         {
-            SetupCheck(context, inputValue, out var flowIn, valueToCompare, proximityCheck);
+            SetupCheck(inputValue, out var flowIn, valueToCompare, proximityCheck);
             flow.ConnectToFlowDestination(flowIn);
         }
 
-        public void SetupCheck(TestContext context, out ValueInRef inputValue, out FlowInRef flow, object valueToCompare,
+        public void SetupCheck(out ValueInRef inputValue, out FlowInRef flow, object valueToCompare,
             bool proximityCheck = false)
         {
               var compareValueType = GltfTypes.TypeIndex(valueToCompare.GetType());
@@ -442,20 +443,20 @@ namespace Khronos_Test_Export
             logSuccessFlowOut.ConnectToFlowDestination(logFlowIn);
             
             expectedValue = valueToCompare;
-            SaveResult(context, out var saveResultInputValue, logFlowOut, valueToCompare.GetType());
+            SaveResult(out var saveResultInputValue, logFlowOut, valueToCompare.GetType());
             inputValue = inputValue.Link(saveResultInputValue);
             
-            AddFallbackFlowCheck(context, testContext =>
+            AddFallbackFlowCheck(() =>
             {
                 context.AddLog(text.text+ ": Test Failed", out var logFailedFlowIn, out _);
                 return logFailedFlowIn;
             });
         }
 
-        public void SetupCheck(TestContext context, ValueOutRef inputValue, out FlowInRef flow, object valueToCompare,
+        public void SetupCheck(ValueOutRef inputValue, out FlowInRef flow, object valueToCompare,
             bool proximityCheck = false)
         {
-            SetupCheck(context, out var inputValueRef, out flow, valueToCompare, proximityCheck);
+            SetupCheck(out var inputValueRef, out flow, valueToCompare, proximityCheck);
             inputValueRef.ConnectToSource(inputValue);
         }
     }

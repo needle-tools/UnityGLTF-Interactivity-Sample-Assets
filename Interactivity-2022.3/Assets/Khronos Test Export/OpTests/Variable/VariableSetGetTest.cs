@@ -125,7 +125,7 @@ namespace Khronos_Test_Export
               
                 VariablesHelpers.GetVariable(nodeCreator, varId, out var getVar);
                 
-                checkBox.SetupCheck(context, getVar, out var checkFlow, valueToSet, false);
+                checkBox.SetupCheck(getVar, out var checkFlow, valueToSet, false);
                 setOutFlow.ConnectToFlowDestination(checkFlow);
             }
             
@@ -136,7 +136,7 @@ namespace Khronos_Test_Export
                 
                 VariablesHelpers.GetVariable(nodeCreator, varId, out var getVar);
                 
-                checkBox.SetupCheck(context, getVar, out var checkFlow, valueToSet, false);
+                checkBox.SetupCheck(getVar, out var checkFlow, valueToSet, false);
                 context.NewEntryPoint(checkFlow, "Get default value from Variable " + GltfTypes.allTypes[gltfType]);
             }     
             

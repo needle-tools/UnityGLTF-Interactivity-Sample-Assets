@@ -40,7 +40,7 @@ namespace Khronos_Test_Export
             switchNode.FlowOut("4");
             switchNode.FlowOut("3");
             switchNode.ValueIn(Flow_SwitchNode.IdSelection).SetValue(4);
-            _selectionFlowCheck.SetupCheck(context, switchNode.FlowOut("4"));
+            _selectionFlowCheck.SetupCheck(switchNode.FlowOut("4"));
 
             var switch2Node = noteCreator.CreateNode(new Flow_SwitchNode());
             context.NewEntryPoint(switch2Node.FlowIn(Flow_SwitchNode.IdFlowIn), "Switch default flow");
@@ -49,13 +49,13 @@ namespace Khronos_Test_Export
             switch2Node.FlowOut("2");
             switch2Node.FlowOut("3");
             switch2Node.ValueIn(Flow_SwitchNode.IdSelection).SetValue(5);
-            _defaultFlowCheck.SetupCheck(context, switch2Node.FlowOut(Flow_SwitchNode.IdFDefaultFlowOut));
+            _defaultFlowCheck.SetupCheck(switch2Node.FlowOut(Flow_SwitchNode.IdFDefaultFlowOut));
 
             var switch3Node = noteCreator.CreateNode(new Flow_SwitchNode());
             context.NewEntryPoint(switch3Node.FlowIn(Flow_SwitchNode.IdFlowIn), "Switch empty-cases default flow");
             switch3Node.Configuration[Flow_SwitchNode.IdConfigurationCases].Value = new int[] {};
             switch3Node.ValueIn(Flow_SwitchNode.IdSelection).SetValue(5);
-            _noCasesDefaultFlowCheck.SetupCheck(context, switch3Node.FlowOut(Flow_SwitchNode.IdFDefaultFlowOut));
+            _noCasesDefaultFlowCheck.SetupCheck(switch3Node.FlowOut(Flow_SwitchNode.IdFDefaultFlowOut));
        
             var switch4Node = noteCreator.CreateNode(new Flow_SwitchNode());
             context.NewEntryPoint(switch4Node.FlowIn(Flow_SwitchNode.IdFlowIn), "Switch negate cases flow");
@@ -64,7 +64,7 @@ namespace Khronos_Test_Export
             switch4Node.FlowOut("-50");
             switch4Node.FlowOut("3");
             switch4Node.ValueIn(Flow_SwitchNode.IdSelection).SetValue(-50);
-            _negateCasesFlowCheck.SetupCheck(context, switch4Node.FlowOut("-50"));
+            _negateCasesFlowCheck.SetupCheck(switch4Node.FlowOut("-50"));
             
             // var switch5Node = noteCreator.CreateNode(new Flow_SwitchNode());
             // context.SetEntryPoint(switch5Node.FlowIn(Flow_SwitchNode.IdFlowIn), "Switch float number cases flow");

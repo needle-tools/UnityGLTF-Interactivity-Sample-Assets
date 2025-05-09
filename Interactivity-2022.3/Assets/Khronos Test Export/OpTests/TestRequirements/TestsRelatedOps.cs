@@ -35,17 +35,17 @@ namespace Khronos_Test_Export.OpTests.TestRequirements
         {
             context.NewEntryPoint("Entry");
            
-            _flowCheckBox.SetupCheck(context, out var flowCheckFlowIn);
-            _valueCheckBox.SetupCheck(context, out var valueCheckRef, out var flowValueCheckFlowIn, 1, false);
+            _flowCheckBox.SetupCheck(out var flowCheckFlowIn);
+            _valueCheckBox.SetupCheck(out var valueCheckRef, out var flowValueCheckFlowIn, 1, false);
             valueCheckRef.SetValue(1);
             float proximityValue = 33.21145566622334233f;
-            _valueProximityCheckBox.SetupCheck(context, out var valueProximityCheckRef, out var flowValueProximityCheckFlowIn, proximityValue, false);
+            _valueProximityCheckBox.SetupCheck(out var valueProximityCheckRef, out var flowValueProximityCheckFlowIn, proximityValue, false);
             valueProximityCheckRef.SetValue(proximityValue);
             
             context.AddPlusOneCounter(out var counter, out var flowInToIncrease);
             
-            _counterCheckBox.SetupCheck(context, counter, out var counterCheckFlowIn, 2);
-            _multiFlowCheckBox.SetupMultiFlowCheck(context, 2, out var multiFlowCheckFlowIn);
+            _counterCheckBox.SetupCheck(counter, out var counterCheckFlowIn, 2);
+            _multiFlowCheckBox.SetupMultiFlowCheck(2, out var multiFlowCheckFlowIn);
             context.AddToCurrentEntrySequence(
                 new FlowInRef[]
                 {
@@ -60,7 +60,7 @@ namespace Khronos_Test_Export.OpTests.TestRequirements
                 });
             
             context.NewEntryPoint("Delayed Check", 1f);
-            _delayedCheckBox.SetupCheck(context, out var delayedCheckFlow);
+            _delayedCheckBox.SetupCheck(out var delayedCheckFlow);
             context.AddToCurrentEntrySequence(
                 new FlowInRef[]
                 {

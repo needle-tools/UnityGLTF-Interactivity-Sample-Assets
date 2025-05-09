@@ -125,7 +125,7 @@ namespace Khronos_Test_Export
             var testApproximateEquality =
                 schema == "math/e" || schema == "math/pi" || expected is float && !isSpecialValue;
 
-            basicTestCheckBox.SetupCheck(context, testNode.FirstValueOut(), out var checkFlowIn, expected,
+            basicTestCheckBox.SetupCheck(testNode.FirstValueOut(), out var checkFlowIn, expected,
                 testApproximateEquality);
             context.AddToCurrentEntrySequence(checkFlowIn);
 

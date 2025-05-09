@@ -39,7 +39,7 @@ namespace Khronos_Test_Export
             waitAllNode.Configuration[Flow_WaitAllNode.IdConfigInputFlows].Value = 3;
             
             context.NewEntryPoint("Wait All - Completed");
-            _remainingInputOnCompletedCheckBox.SetupCheck(context, waitAllNode.ValueOut(Flow_WaitAllNode.IdOutRemainingInputs),
+            _remainingInputOnCompletedCheckBox.SetupCheck(waitAllNode.ValueOut(Flow_WaitAllNode.IdOutRemainingInputs),
                 out var remCheckFlowCompleted, 0);
 
             context.AddToCurrentEntrySequence(new FlowInRef[]
@@ -50,7 +50,7 @@ namespace Khronos_Test_Export
                     remCheckFlowCompleted
                 });
             
-            _completedCheckBox.SetupCheck(context, waitAllNode.FlowOut(Flow_WaitAllNode.IdFlowOutCompleted));
+            _completedCheckBox.SetupCheck(waitAllNode.FlowOut(Flow_WaitAllNode.IdFlowOutCompleted));
             
             // Remaining
             
@@ -59,7 +59,7 @@ namespace Khronos_Test_Export
             
             context.NewEntryPoint("Wait All - Remaining");
 
-            _remainingInputCheckBox.SetupCheck(context, waitAllNodeRemaining.ValueOut(Flow_WaitAllNode.IdOutRemainingInputs),
+            _remainingInputCheckBox.SetupCheck(waitAllNodeRemaining.ValueOut(Flow_WaitAllNode.IdOutRemainingInputs),
                 out var remCheckFlow, 2, false);
          
             context.AddToCurrentEntrySequence(
@@ -79,7 +79,7 @@ namespace Khronos_Test_Export
             waitAllNodeReset.Configuration[Flow_WaitAllNode.IdConfigInputFlows].Value = 3;
             
             context.NewEntryPoint("Wait All - Reset");
-            _resetCheckBox.SetupCheck(context, waitAllNodeReset.ValueOut(Flow_WaitAllNode.IdOutRemainingInputs),
+            _resetCheckBox.SetupCheck(waitAllNodeReset.ValueOut(Flow_WaitAllNode.IdOutRemainingInputs),
                out var flowCheckReset, 2, false);
 
             context.AddToCurrentEntrySequence(
@@ -116,7 +116,7 @@ namespace Khronos_Test_Export
                     waitAllNodeResetCompl.FlowIn("0"),
                 });
 
-            _resetCompletedCheckBox.SetupCheckFlowTimes(context, out var flowInTimes, 1);
+            _resetCompletedCheckBox.SetupCheckFlowTimes(out var flowInTimes, 1);
             waitAllNodeResetCompl.FlowOut(Flow_WaitAllNode.IdFlowOutCompleted).ConnectToFlowDestination(flowInTimes);
 
         }
