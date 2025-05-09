@@ -35,14 +35,14 @@ namespace Khronos_Test_Export
             var nodeCreator = context.interactivityExportContext;
             
             var forLoop = nodeCreator.CreateNode(new Flow_ForLoopNode());
-            context.NewEntryPoint(out var entryFlow, "Loop Entry");
+            context.NewEntryPoint("Loop Entry");
 
             forLoop.Configuration[Flow_ForLoopNode.IdConfigInitialIndex].Value = 1;
             forLoop.ValueIn(Flow_ForLoopNode.IdStartIndex).SetValue(0);
             forLoop.ValueIn(Flow_ForLoopNode.IdEndIndex).SetValue(10);
             
             _initialIndexCheck.SetupCheck(context, forLoop.ValueOut(Flow_ForLoopNode.IdIndex), out var initialIndexCheckFlow, 1);
-            context.AddSequence(entryFlow,
+            context.AddToCurrentEntrySequence(
                 new FlowInRef[]
                 {
                     initialIndexCheckFlow,

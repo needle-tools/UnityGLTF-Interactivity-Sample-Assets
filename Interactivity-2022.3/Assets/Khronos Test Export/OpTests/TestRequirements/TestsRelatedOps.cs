@@ -33,7 +33,7 @@ namespace Khronos_Test_Export.OpTests.TestRequirements
 
         public void CreateNodes(TestContext context)
         {
-            context.NewEntryPoint(out var entryFlow, "Entry");
+            context.NewEntryPoint("Entry");
            
             _flowCheckBox.SetupCheck(context, out var flowCheckFlowIn);
             _valueCheckBox.SetupCheck(context, out var valueCheckRef, out var flowValueCheckFlowIn, 1, false);
@@ -46,7 +46,7 @@ namespace Khronos_Test_Export.OpTests.TestRequirements
             
             _counterCheckBox.SetupCheck(context, counter, out var counterCheckFlowIn, 2);
             _multiFlowCheckBox.SetupMultiFlowCheck(context, 2, out var multiFlowCheckFlowIn);
-            context.AddSequence(entryFlow,
+            context.AddToCurrentEntrySequence(
                 new FlowInRef[]
                 {
                     flowCheckFlowIn,
@@ -59,9 +59,9 @@ namespace Khronos_Test_Export.OpTests.TestRequirements
                     multiFlowCheckFlowIn[1]
                 });
             
-            context.NewEntryPoint(out var delayedEntry, "Delayed Check", 1f);
+            context.NewEntryPoint("Delayed Check", 1f);
             _delayedCheckBox.SetupCheck(context, out var delayedCheckFlow);
-            context.AddSequence(delayedEntry,
+            context.AddToCurrentEntrySequence(
                 new FlowInRef[]
                 {
                     delayedCheckFlow,

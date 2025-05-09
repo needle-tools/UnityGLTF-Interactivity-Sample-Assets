@@ -41,9 +41,14 @@ namespace Khronos_Test_Export
         
         public List<Case> cases = new List<Case>();
         private Case currentCase => cases[cases.Count - 1];
+        
         private Entry _lastEntryPoint;
         private GltfInteractivityExportNode _lastEntryPointFallbackSequence = null;
-        private GltfInteractivityExportNode _lastEntryPointNodeSequennce = null;
+        private GltfInteractivityExportNode _lastEntryPointNodeSequence = null;
+        private GltfInteractivityExportNode _lastDelayedFallback = null;
+        private List<FlowInRef> _currentEntryFlows = new List<FlowInRef>();
+        private List<FlowInRef> _currentFallbackFlows = new List<FlowInRef>();
+        
         
         public TestContext(CheckBox defaultCheckBox, TextMeshPro caseLabelPrefab, Transform root)
         {
@@ -53,28 +58,110 @@ namespace Khronos_Test_Export
             _layout.coloumnSpaceWidth = _checkBoxPrefab.CheckBoxSize.x / 10f;
         }
 
-        public void NewEntryPoint(FlowInRef flowIn, string name, float? delayedExecutionTime = null, bool requiresUserInteraction = false)
+        private void UpdateEntrySequences()
         {
-            NewEntryPoint(out var flow, name, delayedExecutionTime, requiresUserInteraction);
-            flow.ConnectToFlowDestination(flowIn);
+            if (_currentFallbackFlows.Count > 0)
+            {
+                if (_lastEntryPoint.delayedExecutionTime != null)
+                {
+                    if (_lastDelayedFallback == null)
+                    {
+                        _lastDelayedFallback = interactivityExportContext.CreateNode(new Flow_SetDelayNode());
+                        _lastDelayedFallback.ValueIn(Flow_SetDelayNode.IdDuration).SetValue(_lastEntryPoint.delayedExecutionTime.Value);
+                    }
+                    
+                    _lastEntryPoint.node.FlowOut(Event_OnStartNode.IdFlowOut).ConnectToFlowDestination(_lastDelayedFallback.FlowIn(Flow_SequenceNode.IdFlowIn));
+                }
+                
+                if (_lastEntryPointFallbackSequence == null && (_currentFallbackFlows.Count > 1 || _lastDelayedFallback == null))
+                {
+                    var nodeCreator = interactivityExportContext;
+                    _lastEntryPointFallbackSequence = nodeCreator.CreateNode(new Flow_SequenceNode());
+                }
+                
+                
+                if (_lastEntryPointFallbackSequence != null)
+                {
+                    _lastEntryPointFallbackSequence.FlowConnections.Clear();
+                    foreach (var flow in _currentFallbackFlows)
+                        _lastEntryPointFallbackSequence.FlowOut((_lastEntryPointFallbackSequence.FlowConnections.Count+1).ToString("D3")).ConnectToFlowDestination(flow);
+                }
+            }
+
+            if (_currentEntryFlows.Count > 1)
+            {
+                if (_lastEntryPointNodeSequence == null)
+                {
+                    var nodeCreator = interactivityExportContext;
+                    _lastEntryPointNodeSequence = nodeCreator.CreateNode(new Flow_SequenceNode());
+                }
+                _lastEntryPointNodeSequence.FlowConnections.Clear();
+                foreach (var flow in _currentEntryFlows)
+                    _lastEntryPointNodeSequence.FlowOut(_lastEntryPointNodeSequence.FlowConnections.Count.ToString("D3")).ConnectToFlowDestination(flow);
+            }
+            
+            
+            var startFlow = _lastEntryPoint.node.FlowOut(Event_OnStartNode.IdFlowOut);
+
+            if (_lastEntryPointFallbackSequence != null)
+            {
+                if (_lastDelayedFallback == null)
+                {
+                    startFlow.ConnectToFlowDestination(_lastEntryPointFallbackSequence.FlowIn(Flow_SequenceNode.IdFlowIn));
+                    startFlow = _lastEntryPointFallbackSequence.FlowOut("000");
+                }
+                else
+                {
+                    startFlow.ConnectToFlowDestination(_lastDelayedFallback.FlowIn(Flow_SetDelayNode.IdFlowIn));
+                    _lastDelayedFallback.FlowOut(Flow_SetDelayNode.IdFlowDone).ConnectToFlowDestination(_lastEntryPointFallbackSequence.FlowIn(Flow_SequenceNode.IdFlowIn));
+                    startFlow = _lastDelayedFallback.FlowOut(Flow_SetDelayNode.IdFlowOut);
+                }
+            }
+            else if (_currentFallbackFlows.Count == 1)
+            {
+                if (_lastDelayedFallback != null)
+                {
+                    startFlow.ConnectToFlowDestination(_lastDelayedFallback.FlowIn(Flow_SetDelayNode.IdFlowIn));
+                    _lastDelayedFallback.FlowOut(Flow_SetDelayNode.IdFlowDone).ConnectToFlowDestination(_currentFallbackFlows[0]);
+                    startFlow = _lastDelayedFallback.FlowOut(Flow_SetDelayNode.IdFlowOut);
+                }
+            }
+            
+            if (_lastEntryPointNodeSequence != null)
+            {
+                startFlow.ConnectToFlowDestination(_lastEntryPointNodeSequence.FlowIn(Flow_SequenceNode.IdFlowIn));
+                startFlow = _lastEntryPointNodeSequence.FlowOut("000");
+            }
+            else
+                if (_currentEntryFlows.Count == 1)
+                    startFlow.ConnectToFlowDestination(_currentEntryFlows[0]);
         }
         
-        public void NewEntryPoint(out FlowOutRef flow, string name, float? delayedExecutionTime = null, bool requiresUserInteraction = false)
+        public void NewEntryPoint(FlowInRef flowIn, string name, float? delayedExecutionTime = null, bool requiresUserInteraction = false)
+        {
+            NewEntryPoint(name, delayedExecutionTime, requiresUserInteraction);
+            AddToCurrentEntrySequence(flowIn);
+            UpdateEntrySequences();
+        }
+        
+        public void NewEntryPoint(string name, float? delayedExecutionTime = null, bool requiresUserInteraction = false)
         {
             var nodeCreator = interactivityExportContext;
             var startNode = nodeCreator.CreateNode(new Event_OnStartNode());
-            flow = startNode.FlowOut(Event_OnStartNode.IdFlowOut);
             
             var newEntry = new Entry();
             newEntry.node = startNode;
             newEntry.name = name;
             newEntry.delayedExecutionTime = delayedExecutionTime;
             newEntry.requiresUserInteraction = requiresUserInteraction;
-            
+
+            _currentEntryFlows.Clear();
+            _currentFallbackFlows.Clear();
             currentCase.entryNodes.Add(newEntry);
             _lastEntryPoint = newEntry;
             _lastEntryPointFallbackSequence = null;
-            _lastEntryPointNodeSequennce = null;
+            _lastEntryPointNodeSequence = null;
+            _lastDelayedFallback = null;
         }
 
         public void AddFallbackToLastEntryPoint(FlowInRef flow)
@@ -84,51 +171,8 @@ namespace Khronos_Test_Export
                 Debug.LogError("AddFallbackToLastEntryPoint requires a call of NewEntryPoint before.");
                 return;
             }
-
-            
-            if (_lastEntryPointFallbackSequence == null)
-            {
-                var nodeCreator = interactivityExportContext;
-                _lastEntryPointFallbackSequence = nodeCreator.CreateNode(new Flow_SequenceNode());
-                var socket = _lastEntryPoint.node.FlowOut(Event_OnStartNode.IdFlowOut).socket;
-              
-                if (_lastEntryPoint.delayedExecutionTime != null)
-                {
-                    var s = nodeCreator.CreateNode(new Flow_SequenceNode());
-                    _lastEntryPointNodeSequennce = s;
-                    if (socket.Value.Node != null)
-                    {
-                        s.FlowOut("000").socket.Value.Socket = socket.Value.Socket;
-                        s.FlowOut("000").socket.Value.Node = socket.Value.Node;
-                    }
-                    _lastEntryPoint.node.FlowOut(Event_OnStartNode.IdFlowOut).ConnectToFlowDestination(s.FlowIn(Flow_SequenceNode.IdFlowIn));
-                    
-                    var delay = nodeCreator.CreateNode(new Flow_SetDelayNode());
-                    s.FlowOut(s.FlowConnections.Count.ToString("D3")).ConnectToFlowDestination(delay.FlowIn(Flow_SetDelayNode.IdFlowIn));
-                    delay.ValueIn(Flow_SetDelayNode.IdDuration).SetValue(_lastEntryPoint.delayedExecutionTime.Value);
-                    delay.FlowOut(Flow_SetDelayNode.IdFlowDone)
-                        .ConnectToFlowDestination(
-                            _lastEntryPointFallbackSequence.FlowIn(Flow_SequenceNode.IdFlowIn));
-                    _lastEntryPointFallbackSequence.FlowOut("000").ConnectToFlowDestination(flow);
-                }
-                else
-                {
-                    if (socket.Value.Node != null)
-                    {
-                        _lastEntryPointFallbackSequence.FlowOut("000").socket.Value.Socket = socket.Value.Socket;
-                        _lastEntryPointFallbackSequence.FlowOut("000").socket.Value.Node = socket.Value.Node;
-                    }
-
-                    _lastEntryPoint.node.FlowOut(Event_OnStartNode.IdFlowOut).ConnectToFlowDestination(_lastEntryPointFallbackSequence.FlowIn(Flow_SequenceNode.IdFlowIn));
-                    _lastEntryPointNodeSequennce = _lastEntryPointFallbackSequence;
-                    _lastEntryPointFallbackSequence.FlowOut(_lastEntryPointFallbackSequence.FlowConnections.Count.ToString("D3")).ConnectToFlowDestination(flow);
-                }
-            }
-            else
-            {
-                var count = _lastEntryPointFallbackSequence.FlowConnections.Count;
-                _lastEntryPointFallbackSequence.FlowOut(count.ToString("D3")).ConnectToFlowDestination(flow);
-            }
+            _currentFallbackFlows.Add(flow);
+            UpdateEntrySequences();
         }
         
         public void AddLog(string message, out FlowInRef flowIn, out FlowOutRef flowOut,params ValueOutRef[] values)
@@ -152,16 +196,31 @@ namespace Khronos_Test_Export
             }
         }
         
+        public void AddToCurrentEntrySequence(FlowInRef flow)
+        {
+            if (_lastEntryPoint == null)
+            {
+                Debug.LogError("AddToLastEntrySequence requires a call of NewEntryPoint before.");
+                return;
+            }
+            _currentEntryFlows.Add(flow);
+            UpdateEntrySequences();
+        }
+        
+        public void AddToCurrentEntrySequence(params FlowInRef[] flows)
+        {
+            if (_lastEntryPoint == null)
+            {
+                Debug.LogError("AddToLastEntrySequence requires a call of NewEntryPoint before.");
+                return;
+            }
+            foreach (var flow in flows)
+                _currentEntryFlows.Add(flow);
+            UpdateEntrySequences();
+        }
+        
         public void AddSequence(FlowOutRef flowIn, FlowInRef[] sequences)
         {
-            if (_lastEntryPoint != null && flowIn.socket.Value.Node == _lastEntryPoint.node.FlowOut(Event_OnStartNode.IdFlowOut).socket.Value.Node)
-            {
-                if (_lastEntryPointNodeSequennce != null)
-                {
-                    flowIn = _lastEntryPointNodeSequennce.FlowOut("000");
-                }
-            }
-            
             var nodeCreator = interactivityExportContext;
             
             var sequenceNode = nodeCreator.CreateNode(new Flow_SequenceNode());
@@ -232,8 +291,7 @@ namespace Khronos_Test_Export
                 newCheckBox.Waiting();
             return newCheckBox;
         }
-
-
+        
         public void Dispose()
         {
             foreach (var checkBox in CheckBoxes)

@@ -33,7 +33,7 @@ namespace Khronos_Test_Export
             var nodeCreator = context.interactivityExportContext;
             
             // Order Tests
-            context.NewEntryPoint(out var entryOrder, _orderCheckBox.GetText());
+            context.NewEntryPoint(_orderCheckBox.GetText());
             var multiGateNode = nodeCreator.CreateNode(new Flow_MultiGateNode());
             multiGateNode.FlowOut("008");
             multiGateNode.FlowOut("004");
@@ -45,7 +45,7 @@ namespace Khronos_Test_Export
                 multiGateNode.FlowOut("008"),
             });
             
-            context.AddSequence(entryOrder,
+            context.AddToCurrentEntrySequence(
                 new FlowInRef[]
                 {
                     multiGateNode.FlowIn(Flow_MultiGateNode.IdFlowIn),
@@ -56,8 +56,8 @@ namespace Khronos_Test_Export
             
             // Random Tests
             var multiGateRandomNode = nodeCreator.CreateNode(new Flow_MultiGateNode());
-            context.NewEntryPoint(out var entryRandom, _randomCheckBox.GetText());
-            context.AddSequence(entryRandom,
+            context.NewEntryPoint(_randomCheckBox.GetText());
+            context.AddToCurrentEntrySequence(
                 new FlowInRef[]
                 {
                     multiGateRandomNode.FlowIn(Flow_MultiGateNode.IdFlowIn),
@@ -76,8 +76,8 @@ namespace Khronos_Test_Export
             
             // Loop Tests
             var multiGateLoopNode = nodeCreator.CreateNode(new Flow_MultiGateNode());
-            context.NewEntryPoint(out var entryLoop, _loopCheckBox.GetText());
-            context.AddSequence(entryLoop,
+            context.NewEntryPoint(_loopCheckBox.GetText());
+            context.AddToCurrentEntrySequence(
                 new FlowInRef[]
                 {
                     multiGateLoopNode.FlowIn(Flow_MultiGateNode.IdFlowIn),
@@ -111,8 +111,8 @@ namespace Khronos_Test_Export
             
             // Reset Loop Tests
             var multiGateResetLoopNode = nodeCreator.CreateNode(new Flow_MultiGateNode());
-            context.NewEntryPoint(out var entryLoopReset, _loopCheckBox.GetText());
-            context.AddSequence(entryLoopReset,
+            context.NewEntryPoint(_loopCheckBox.GetText());
+            context.AddToCurrentEntrySequence(
                 new FlowInRef[]
                 {
                     multiGateResetLoopNode.FlowIn(Flow_MultiGateNode.IdFlowIn),

@@ -38,12 +38,11 @@ namespace Khronos_Test_Export
             var waitAllNode = nodeCreator.CreateNode(new Flow_WaitAllNode());
             waitAllNode.Configuration[Flow_WaitAllNode.IdConfigInputFlows].Value = 3;
             
-            context.NewEntryPoint(out var entryFlow, "Wait All - Completed");
+            context.NewEntryPoint("Wait All - Completed");
             _remainingInputOnCompletedCheckBox.SetupCheck(context, waitAllNode.ValueOut(Flow_WaitAllNode.IdOutRemainingInputs),
                 out var remCheckFlowCompleted, 0);
 
-            context.AddSequence(entryFlow,
-                new FlowInRef[]
+            context.AddToCurrentEntrySequence(new FlowInRef[]
                 {
                     waitAllNode.FlowIn("0"),
                     waitAllNode.FlowIn("1"),
@@ -58,12 +57,12 @@ namespace Khronos_Test_Export
             var waitAllNodeRemaining = nodeCreator.CreateNode(new Flow_WaitAllNode());
             waitAllNodeRemaining.Configuration[Flow_WaitAllNode.IdConfigInputFlows].Value = 3;
             
-            context.NewEntryPoint(out var entryFlowRemaining, "Wait All - Remaining");
+            context.NewEntryPoint("Wait All - Remaining");
 
             _remainingInputCheckBox.SetupCheck(context, waitAllNodeRemaining.ValueOut(Flow_WaitAllNode.IdOutRemainingInputs),
                 out var remCheckFlow, 2, false);
          
-            context.AddSequence(entryFlowRemaining,
+            context.AddToCurrentEntrySequence(
                 new FlowInRef[]
                 {
                     waitAllNodeRemaining.FlowIn("0"),
@@ -79,11 +78,11 @@ namespace Khronos_Test_Export
             var waitAllNodeReset = nodeCreator.CreateNode(new Flow_WaitAllNode());
             waitAllNodeReset.Configuration[Flow_WaitAllNode.IdConfigInputFlows].Value = 3;
             
-            context.NewEntryPoint(out var entryFlowReset, "Wait All - Reset");
+            context.NewEntryPoint("Wait All - Reset");
             _resetCheckBox.SetupCheck(context, waitAllNodeReset.ValueOut(Flow_WaitAllNode.IdOutRemainingInputs),
                out var flowCheckReset, 2, false);
 
-            context.AddSequence(entryFlowReset,
+            context.AddToCurrentEntrySequence(
                 new FlowInRef[]
                 {
                     waitAllNodeReset.FlowIn("0"),
@@ -102,8 +101,8 @@ namespace Khronos_Test_Export
             var waitAllNodeResetCompl = nodeCreator.CreateNode(new Flow_WaitAllNode());
             waitAllNodeResetCompl.Configuration[Flow_WaitAllNode.IdConfigInputFlows].Value = 3;
             
-            context.NewEntryPoint(out var entryFlowResetCompl, "Wait All - Reset Completed");
-            context.AddSequence(entryFlowResetCompl,
+            context.NewEntryPoint("Wait All - Reset Completed");
+            context.AddToCurrentEntrySequence(
                 new FlowInRef[]
                 {
                     waitAllNodeResetCompl.FlowIn("0"),

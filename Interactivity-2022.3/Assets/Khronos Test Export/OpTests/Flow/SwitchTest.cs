@@ -8,7 +8,7 @@ namespace Khronos_Test_Export
         private CheckBox _defaultFlowCheck;
         private CheckBox _noCasesDefaultFlowCheck;
         private CheckBox _negateCasesFlowCheck;
-        private CheckBox _floatNumberCasesFlowCheck;
+        //private CheckBox _floatNumberCasesFlowCheck;
         public string GetTestName()
         {
             return "flow/switch";
@@ -25,7 +25,7 @@ namespace Khronos_Test_Export
             _defaultFlowCheck = context.AddCheckBox("Default flow");
             _noCasesDefaultFlowCheck = context.AddCheckBox("Empty cases default flow");
             _negateCasesFlowCheck = context.AddCheckBox("Negate cases flow");
-            _floatNumberCasesFlowCheck = context.AddCheckBox("Float number cases flow");
+            //_floatNumberCasesFlowCheck = context.AddCheckBox("Float number cases flow");
         }
 
         public void CreateNodes(TestContext context)

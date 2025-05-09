@@ -37,8 +37,8 @@ namespace Khronos_Test_Export
             var doNNode = nodeCreator.CreateNode(new Flow_DoNNode());
             
                        
-            context.NewEntryPoint(out var entry, "Do N - Iterations");
-            context.AddSequence(entry,
+            context.NewEntryPoint("Do N - Iterations");
+            context.AddToCurrentEntrySequence(
                 new FlowInRef[]
                 {
                     doNNode.FlowIn(Flow_DoNNode.IdFlowIn),
@@ -82,13 +82,13 @@ namespace Khronos_Test_Export
 
             var doN2Node = nodeCreator.CreateNode(new Flow_DoNNode());
             doN2Node.ValueIn(Flow_DoNNode.IdN).SetValue(2);
-            context.NewEntryPoint(out var entryReset, "Do N - Reset");
+            context.NewEntryPoint("Do N - Reset");
             
             context.AddPlusOneCounter(out var counter2, out var flowInToIncrease2);
             doN2Node.FlowOut(Flow_DoNNode.IdOut).ConnectToFlowDestination(flowInToIncrease2);
             _resetCheck.SetupCheck(context, counter2, out var checkCountFlow, 4);
 
-            context.AddSequence(entryReset,
+            context.AddToCurrentEntrySequence(
                 new FlowInRef[]
                 {
                     doN2Node.FlowIn(Flow_DoNNode.IdFlowIn),
@@ -102,12 +102,12 @@ namespace Khronos_Test_Export
             
             var doN3Node = nodeCreator.CreateNode(new Flow_DoNNode());
             doN3Node.ValueIn(Flow_DoNNode.IdN).SetValue(2);
-            context.NewEntryPoint(out var entry2, "Do N - Max Iteration");
+            context.NewEntryPoint("Do N - Max Iteration");
 
             context.AddPlusOneCounter(out var counter3, out var flowInToIncrease3);
             doN3Node.FlowOut(Flow_DoNNode.IdOut).ConnectToFlowDestination(flowInToIncrease3);
             _limitCheck.SetupCheck(context, counter3, out var checkCountFlow2, 2);
-            context.AddSequence(entry2,
+            context.AddToCurrentEntrySequence(
                 new FlowInRef[]
                 {
                     doN3Node.FlowIn(Flow_DoNNode.IdFlowIn),
