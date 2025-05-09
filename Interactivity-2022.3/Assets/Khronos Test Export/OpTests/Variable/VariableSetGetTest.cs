@@ -61,7 +61,7 @@ namespace Khronos_Test_Export
             checkDefaultFloatGet = context.AddCheckBox("default float");
             checkDefaultVector2Get = context.AddCheckBox("default float2");
             checkDefaultVector3Get = context.AddCheckBox("default float3");
-            checkDefaultVector4Get = context.AddCheckBox("default float");
+            checkDefaultVector4Get = context.AddCheckBox("default float4");
         }
 
         public void CreateNodes(TestContext context)
@@ -118,7 +118,7 @@ namespace Khronos_Test_Export
             {
                 var gltfType = GltfTypes.TypeIndex(type);
                 var nullValue = GltfTypes.GetNullByType(gltfType);
-                var varId = nodeCreator.Context.AddVariableWithIdIfNeeded("VarSetTest_"+GltfTypes.allTypes[gltfType], nullValue, gltfType);
+                var varId = nodeCreator.Context.AddVariableWithIdIfNeeded("VarSetTestStatic_"+GltfTypes.allTypes[gltfType]+GltfTypes.allTypes[gltfType]+Guid.NewGuid().ToString(), nullValue, gltfType);
                 
                 VariablesHelpers.SetVariableStaticValue(nodeCreator, varId, valueToSet, out var setFlow, out var setOutFlow);
                 context.NewEntryPoint(setFlow, "Set Variable " + GltfTypes.allTypes[gltfType]);
@@ -132,12 +132,13 @@ namespace Khronos_Test_Export
             void AddSubTestGetDefault(Type type, CheckBox checkBox, object valueToSet)
             {
                 var gltfType = GltfTypes.TypeIndex(type);
-                var varId = nodeCreator.Context.AddVariableWithIdIfNeeded("VarSetTest_"+GltfTypes.allTypes[gltfType], valueToSet, gltfType);
+                var varId = nodeCreator.Context.AddVariableWithIdIfNeeded("VarSetTest_"+GltfTypes.allTypes[gltfType]+Guid.NewGuid().ToString(), valueToSet, gltfType);
                 
                 VariablesHelpers.GetVariable(nodeCreator, varId, out var getVar);
                 
+                context.NewEntryPoint("Get default value from Variable " + GltfTypes.allTypes[gltfType]);
                 checkBox.SetupCheck(getVar, out var checkFlow, valueToSet, false);
-                context.NewEntryPoint(checkFlow, "Get default value from Variable " + GltfTypes.allTypes[gltfType]);
+                context.AddToCurrentEntrySequence(checkFlow);
             }     
             
             // AddSubTestInput(typeof(bool), checkBoolSet, true);
