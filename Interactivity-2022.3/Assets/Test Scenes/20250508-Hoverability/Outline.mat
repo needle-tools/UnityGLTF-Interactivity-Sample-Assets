@@ -20,11 +20,12 @@ Material:
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_Name: Backdrop
+  m_Name: Outline
   m_Shader: {fileID: -6465566751694194690, guid: 59541e6caf586ca4f96ccf48a4813a51, type: 3}
   m_Parent: {fileID: 0}
   m_ModifiedSerializedProperties: 0
   m_ValidKeywords:
+  - _BUILTIN_SURFACE_TYPE_TRANSPARENT
   - _VERTEX_COLORS_ON
   m_InvalidKeywords: []
   m_LightmapFlags: 6
@@ -32,7 +33,7 @@ Material:
   m_DoubleSidedGI: 0
   m_CustomRenderQueue: 2000
   stringTagMap:
-    RenderType: Opaque
+    RenderType: Transparent
   disabledShaderPasses: []
   m_LockedProperties: 
   m_SavedProperties:
@@ -83,13 +84,13 @@ Material:
     - _BUILTIN_AlphaClip: 0
     - _BUILTIN_Blend: 0
     - _BUILTIN_CullMode: 2
-    - _BUILTIN_DstBlend: 0
+    - _BUILTIN_DstBlend: 10
     - _BUILTIN_QueueControl: 1
     - _BUILTIN_QueueOffset: 0
-    - _BUILTIN_SrcBlend: 1
-    - _BUILTIN_Surface: 0
+    - _BUILTIN_SrcBlend: 5
+    - _BUILTIN_Surface: 1
     - _BUILTIN_ZTest: 4
-    - _BUILTIN_ZWrite: 1
+    - _BUILTIN_ZWrite: 0
     - _BUILTIN_ZWriteControl: 0
     - _BumpScale: 1
     - _Cutoff: 0.5
