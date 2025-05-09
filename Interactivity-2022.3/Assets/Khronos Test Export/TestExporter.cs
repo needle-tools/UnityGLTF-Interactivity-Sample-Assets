@@ -9,6 +9,7 @@ using TMPro;
 using UnityEditor;
 using UnityEngine;
 using UnityGLTF;
+using UnityGLTF.Interactivity;
 using UnityGLTF.Interactivity.Export;
 using UnityGLTF.Interactivity.Schema;
 using UnityGLTF.Interactivity.VisualScripting;
@@ -94,6 +95,7 @@ namespace Khronos_Test_Export
                     obj[nameof(SubTests.name)] = value.name;
                     obj[nameof(SubTests.resultVarName)] = value.resultVarName;
                     obj[nameof(SubTests.resultVarId)] = value.resultVarId;
+                    obj["resultVarType"] = GltfTypes.GetTypeMapping(value.expectedResultValue.GetType()).GltfSignature;
                     GltfInteractivityNode.ValueSerializer.Serialize(value.expectedResultValue, obj);
                     obj[nameof(SubTests.expectedResultValue)] = obj["value"];
                     obj.Remove("value");
