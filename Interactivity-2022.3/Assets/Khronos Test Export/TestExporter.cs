@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Text;
 using Newtonsoft.Json;
@@ -106,6 +107,35 @@ namespace Khronos_Test_Export
                 }
             }
         }
+    
+        [Serializable]
+        public class IndexEntry
+        {
+            public string label;
+            public string name;
+           // public string screenshot = "";
+            public string[] tags;
+            public Dictionary<string, string> variants = new Dictionary<string, string>();
+        }
+
+        private void CreateIndexJsonFile(string name, List<(ITestCase, string, string)> tests)
+        {
+            var indexData = new List<IndexEntry>();
+            foreach (var test in tests)
+            {
+                var entry = new IndexEntry();
+                entry.label = test.Item1.GetTestName();
+                entry.name = test.Item1.GetTestName();
+                entry.tags = _schemaUsedInCase[test.Item1].ToArray();
+                entry.variants.Add("gltf-Binary", test.Item2.Replace(@"\", "/"));
+                entry.variants.Add("test-Json", test.Item3.Replace(@"\", "/"));
+                indexData.Add(entry);
+            }
+
+            var json = JsonConvert.SerializeObject(indexData, Formatting.Indented);
+            
+            System.IO.File.WriteAllText(name, json);
+        }
 
         private void CreateTestCaseJsonFile(string name, ITestCase[] testCases, string fileName, string glbFileName)
         {
@@ -202,7 +232,7 @@ namespace Khronos_Test_Export
             EditorPrefs.SetString("GLTFTestExportPath", path);
         }
 
-        public void ExportTest(ITestCase[] cases, bool batchExport = false, string allInOneName = null)
+        public void ExportTest(ITestCase[] cases, bool batchExport, string allInOneName, string indexFileName)
         {
             var settings = GLTFSettings.GetDefaultSettings();
             var testFileExporterPLugin = settings.ExportPlugins.FirstOrDefault(ep => ep is TestFileExporterPlugin);
@@ -229,6 +259,7 @@ namespace Khronos_Test_Export
 
             if (batchExport)
             {
+                List<(ITestCase, string, string)> tests = new List<(ITestCase, string, string)>();
                 foreach (var testCase in cases)
                 {
                     try
@@ -259,17 +290,23 @@ namespace Khronos_Test_Export
                         var individualPath = System.IO.Path.Combine(path, glbFileName);
 
                         export.SaveGLB(destinationPath, glbFileName);
-                            
+                        
+                        var jsonFilename = System.IO.Path.Combine(path,
+                            System.IO.Path.Combine(destinationPath, testName + ".json"));
+                        tests.Add((testCase,    Path.GetRelativePath(path, Path.Combine(destinationPath, glbFileName)), Path.GetRelativePath(path,jsonFilename)));
                         CreateTestCaseReadmeFile(testCase, System.IO.Path.Combine(destinationPath, testName + ".md"));
                         CreateTestCaseJsonFile(testCase.GetTestName(), new[] { testCase },
-                            System.IO.Path.Combine(path, System.IO.Path.Combine(destinationPath, testName+".json")), glbFileName);
+                            jsonFilename, glbFileName);
                         currentTestContext.Dispose();
                     }
                     finally
                     {
                         currentTestContext.Dispose();
                     }
+                    
                 }
+                string idnexFileName = Path.Combine(path, indexFileName + ".json");
+                CreateIndexJsonFile(idnexFileName, tests);
             }
             else
             {
@@ -307,8 +344,10 @@ namespace Khronos_Test_Export
         public void OnInteractivityExport(GltfInteractivityExportNodes export)
         {
             currentTestContext.interactivityExportContext = export;
+            int index = 0;
             foreach (var testCase in currentTestCases)
             {
+                currentTestContext.CurrentCaseIndex = index;
                 int lastCount = currentTestContext.interactivityExportContext.nodes.Count;
                 testCase.CreateNodes(currentTestContext);
 
@@ -328,6 +367,8 @@ namespace Khronos_Test_Export
                 {
                     _schemaUsedInCase.Add(testCase, schemaUsedInCase);
                 }
+
+                index++;
             }
         }
     }

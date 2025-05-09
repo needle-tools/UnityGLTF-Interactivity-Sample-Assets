@@ -61,7 +61,8 @@ namespace Khronos_Test_Export
         [SerializeField] protected TestCaseEntry[] testCases;
 
         public string testName = "TestName";
-
+        public string indexFilename = "index";
+        
         public class IgnoreTestCaseAttribute : Attribute
         {
             public IgnoreTestCaseAttribute()
@@ -127,12 +128,12 @@ namespace Khronos_Test_Export
 
             if (exportAllInOne)
             {
-                testExporter.ExportTest(cases, false, testName);
+                testExporter.ExportTest(cases, false, testName, indexFilename);
             }
 
             if (exportIndividual)
             {
-                testExporter.ExportTest(cases, true);
+                testExporter.ExportTest(cases, true, testName, indexFilename);
             }
         }
 #if UNITY_EDITOR
@@ -166,13 +167,14 @@ namespace Khronos_Test_Export
                 GUILayout.EndVertical();
 
                 exportIndividual = GUILayout.Toggle(exportIndividual, "Export Individual Tests");
+                EditorGUI.indentLevel++;
+                EditorGUILayout.PropertyField(serializedObject.FindProperty(nameof(TestCreator.indexFilename)));
+                EditorGUI.indentLevel--;
+
                 exportAllInOne = GUILayout.Toggle(exportAllInOne, "Export All In One");
-                if (exportAllInOne)
-                {
-                    EditorGUI.indentLevel++;
-                    EditorGUILayout.PropertyField(serializedObject.FindProperty(nameof(TestCreator.testName)));
-                    EditorGUI.indentLevel--;
-                }
+                EditorGUI.indentLevel++;
+                EditorGUILayout.PropertyField(serializedObject.FindProperty(nameof(TestCreator.testName)));
+                EditorGUI.indentLevel--;
 
                 if (EditorGUI.EndChangeCheck())
                 {

@@ -40,7 +40,8 @@ namespace Khronos_Test_Export
         }
         
         public List<Case> cases = new List<Case>();
-        private Case currentCase => cases[cases.Count - 1];
+        public int CurrentCaseIndex = -1;
+        private Case currentCase => cases[CurrentCaseIndex];
         
         private Entry _lastEntryPoint;
         private GltfInteractivityExportNode _lastEntryPointFallbackSequence = null;
@@ -275,6 +276,7 @@ namespace Khronos_Test_Export
 
             newCase.caseLabel = newLabel;
             cases.Add(newCase);
+            CurrentCaseIndex = cases.Count - 1;
             return newCase;
         }
 

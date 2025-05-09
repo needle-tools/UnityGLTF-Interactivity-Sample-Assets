@@ -101,6 +101,7 @@ namespace Khronos_Test_Export
             var nodeCreator = context.interactivityExportContext;
 
             var testNode = nodeCreator.CreateNode(GetSchema(schema));
+            context.NewEntryPoint("Basic float");
 
             if (testNode.ValueInConnection.ContainsKey("a"))
                 testNode.SetValueInSocket("a", a, TypeRestriction.LimitToFloat);
@@ -126,8 +127,8 @@ namespace Khronos_Test_Export
 
             basicTestCheckBox.SetupCheck(context, testNode.FirstValueOut(), out var checkFlowIn, expected,
                 testApproximateEquality);
+            context.AddToCurrentEntrySequence(checkFlowIn);
 
-            context.NewEntryPoint(checkFlowIn, "Basic float");
         }
     }
 }

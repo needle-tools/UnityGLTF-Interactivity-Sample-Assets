@@ -417,6 +417,7 @@ namespace Khronos_Test_Export
         public override void ExportTests(bool exportAllInOne = true, bool exportIndividual = true)
         {
             testName = "Math Tests";
+            indexFilename = "MathTests-Index";
             base.ExportTests(exportAllInOne, exportIndividual);
         }
 #if UNITY_EDITOR
@@ -426,8 +427,7 @@ namespace Khronos_Test_Export
         {
             public bool exportAllInOne = true;
             public bool exportIndividual = true;
-
-
+            
             public override void OnInspectorGUI()
             {
                 EditorGUILayout.PropertyField(serializedObject.FindProperty(nameof(MathTestCreator.testExporter)));
