@@ -110,12 +110,12 @@ namespace Khronos_Test_Export
             if (testNode.ValueInConnection.ContainsKey("c"))
                 testNode.SetValueInSocket("c", c, TypeRestriction.LimitToFloat);
 
-            var schemaExpetedType = testNode.Schema.OutputValueSockets["value"].expectedType;
+            var schemaExpectedType = testNode.Schema.OutputValueSockets["value"].expectedType;
             var typeRestriction = expected is float ? TypeRestriction.LimitToFloat : TypeRestriction.LimitToBool;
             var expectedRestriction = expected is float ? ExpectedType.Float : ExpectedType.Bool;
 
-            if ((schemaExpetedType != null && schemaExpetedType.typeIndex != GltfTypes.TypeIndex(typeof(bool))
-                 || schemaExpetedType == null))
+            if ((schemaExpectedType != null && schemaExpectedType.typeIndex != GltfTypes.TypeIndex(typeof(bool))
+                 || schemaExpectedType == null))
                 testNode.OutputValueSocket["value"].expectedType = expectedRestriction;
 
 
