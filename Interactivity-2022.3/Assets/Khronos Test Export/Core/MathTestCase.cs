@@ -123,7 +123,7 @@ namespace Khronos_Test_Export
                                  expected.Equals(float.NegativeInfinity);
 
             var testApproximateEquality =
-                schema == "math/e" || schema == "math/pi" || expected is float && !isSpecialValue;
+                schema == "math/e" || schema == "math/pi" || schema == "math/inf" || expected is float && !isSpecialValue;
 
             basicTestCheckBox.SetupCheck(testNode.FirstValueOut(), out var checkFlowIn, expected,
                 testApproximateEquality);
