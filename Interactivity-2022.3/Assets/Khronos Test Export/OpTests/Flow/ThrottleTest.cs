@@ -89,7 +89,7 @@ namespace Khronos_Test_Export
             // Error flow
             var throttleNode3 = nodeCreator.CreateNode(new Flow_ThrottleNode());
             context.NewEntryPoint(throttleNode3.FlowIn(Flow_ThrottleNode.IdFlowIn), _errFlowCheckBox.GetText());
-            throttleNode3.ValueIn(Flow_ThrottleNode.IdInputDuration).SetValue(-1);
+            throttleNode3.ValueIn(Flow_ThrottleNode.IdInputDuration).SetValue(-1f);
             
             _errFlowCheckBox.SetupCheck(throttleNode3.FlowOut(Flow_ThrottleNode.IdFlowOutError));
             _errFlowOutCheckBox.SetupNegateCheck(throttleNode3.FlowOut(Flow_ThrottleNode.IdFlowOut));
