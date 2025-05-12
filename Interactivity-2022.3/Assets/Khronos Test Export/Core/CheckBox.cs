@@ -88,6 +88,22 @@ namespace Khronos_Test_Export
             flowIn = setPosition.FlowIn(Pointer_SetNode.IdFlowIn); 
             flowOut = setPosition.FlowOut(Pointer_SetNode.IdFlowOut);
         }
+
+        private string ExpectedValueToString()
+        {
+            var invariantCulture = System.Globalization.CultureInfo.InvariantCulture;
+            
+            if (expectedValue is float floatValue)
+                return floatValue.ToString(invariantCulture);
+
+            if (expectedValue is double doubleValue)
+                return doubleValue.ToString(invariantCulture);
+            
+            if (expectedValue is bool boolValue)
+                return boolValue.ToString(invariantCulture);
+            
+            return expectedValue.ToString();
+        }
         
         private void SaveResult(FlowOutRef flow)
         {
@@ -448,7 +464,8 @@ namespace Khronos_Test_Export
             validNode.FlowOut(Flow_BranchNode.IdFlowOutTrue)
                 .ConnectToFlowDestination(setPosition);
             
-            context.AddLog(logText+ ": Value is {0}, should be "+valueToCompare.ToString(), out var logFlowIn, out var logFlowOut, 1, out var logValueRef);
+            expectedValue = valueToCompare;
+            context.AddLog(logText+ ": Value is {0}, should be "+ExpectedValueToString(), out var logFlowIn, out var logFlowOut, 1, out var logValueRef);
             inputValue = inputValue.Link(logValueRef[0]);
             validNode.FlowOut(Flow_BranchNode.IdFlowOutFalse).ConnectToFlowDestination(logFlowIn);
             
@@ -457,7 +474,6 @@ namespace Khronos_Test_Export
             flowOutSetValid.ConnectToFlowDestination(logSuccesFlowIn);
             logSuccessFlowOut.ConnectToFlowDestination(logFlowIn);
             
-            expectedValue = valueToCompare;
             SaveResult(out var saveResultInputValue, logFlowOut, valueToCompare.GetType());
             inputValue = inputValue.Link(saveResultInputValue);
             
