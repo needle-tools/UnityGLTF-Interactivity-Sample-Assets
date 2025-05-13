@@ -34,7 +34,7 @@ namespace Khronos_Test_Export
         {
             var nodeCreator = context.interactivityExportContext;
             
-            var doNNode = nodeCreator.CreateNode(new Flow_DoNNode());
+            var doNNode = nodeCreator.CreateNode<Flow_DoNNode>();
             
                        
             context.NewEntryPoint("Do N - Iterations");
@@ -55,10 +55,10 @@ namespace Khronos_Test_Export
             
             _bodyFlowCheck.SetupCheck(out var bodyCheckFlowIn);
             
-            var conditionNode = nodeCreator.CreateNode(new Math_EqNode());
+            var conditionNode = nodeCreator.CreateNode<Math_EqNode>();
             conditionNode.ValueIn(Math_EqNode.IdValueA).ConnectToSource(counter);
             conditionNode.ValueIn(Math_EqNode.IdValueB).SetValue(5);
-            var branchNode = nodeCreator.CreateNode(new Flow_BranchNode());
+            var branchNode = nodeCreator.CreateNode<Flow_BranchNode>();
             branchNode.ValueIn(Flow_BranchNode.IdCondition).ConnectToSource(conditionNode.FirstValueOut());
                  
             _bodyIterationCheck.SetupCheck(counter, out var bodyIterationCheckFlowIn, 5);
@@ -80,7 +80,7 @@ namespace Khronos_Test_Export
                 });
             
 
-            var doN2Node = nodeCreator.CreateNode(new Flow_DoNNode());
+            var doN2Node = nodeCreator.CreateNode<Flow_DoNNode>();
             doN2Node.ValueIn(Flow_DoNNode.IdN).SetValue(2);
             context.NewEntryPoint("Do N - Reset");
             
@@ -100,7 +100,7 @@ namespace Khronos_Test_Export
                     checkCountFlow
                 });
             
-            var doN3Node = nodeCreator.CreateNode(new Flow_DoNNode());
+            var doN3Node = nodeCreator.CreateNode<Flow_DoNNode>();
             doN3Node.ValueIn(Flow_DoNNode.IdN).SetValue(2);
             context.NewEntryPoint("Do N - Max Iteration");
 

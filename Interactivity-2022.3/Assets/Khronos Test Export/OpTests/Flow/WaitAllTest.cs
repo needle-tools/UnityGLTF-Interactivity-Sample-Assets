@@ -35,7 +35,7 @@ namespace Khronos_Test_Export
             var nodeCreator = context.interactivityExportContext;
             
             // Completed
-            var waitAllNode = nodeCreator.CreateNode(new Flow_WaitAllNode());
+            var waitAllNode = nodeCreator.CreateNode<Flow_WaitAllNode>();
             waitAllNode.Configuration[Flow_WaitAllNode.IdConfigInputFlows].Value = 3;
             
             context.NewEntryPoint("Wait All - Completed");
@@ -54,7 +54,7 @@ namespace Khronos_Test_Export
             
             // Remaining
             
-            var waitAllNodeRemaining = nodeCreator.CreateNode(new Flow_WaitAllNode());
+            var waitAllNodeRemaining = nodeCreator.CreateNode<Flow_WaitAllNode>();
             waitAllNodeRemaining.Configuration[Flow_WaitAllNode.IdConfigInputFlows].Value = 3;
             
             context.NewEntryPoint("Wait All - Remaining");
@@ -69,13 +69,13 @@ namespace Khronos_Test_Export
                     remCheckFlow,
                     waitAllNodeRemaining.FlowIn("1"),
                 });
-            var dummySequenceR = nodeCreator.CreateNode(new Flow_SequenceNode());
+            var dummySequenceR = nodeCreator.CreateNode<Flow_SequenceNode>();
             dummySequenceR.FlowOut("0").ConnectToFlowDestination(waitAllNodeRemaining.FlowIn("2"));
             waitAllNodeRemaining.FlowIn("2");
             
             // Reset
             
-            var waitAllNodeReset = nodeCreator.CreateNode(new Flow_WaitAllNode());
+            var waitAllNodeReset = nodeCreator.CreateNode<Flow_WaitAllNode>();
             waitAllNodeReset.Configuration[Flow_WaitAllNode.IdConfigInputFlows].Value = 3;
             
             context.NewEntryPoint("Wait All - Reset");
@@ -92,13 +92,13 @@ namespace Khronos_Test_Export
                     flowCheckReset
                 });
 
-            var dummySequence = nodeCreator.CreateNode(new Flow_SequenceNode());
+            var dummySequence = nodeCreator.CreateNode<Flow_SequenceNode>();
             dummySequence.FlowOut("0").ConnectToFlowDestination(waitAllNodeReset.FlowIn("2"));
 
             
             // Reset Completed
             
-            var waitAllNodeResetCompl = nodeCreator.CreateNode(new Flow_WaitAllNode());
+            var waitAllNodeResetCompl = nodeCreator.CreateNode<Flow_WaitAllNode>();
             waitAllNodeResetCompl.Configuration[Flow_WaitAllNode.IdConfigInputFlows].Value = 3;
             
             context.NewEntryPoint("Wait All - Reset Completed");

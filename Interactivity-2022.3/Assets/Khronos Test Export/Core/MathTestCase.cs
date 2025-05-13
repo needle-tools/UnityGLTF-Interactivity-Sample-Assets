@@ -61,7 +61,7 @@ namespace Khronos_Test_Export
             }
         }
 
-        static GltfInteractivityNodeSchema GetSchema(string name)
+        static Type GetSchema(string name)
         {
             if (schemasByTypeName == null)
                 Setup();
@@ -71,8 +71,7 @@ namespace Khronos_Test_Export
 
             if (schemasByTypeName.TryGetValue(name, out var schemaType))
             {
-                var schema = (GltfInteractivityNodeSchema)System.Activator.CreateInstance(schemaType);
-                return schema;
+                return schemaType;
             }
 
             throw new Exception($"Schema not found: {name}");

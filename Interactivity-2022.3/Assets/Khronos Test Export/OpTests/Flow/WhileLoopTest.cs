@@ -36,14 +36,14 @@ namespace Khronos_Test_Export
         public void CreateNodes(TestContext context)
         {
             var nodeCreator = context.interactivityExportContext;
-            var whileLoop = nodeCreator.CreateNode(new Flow_WhileNode());
+            var whileLoop = nodeCreator.CreateNode<Flow_WhileNode>();
             
             context.NewEntryPoint(whileLoop.FlowIn(Flow_WhileNode.IdFlowIn), "While Loop flowIn");
             
             context.AddPlusOneCounter(out var counter, out var flowInToIncrease);
             _bodyFlowCheck.SetupCheck(out var bodyCheckFlowIn);
             
-            var conditionNode = nodeCreator.CreateNode(new Math_LtNode());
+            var conditionNode = nodeCreator.CreateNode<Math_LtNode>();
             whileLoop.ValueIn(Flow_WhileNode.IdCondition).ConnectToSource(conditionNode.FirstValueOut());
             conditionNode.ValueIn(Math_LtNode.IdValueA).ConnectToSource(counter);
             conditionNode.ValueIn(Math_LtNode.IdValueB).SetValue(2);
@@ -67,7 +67,7 @@ namespace Khronos_Test_Export
                     bodyIterationCheckFlowIn,
                 });
             
-            var whileLoop2 = nodeCreator.CreateNode(new Flow_WhileNode());
+            var whileLoop2 = nodeCreator.CreateNode<Flow_WhileNode>();
             context.NewEntryPoint(whileLoop2.FlowIn(Flow_WhileNode.IdFlowIn), "While Loop flowIn (false Condition)");
             whileLoop2.ValueIn(Flow_WhileNode.IdCondition).SetValue(false);
             

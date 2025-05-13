@@ -29,7 +29,7 @@ namespace Khronos_Test_Export
         {
             var nodeCreator = context.interactivityExportContext;
             
-            var sequenceNode = nodeCreator.CreateNode(new Flow_SequenceNode());
+            var sequenceNode = nodeCreator.CreateNode<Flow_SequenceNode>();
             context.NewEntryPoint(sequenceNode.FlowIn(Flow_SequenceNode.IdFlowIn), _sequenceOrderCheck.GetText());
             sequenceNode.FlowOut("0");
             sequenceNode.FlowOut("9");
@@ -43,7 +43,7 @@ namespace Khronos_Test_Export
             });         
 
             
-            var sequenceNode2 = nodeCreator.CreateNode(new Flow_SequenceNode());
+            var sequenceNode2 = nodeCreator.CreateNode<Flow_SequenceNode>();
             context.NewEntryPoint(sequenceNode2.FlowIn(Flow_SequenceNode.IdFlowIn), _sequenceOrderCheck2.GetText());
 
             sequenceNode2.FlowOut("ccc");
@@ -57,7 +57,7 @@ namespace Khronos_Test_Export
                 sequenceNode2.FlowOut("ccc"),
             });     
             
-            var sequenceNode3 = nodeCreator.CreateNode(new Flow_SequenceNode());
+            var sequenceNode3 = nodeCreator.CreateNode<Flow_SequenceNode>();
             context.NewEntryPoint(sequenceNode3.FlowIn(Flow_SequenceNode.IdFlowIn), _sequenceOrderCheck3.GetText());
 
             sequenceNode3.FlowOut("b");

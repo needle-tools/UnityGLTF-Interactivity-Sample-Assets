@@ -34,13 +34,13 @@ namespace Khronos_Test_Export
         {
             var nodeCreator = context.interactivityExportContext;
 
-            var branchTrueNode = nodeCreator.CreateNode(new Flow_BranchNode());
+            var branchTrueNode = nodeCreator.CreateNode<Flow_BranchNode>();
             context.NewEntryPoint(branchTrueNode.FlowIn(Flow_BranchNode.IdFlowIn), "Branch Condition True");
             branchTrueNode.ValueIn(Flow_BranchNode.IdCondition).SetValue(true);
             _condTrueFlowTrueCheck.SetupCheck(branchTrueNode.FlowOut(Flow_BranchNode.IdFlowOutTrue));
             _condTrueFlowFalseCheck.SetupNegateCheck(branchTrueNode.FlowOut(Flow_BranchNode.IdFlowOutFalse));
             
-            var branchFalseNode = nodeCreator.CreateNode(new Flow_BranchNode());
+            var branchFalseNode = nodeCreator.CreateNode<Flow_BranchNode>();
             context.NewEntryPoint(branchFalseNode.FlowIn(Flow_BranchNode.IdFlowIn), "Branch Condition False");
             branchFalseNode.ValueIn(Flow_BranchNode.IdCondition).SetValue(false);
             _condFalseFlowTrueCheck.SetupNegateCheck(branchFalseNode.FlowOut(Flow_BranchNode.IdFlowOutTrue));

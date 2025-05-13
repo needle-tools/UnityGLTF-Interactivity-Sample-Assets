@@ -44,9 +44,9 @@ namespace Khronos_Test_Export
             
             context.NewEntryPoint("Set Delay", 2f);
             
-            var setDelayNode = nodeCreator.CreateNode(new Flow_SetDelayNode());
+            var setDelayNode = nodeCreator.CreateNode<Flow_SetDelayNode>();
 
-            var tickNode = nodeCreator.CreateNode(new Event_OnTickNode());
+            var tickNode = nodeCreator.CreateNode<Event_OnTickNode>();
             setDelayNode.ValueIn(Flow_SetDelayNode.IdDuration).SetValue(1f);
 
             var startTimeVarId = context.interactivityExportContext.Context.AddVariableWithIdIfNeeded(
@@ -58,7 +58,7 @@ namespace Khronos_Test_Export
             context.AddToCurrentEntrySequence(setDelayNode.FlowIn(Flow_SetDelayNode.IdFlowIn));
             
             VariablesHelpers.GetVariable(nodeCreator, startTimeVarId, out var startTimeVarRef);
-            var subtractNode = nodeCreator.CreateNode(new Math_SubNode());
+            var subtractNode = nodeCreator.CreateNode<Math_SubNode>();
             subtractNode.ValueIn(Math_SubNode.IdValueA).ConnectToSource(tickNode.ValueOut(Event_OnTickNode.IdOutTimeSinceStart));
             subtractNode.ValueIn(Math_SubNode.IdValueB).ConnectToSource(startTimeVarRef);
             
@@ -76,7 +76,7 @@ namespace Khronos_Test_Export
             
             // setDelay Cancel
             context.NewEntryPoint(_setDelayCancelCheckBox.GetText(), 2f);
-            var setDelayNode2 = nodeCreator.CreateNode(new Flow_SetDelayNode());
+            var setDelayNode2 = nodeCreator.CreateNode<Flow_SetDelayNode>();
             setDelayNode2.ValueIn(Flow_SetDelayNode.IdDuration).SetValue(1f);
             context.AddToCurrentEntrySequence(setDelayNode2.FlowIn());
             context.AddToCurrentEntrySequence(setDelayNode2.FlowIn(Flow_SetDelayNode.IdFlowInCancel));
@@ -86,12 +86,12 @@ namespace Khronos_Test_Export
             // Cancel Delay
 
             context.NewEntryPoint("Cancel Delay", 2f);
-            var delayNode = nodeCreator.CreateNode(new Flow_SetDelayNode());
+            var delayNode = nodeCreator.CreateNode<Flow_SetDelayNode>();
             delayNode.ValueIn(Flow_SetDelayNode.IdDuration).SetValue(1f);
             
             _cancelCheckBox.SetupNegateCheck(delayNode.FlowOut(Flow_SetDelayNode.IdFlowDone));
             
-            var cancelDelayNode = nodeCreator.CreateNode(new Flow_CancelDelayNode());
+            var cancelDelayNode = nodeCreator.CreateNode<Flow_CancelDelayNode>();
             cancelDelayNode.ValueIn(Flow_CancelDelayNode.IdDelayIndex)
                 .ConnectToSource(delayNode.ValueOut(Flow_SetDelayNode.IdOutLastDelayIndex));
             
@@ -100,7 +100,7 @@ namespace Khronos_Test_Export
             
             // Delay with Error
             context.NewEntryPoint("Error", 2f);
-            var delayNode2 = nodeCreator.CreateNode(new Flow_SetDelayNode());
+            var delayNode2 = nodeCreator.CreateNode<Flow_SetDelayNode>();
             delayNode2.ValueIn(Flow_SetDelayNode.IdDuration).SetValue(-1f);
             context.AddToCurrentEntrySequence(delayNode2.FlowIn());
             _flowErrCheckBox.SetupCheck(delayNode2.FlowOut(Flow_SetDelayNode.IdFlowOutError));

@@ -39,7 +39,7 @@ namespace Khronos_Test_Export
             var nodeCreator = context.interactivityExportContext;
             
             // Basic test - only once flow out
-            var throttleNode = nodeCreator.CreateNode(new Flow_ThrottleNode());
+            var throttleNode = nodeCreator.CreateNode<Flow_ThrottleNode>();
             context.NewEntryPoint(_outThrottleCheckBox.GetText());
             
             _lastRemainingTimeCheckBox.proximityCheckDistance = 0.01f;
@@ -59,10 +59,10 @@ namespace Khronos_Test_Export
         
             // Wait for delay
             
-            var throttleNode2 = nodeCreator.CreateNode(new Flow_ThrottleNode());
+            var throttleNode2 = nodeCreator.CreateNode<Flow_ThrottleNode>();
             context.NewEntryPoint(_flowOutAfterDelayCheckBox.GetText(), 2f);
             
-            var delayNode = nodeCreator.CreateNode(new Flow_SetDelayNode());
+            var delayNode = nodeCreator.CreateNode<Flow_SetDelayNode>();
             delayNode.ValueIn(Flow_SetDelayNode.IdDuration).SetValue(1.5f);
 
             _setDelayCheckBox.SetupCheck(out var setDelayCheckFlow);
@@ -87,7 +87,7 @@ namespace Khronos_Test_Export
             throttleNode2.FlowOut(Flow_ThrottleNode.IdFlowOut).ConnectToFlowDestination(flowOutAfterDelayCheckFlow);
             
             // Error flow
-            var throttleNode3 = nodeCreator.CreateNode(new Flow_ThrottleNode());
+            var throttleNode3 = nodeCreator.CreateNode<Flow_ThrottleNode>();
             context.NewEntryPoint(throttleNode3.FlowIn(Flow_ThrottleNode.IdFlowIn), _errFlowCheckBox.GetText());
             throttleNode3.ValueIn(Flow_ThrottleNode.IdInputDuration).SetValue(-1f);
             
@@ -95,7 +95,7 @@ namespace Khronos_Test_Export
             _errFlowOutCheckBox.SetupNegateCheck(throttleNode3.FlowOut(Flow_ThrottleNode.IdFlowOut));
             
             // Reset
-            var throttleNode4 = nodeCreator.CreateNode(new Flow_ThrottleNode());
+            var throttleNode4 = nodeCreator.CreateNode<Flow_ThrottleNode>();
             context.NewEntryPoint(_resetCheckBox.GetText());
             throttleNode4.ValueIn(Flow_ThrottleNode.IdInputDuration).SetValue(2f);
             context.AddToCurrentEntrySequence(new []

@@ -34,7 +34,7 @@ namespace Khronos_Test_Export
             
             // Order Tests
             context.NewEntryPoint(_orderCheckBox.GetText());
-            var multiGateNode = nodeCreator.CreateNode(new Flow_MultiGateNode());
+            var multiGateNode = nodeCreator.CreateNode<Flow_MultiGateNode>();
             multiGateNode.FlowOut("008");
             multiGateNode.FlowOut("004");
             multiGateNode.FlowOut("001");
@@ -55,7 +55,7 @@ namespace Khronos_Test_Export
             
             
             // Random Tests
-            var multiGateRandomNode = nodeCreator.CreateNode(new Flow_MultiGateNode());
+            var multiGateRandomNode = nodeCreator.CreateNode<Flow_MultiGateNode>();
             context.NewEntryPoint(_randomCheckBox.GetText());
             context.AddToCurrentEntrySequence(
                 new FlowInRef[]
@@ -75,7 +75,7 @@ namespace Khronos_Test_Export
             
             
             // Loop Tests
-            var multiGateLoopNode = nodeCreator.CreateNode(new Flow_MultiGateNode());
+            var multiGateLoopNode = nodeCreator.CreateNode<Flow_MultiGateNode>();
             context.NewEntryPoint(_loopCheckBox.GetText());
             context.AddToCurrentEntrySequence(
                 new FlowInRef[]
@@ -90,11 +90,11 @@ namespace Khronos_Test_Export
             _loopCheckBox.SetupMultiFlowCheck(4, out var loopCheckFlowIn, new string[] {"Flow0", "Flow1", "Flow2", "Flow0 (2.)"});
             
             context.AddPlusOneCounter(out var loopCounter, out var flowInToIncrease);
-            var branchConditionSecondFlow = nodeCreator.CreateNode(new Math_EqNode());
+            var branchConditionSecondFlow = nodeCreator.CreateNode<Math_EqNode>();
             branchConditionSecondFlow.ValueIn(Math_EqNode.IdValueA).SetValue(2);
             branchConditionSecondFlow.ValueIn(Math_EqNode.IdValueB).ConnectToSource(loopCounter);
             
-            var branchSecondFlow = nodeCreator.CreateNode(new Flow_BranchNode());
+            var branchSecondFlow = nodeCreator.CreateNode<Flow_BranchNode>();
             branchSecondFlow.ValueIn(Flow_BranchNode.IdCondition).ConnectToSource(branchConditionSecondFlow.FirstValueOut());
             branchSecondFlow.FlowOut(Flow_BranchNode.IdFlowOutFalse).ConnectToFlowDestination(loopCheckFlowIn[0]);
             branchSecondFlow.FlowOut(Flow_BranchNode.IdFlowOutTrue).ConnectToFlowDestination(loopCheckFlowIn[3]);
@@ -110,7 +110,7 @@ namespace Khronos_Test_Export
             multiGateLoopNode.FlowOut("003").ConnectToFlowDestination(loopCheckFlowIn[2]);
             
             // Reset Loop Tests
-            var multiGateResetLoopNode = nodeCreator.CreateNode(new Flow_MultiGateNode());
+            var multiGateResetLoopNode = nodeCreator.CreateNode<Flow_MultiGateNode>();
             context.NewEntryPoint(_loopCheckBox.GetText());
             context.AddToCurrentEntrySequence(
                 new FlowInRef[]
@@ -125,11 +125,11 @@ namespace Khronos_Test_Export
             _resetCheckBox.SetupMultiFlowCheck(3, out var loopResetCheckFlowIn);
             
             context.AddPlusOneCounter(out var loopCounterReset, out var flowInToIncreaseReset);
-            var branchConditionSecondFlowReset = nodeCreator.CreateNode(new Math_EqNode());
+            var branchConditionSecondFlowReset = nodeCreator.CreateNode<Math_EqNode>();
             branchConditionSecondFlowReset.ValueIn(Math_EqNode.IdValueA).SetValue(2);
             branchConditionSecondFlowReset.ValueIn(Math_EqNode.IdValueB).ConnectToSource(loopCounterReset);
             
-            var branchSecondFlowReset = nodeCreator.CreateNode(new Flow_BranchNode());
+            var branchSecondFlowReset = nodeCreator.CreateNode<Flow_BranchNode>();
             branchSecondFlowReset.ValueIn(Flow_BranchNode.IdCondition).ConnectToSource(branchConditionSecondFlowReset.FirstValueOut());
             branchSecondFlowReset.FlowOut(Flow_BranchNode.IdFlowOutFalse).ConnectToFlowDestination(loopResetCheckFlowIn[0]);
             branchSecondFlowReset.FlowOut(Flow_BranchNode.IdFlowOutTrue).ConnectToFlowDestination(loopResetCheckFlowIn[2]);

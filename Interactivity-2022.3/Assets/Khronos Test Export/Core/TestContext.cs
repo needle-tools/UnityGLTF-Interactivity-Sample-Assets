@@ -67,7 +67,7 @@ namespace Khronos_Test_Export
                 {
                     if (_lastDelayedFallback == null)
                     {
-                        _lastDelayedFallback = interactivityExportContext.CreateNode(new Flow_SetDelayNode());
+                        _lastDelayedFallback = interactivityExportContext.CreateNode<Flow_SetDelayNode>();
                         _lastDelayedFallback.ValueIn(Flow_SetDelayNode.IdDuration).SetValue(_lastEntryPoint.delayedExecutionTime.Value);
                     }
                     
@@ -77,7 +77,7 @@ namespace Khronos_Test_Export
                 if (_lastEntryPointFallbackSequence == null && (_currentFallbackFlows.Count > 1 || _lastDelayedFallback == null))
                 {
                     var nodeCreator = interactivityExportContext;
-                    _lastEntryPointFallbackSequence = nodeCreator.CreateNode(new Flow_SequenceNode());
+                    _lastEntryPointFallbackSequence = nodeCreator.CreateNode<Flow_SequenceNode>();
                 }
                 
                 
@@ -94,7 +94,7 @@ namespace Khronos_Test_Export
                 if (_lastEntryPointNodeSequence == null)
                 {
                     var nodeCreator = interactivityExportContext;
-                    _lastEntryPointNodeSequence = nodeCreator.CreateNode(new Flow_SequenceNode());
+                    _lastEntryPointNodeSequence = nodeCreator.CreateNode<Flow_SequenceNode>();
                 }
                 _lastEntryPointNodeSequence.FlowConnections.Clear();
                 foreach (var flow in _currentEntryFlows)
@@ -148,7 +148,7 @@ namespace Khronos_Test_Export
         public void NewEntryPoint(string name, float? delayedExecutionTime = null, bool requiresUserInteraction = false)
         {
             var nodeCreator = interactivityExportContext;
-            var startNode = nodeCreator.CreateNode(new Event_OnStartNode());
+            var startNode = nodeCreator.CreateNode<Event_OnStartNode>();
             
             var newEntry = new Entry();
             newEntry.node = startNode;
@@ -224,7 +224,7 @@ namespace Khronos_Test_Export
         {
             var nodeCreator = interactivityExportContext;
             
-            var sequenceNode = nodeCreator.CreateNode(new Flow_SequenceNode());
+            var sequenceNode = nodeCreator.CreateNode<Flow_SequenceNode>();
             if (flowIn.socket.Value.Node != null)
             {
                 sequenceNode.FlowOut("s000").socket.Value.Socket = flowIn.socket.Value.Socket;
@@ -249,7 +249,7 @@ namespace Khronos_Test_Export
             
             VariablesHelpers.GetVariable(nodeCreator, newVarId, out var loopRangeCounter);
             varValue = loopRangeCounter;
-            var addLoopRangeCounter = nodeCreator.CreateNode(new Math_AddNode());
+            var addLoopRangeCounter = nodeCreator.CreateNode<Math_AddNode>();
             addLoopRangeCounter.ValueIn(Math_AddNode.IdValueA).ConnectToSource(loopRangeCounter);
             addLoopRangeCounter.ValueIn(Math_AddNode.IdValueB).SetValue(1);
             

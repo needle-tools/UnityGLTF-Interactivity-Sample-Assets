@@ -80,7 +80,7 @@ namespace Khronos_Test_Export
         {
             var waitingIndex = context.interactivityExportContext.Context.exporter.GetTransformIndex(waiting);
             
-            var setPosition = context.interactivityExportContext.CreateNode(new Pointer_SetNode());
+            var setPosition = context.interactivityExportContext.CreateNode<Pointer_SetNode>();
             PointersHelper.SetupPointerTemplateAndTargetInput(setPosition, PointersHelper.IdPointerNodeIndex, "/nodes/{" + PointersHelper.IdPointerNodeIndex + "}/translation", GltfTypes.Float3);
             setPosition.ValueIn(Pointer_SetNode.IdValue).SetValue(Vector3.zero);
             setPosition.ValueIn(PointersHelper.IdPointerNodeIndex).SetValue(waitingIndex);  
@@ -150,7 +150,7 @@ namespace Khronos_Test_Export
 
         private void SetToForeground(int nodeIndex, out FlowInRef flowIn, out FlowOutRef flowOut)
         {
-            var setPosition = context.interactivityExportContext.CreateNode(new Pointer_SetNode());
+            var setPosition = context.interactivityExportContext.CreateNode<Pointer_SetNode>();
             PointersHelper.SetupPointerTemplateAndTargetInput(setPosition, PointersHelper.IdPointerNodeIndex, "/nodes/{" + PointersHelper.IdPointerNodeIndex + "}/translation", GltfTypes.Float3);
             setPosition.ValueIn(Pointer_SetNode.IdValue).SetValue(positionWhenValid);
             setPosition.ValueIn(PointersHelper.IdPointerNodeIndex).SetValue(nodeIndex);  
@@ -181,26 +181,26 @@ namespace Khronos_Test_Export
                 GltfInteractivityExportNode eqNode = null;
                 if (proximityCheck)
                 {
-                    var subtractNode = context.interactivityExportContext.CreateNode(new Math_SubNode());
+                    var subtractNode = context.interactivityExportContext.CreateNode<Math_SubNode>();
                     subtractNode.ValueIn(Math_SubNode.IdValueA).ConnectToSource(resultVarRef);
                     subtractNode.ValueIn("b").SetValue(expectedValue);
 
-                    var absNode = context.interactivityExportContext.CreateNode(new Math_AbsNode());
+                    var absNode = context.interactivityExportContext.CreateNode<Math_AbsNode>();
                     absNode.ValueIn("a").ConnectToSource(subtractNode.FirstValueOut());
 
-                    var lessThanNode = context.interactivityExportContext.CreateNode(new Math_LtNode());
+                    var lessThanNode = context.interactivityExportContext.CreateNode<Math_LtNode>();
                     lessThanNode.ValueIn("a").ConnectToSource(absNode.FirstValueOut());
                     lessThanNode.SetValueInSocket("b", proximityCheckDistance);
                     eqNode = lessThanNode;
                 }
                 else
                 {
-                    eqNode = context.interactivityExportContext.CreateNode(new Math_EqNode());
+                    eqNode = context.interactivityExportContext.CreateNode<Math_EqNode>();
                     eqNode.ValueIn(Math_EqNode.IdValueA).ConnectToSource(resultVarRef);
                     eqNode.ValueIn(Math_EqNode.IdValueB).SetValue(expectedValue);
                 }
 
-                var branchNode = context.interactivityExportContext.CreateNode(new Flow_BranchNode());
+                var branchNode = context.interactivityExportContext.CreateNode<Flow_BranchNode>();
                 branchNode.ValueIn(Flow_BranchNode.IdCondition).ConnectToSource(eqNode.FirstValueOut());
                 if (isNegated)
                     branchNode.FlowOut(Flow_BranchNode.IdFlowOutTrue).ConnectToFlowDestination(fallbackFlowCheck());
@@ -233,7 +233,7 @@ namespace Khronos_Test_Export
         {
             flows = new FlowInRef[count];
 
-            var branchNode = context.interactivityExportContext.CreateNode(new Flow_BranchNode());
+            var branchNode = context.interactivityExportContext.CreateNode<Flow_BranchNode>();
             GltfInteractivityExportNode lastAndNode = null;
 
             var stateValues = new ValueOutRef[count];
@@ -247,7 +247,7 @@ namespace Khronos_Test_Export
             
                 VariablesHelpers.GetVariable(context.interactivityExportContext, triggeredVarId, out var triggeredVarRef);
                 stateValues[i] = triggeredVarRef;
-                var andNode = context.interactivityExportContext.CreateNode(new Math_AndNode());
+                var andNode = context.interactivityExportContext.CreateNode<Math_AndNode>();
                 andNode.ValueIn(Math_AndNode.IdValueA).ConnectToSource(triggeredVarRef);
                 
                 if (lastAndNode != null)
@@ -295,7 +295,7 @@ namespace Khronos_Test_Export
             var countVar = nodeCreator.Context.AddVariableWithIdIfNeeded("FlowSequenceCount_"+System.Guid.NewGuid().ToString(), 0, GltfTypes.Int);
             
             VariablesHelpers.GetVariable(nodeCreator, countVar, out var countVarRef);
-            var addCount = nodeCreator.CreateNode(new Math_AddNode());
+            var addCount = nodeCreator.CreateNode<Math_AddNode>();
             addCount.ValueIn(Math_AddNode.IdValueA).ConnectToSource(countVarRef);
             addCount.ValueIn(Math_AddNode.IdValueB).SetValue(1);
             
@@ -304,13 +304,13 @@ namespace Khronos_Test_Export
             foreach (var flow in flows)
             {
                 index++;
-                var eqNode = nodeCreator.CreateNode(new Math_EqNode());
+                var eqNode = nodeCreator.CreateNode<Math_EqNode>();
                 eqNode.ValueIn(Math_EqNode.IdValueA).ConnectToSource(countVarRef);
                 eqNode.ValueIn(Math_EqNode.IdValueB).SetValue(index);
 
                 var setVarNode = VariablesHelpers.SetVariable(nodeCreator, countVar, addCount.FirstValueOut(), flow);
                 
-                var checkBranch = nodeCreator.CreateNode(new Flow_BranchNode());
+                var checkBranch = nodeCreator.CreateNode<Flow_BranchNode>();
                 checkBranch.ValueIn(Flow_BranchNode.IdCondition).ConnectToSource(eqNode.FirstValueOut());
                 setVarNode.FlowOut(Variable_SetNode.IdFlowOut).ConnectToFlowDestination(checkBranch.FlowIn(Flow_BranchNode.IdFlowIn));
                 
@@ -352,11 +352,11 @@ namespace Khronos_Test_Export
             
             PostCheck(() =>
             {
-                var eq = context.interactivityExportContext.CreateNode(new Math_EqNode());
+                var eq = context.interactivityExportContext.CreateNode<Math_EqNode>();
                 eq.ValueIn(Math_EqNode.IdValueA).ConnectToSource(counter);
                 eq.ValueIn(Math_EqNode.IdValueB).SetValue(callTimes);
                 
-                var branchNode = context.interactivityExportContext.CreateNode(new Flow_BranchNode());
+                var branchNode = context.interactivityExportContext.CreateNode<Flow_BranchNode>();
                 branchNode.ValueIn(Flow_BranchNode.IdCondition).ConnectToSource(eq.FirstValueOut());
                 
                 branchNode.FlowOut(Flow_BranchNode.IdFlowOutTrue).ConnectToFlowDestination(flowSetValid);
@@ -435,26 +435,26 @@ namespace Khronos_Test_Export
             GltfInteractivityExportNode eqNode;
             if (proximityCheck)
             {
-                var subtractNode = context.interactivityExportContext.CreateNode(new Math_SubNode());
+                var subtractNode = context.interactivityExportContext.CreateNode<Math_SubNode>();
                 inputValue = subtractNode.ValueIn("a");
                 subtractNode.ValueIn("b").SetValue(valueToCompare);
             
-                var absNode = context.interactivityExportContext.CreateNode(new Math_AbsNode());
+                var absNode = context.interactivityExportContext.CreateNode<Math_AbsNode>();
                 absNode.ValueIn("a").ConnectToSource(subtractNode.FirstValueOut());
 
-                var lessThanNode = context.interactivityExportContext.CreateNode(new Math_LtNode());
+                var lessThanNode = context.interactivityExportContext.CreateNode<Math_LtNode>();
                 lessThanNode.ValueIn("a").ConnectToSource(absNode.FirstValueOut());
                 lessThanNode.SetValueInSocket("b", proximityCheckDistance);
                 eqNode = lessThanNode; 
             }
             else
             {
-                eqNode = context.interactivityExportContext.CreateNode(new Math_EqNode());
+                eqNode = context.interactivityExportContext.CreateNode<Math_EqNode>();
                 inputValue = eqNode.ValueIn(Math_EqNode.IdValueA);
                 eqNode.ValueIn(Math_EqNode.IdValueB).SetType(TypeRestriction.LimitToType(compareValueType)).SetValue(valueToCompare);
             }
             
-            var validNode = context.interactivityExportContext.CreateNode(new Flow_BranchNode());
+            var validNode = context.interactivityExportContext.CreateNode<Flow_BranchNode>();
             validNode.ValueIn(Flow_BranchNode.IdCondition).ConnectToSource(eqNode.FirstValueOut());
 
             SetPassed(out var setPosition, out var flowOutSetValid);

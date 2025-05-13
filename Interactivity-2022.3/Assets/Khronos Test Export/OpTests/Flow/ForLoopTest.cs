@@ -34,7 +34,7 @@ namespace Khronos_Test_Export
         {
             var nodeCreator = context.interactivityExportContext;
             
-            var forLoop = nodeCreator.CreateNode(new Flow_ForLoopNode());
+            var forLoop = nodeCreator.CreateNode<Flow_ForLoopNode>();
             context.NewEntryPoint("Loop Entry");
 
             forLoop.Configuration[Flow_ForLoopNode.IdConfigInitialIndex].Value = 1;
