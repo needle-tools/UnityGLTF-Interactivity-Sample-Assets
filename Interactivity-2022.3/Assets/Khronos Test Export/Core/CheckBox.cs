@@ -1,4 +1,5 @@
 using System;
+using System.Linq;
 using TMPro;
 using UnityEngine;
 using UnityGLTF.Interactivity;
@@ -31,6 +32,8 @@ namespace Khronos_Test_Export
         private bool isWaiting = false;
         public TestContext context;
         private bool proximityCheck = false;
+
+        private string resultVarName = null;
         
         private void OnDrawGizmosSelected()
         {
@@ -73,7 +76,18 @@ namespace Khronos_Test_Export
 
         public string GetResultVariableName()
         {
-            return "TestResult_" + _testCase.CaseName + "_" + text.text;
+            if (resultVarName != null)
+                return resultVarName;
+            
+            var name = "TestResult_" + _testCase.CaseName + "_" + text.text;
+            
+            if (context.interactivityExportContext.Context.variables.Exists(v => v.Id == name))
+            {
+                var existingCount = context.interactivityExportContext.Context.variables.Count(v => v.Id == name);
+                name += $" ({existingCount.ToString()})";
+            }
+            resultVarName = name;
+            return name;
         }
 
         private void DeactivateWaiting(out FlowInRef flowIn, out FlowOutRef flowOut)
@@ -426,6 +440,14 @@ namespace Khronos_Test_Export
             flow.ConnectToFlowDestination(flowIn);
         }
 
+        private bool RequiresDotForApproximationCheck(object valueToCompare)
+        {
+            if (valueToCompare is bool || valueToCompare is int ||  valueToCompare is float || valueToCompare is double)
+                return false;
+            return valueToCompare is Vector2 || valueToCompare is Vector3 || valueToCompare is Vector4 ||
+                   valueToCompare is Quaternion || valueToCompare is Matrix4x4;
+        }
+        
         public void SetupCheck(out ValueInRef inputValue, out FlowInRef flow, object valueToCompare,
             bool proximityCheck = false)
         {
@@ -435,17 +457,62 @@ namespace Khronos_Test_Export
             GltfInteractivityExportNode eqNode;
             if (proximityCheck)
             {
-                var subtractNode = context.interactivityExportContext.CreateNode<Math_SubNode>();
-                inputValue = subtractNode.ValueIn("a");
-                subtractNode.ValueIn("b").SetValue(valueToCompare);
-            
-                var absNode = context.interactivityExportContext.CreateNode<Math_AbsNode>();
-                absNode.ValueIn("a").ConnectToSource(subtractNode.FirstValueOut());
+                if (valueToCompare is Matrix4x4 vtcMat)
+                {
+                    var resultDec = context.interactivityExportContext.CreateNode<Math_Extract4x4Node>();
+                    inputValue = resultDec.ValueIn(Math_Extract4x4Node.IdValueIn);
+                    
+                    ValueOutRef lastAddResult = null;
+                    //var compareDec = context.interactivityExportContext.CreateNode<Math_Extract4x4Node>();
+                    for (int i = 0; i < 16; i++)
+                    {
+                        var mul = context.interactivityExportContext.CreateNode<Math_MulNode>();
+                        mul.ValueIn(Math_MulNode.IdValueA).SetValue(vtcMat[i]);
+                        mul.ValueIn(Math_MulNode.IdValueB).ConnectToSource(resultDec.ValueOut(i.ToString()));
 
-                var lessThanNode = context.interactivityExportContext.CreateNode<Math_LtNode>();
-                lessThanNode.ValueIn("a").ConnectToSource(absNode.FirstValueOut());
-                lessThanNode.SetValueInSocket("b", proximityCheckDistance);
-                eqNode = lessThanNode; 
+                        if (lastAddResult == null)
+                            lastAddResult = mul.FirstValueOut();
+                        else
+                        {
+                            var addNode = context.interactivityExportContext.CreateNode<Math_AddNode>();
+                            addNode.ValueIn(Math_AddNode.IdValueA).ConnectToSource(lastAddResult);
+                            addNode.ValueIn(Math_AddNode.IdValueB).ConnectToSource(mul.FirstValueOut());
+                            lastAddResult = addNode.FirstValueOut();
+                        }
+                    }
+                    var gtNode = context.interactivityExportContext.CreateNode<Math_GtNode>();
+                    gtNode.ValueIn(Math_GtNode.IdValueA).ConnectToSource(lastAddResult);
+                    gtNode.SetValueInSocket("b", 1f-proximityCheckDistance);
+                    
+                    eqNode = gtNode;
+                }
+                else
+                if (RequiresDotForApproximationCheck(valueToCompare))
+                {
+                    var dotNode = context.interactivityExportContext.CreateNode<Math_DotNode>();
+                    inputValue = dotNode.ValueIn(Math_DotNode.IdValueA);
+                    dotNode.ValueIn(Math_DotNode.IdValueB).SetValue(valueToCompare);
+                    
+                    var gtNode = context.interactivityExportContext.CreateNode<Math_GtNode>();
+                    gtNode.ValueIn(Math_GtNode.IdValueA).ConnectToSource(dotNode.FirstValueOut());
+                    gtNode.SetValueInSocket("b", 1f-proximityCheckDistance);
+                    
+                    eqNode = gtNode;
+                }
+                else
+                {
+                    var subtractNode = context.interactivityExportContext.CreateNode<Math_SubNode>();
+                    inputValue = subtractNode.ValueIn("a");
+                    subtractNode.ValueIn("b").SetValue(valueToCompare);
+                
+                    var absNode = context.interactivityExportContext.CreateNode<Math_AbsNode>();
+                    absNode.ValueIn("a").ConnectToSource(subtractNode.FirstValueOut());
+
+                    var lessThanNode = context.interactivityExportContext.CreateNode<Math_LtNode>();
+                    lessThanNode.ValueIn("a").ConnectToSource(absNode.FirstValueOut());
+                    lessThanNode.SetValueInSocket("b", proximityCheckDistance);
+                    eqNode = lessThanNode; 
+                }
             }
             else
             {

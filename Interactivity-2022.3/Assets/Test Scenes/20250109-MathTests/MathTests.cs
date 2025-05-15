@@ -64,7 +64,7 @@ public class MathTests : MonoBehaviour, IInteractivityExport
         }
     }
     
-    static GltfInteractivityNodeSchema GetSchema(string name)
+    static Type GetSchema(string name)
     {
         if (schemasByTypeName == null)
             Setup();
@@ -74,8 +74,7 @@ public class MathTests : MonoBehaviour, IInteractivityExport
         
         if (schemasByTypeName.TryGetValue(name, out var schemaType))
         {
-            var schema = (GltfInteractivityNodeSchema) System.Activator.CreateInstance(schemaType);
-            return schema;
+            return schemaType;
         }
         
         throw new Exception($"Schema not found: {name}");

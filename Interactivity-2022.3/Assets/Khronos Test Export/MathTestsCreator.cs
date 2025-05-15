@@ -1,15 +1,17 @@
 using System;
 using System.Collections.Generic;
+using System.Globalization;
+using System.Linq;
 #if UNITY_EDITOR
 using UnityEditor;
 #endif
 using UnityEngine;
+using UnityGLTF.Interactivity;
 
 namespace Khronos_Test_Export
 {
     public class MathTestCreator : TestCreator
     {
-
         abstract class TestCase
         {
             public string schema;
@@ -17,6 +19,10 @@ namespace Khronos_Test_Export
             public virtual void Run()
             {
             }
+
+            public bool autoCreateTestsForAllSupportedInputs = true;
+            
+            public bool approximate = false;
 
             public abstract object A { get; }
             public abstract object B { get; }
@@ -66,11 +72,13 @@ namespace Khronos_Test_Export
             new ZeroArg<float>()
             {
                 schema = "math/e",
+                approximate = true,
                 operation = () => 2.718281828459045f,
             },
             new ZeroArg<float>()
             {
                 schema = "math/pi",
+                approximate = true,
                 operation = () => Mathf.PI,
             },
             new ZeroArg<float>()
@@ -93,8 +101,26 @@ namespace Khronos_Test_Export
             },
             new OneArg<float, float>()
             {
+                schema = "math/abs",
+                a = 7,
+                operation = (a) => Mathf.Abs(a),
+            },
+            new OneArg<float, float>()
+            {
+                schema = "math/abs",
+                a = 0,
+                operation = (a) => Mathf.Abs(a),
+            },
+            new OneArg<float, float>()
+            {
                 schema = "math/sign",
                 a = -9,
+                operation = (a) => Mathf.Sign(a),
+            },
+            new OneArg<float, float>()
+            {
+                schema = "math/sign",
+                a = 9,
                 operation = (a) => Mathf.Sign(a),
             },
             new OneArg<float, float>()
@@ -147,6 +173,7 @@ namespace Khronos_Test_Export
                 schema = "math/mul",
                 a = 345.234432f,
                 b = 1 / 345.234432f,
+                approximate = true,
                 operation = (a, b) => a * b,
             },
             new TwoArg<float, float>()
@@ -154,6 +181,7 @@ namespace Khronos_Test_Export
                 schema = "math/div",
                 a = 8989.324f,
                 b = 2134.234f,
+                approximate = true,
                 operation = (a, b) => a / b,
             },
             new TwoArg<float, float>()
@@ -161,6 +189,7 @@ namespace Khronos_Test_Export
                 schema = "math/rem",
                 a = 19.423534f,
                 b = 2.234f,
+                approximate = true,
                 operation = (a, b) => a % b,
             },
             new TwoArg<float, float>()
@@ -203,9 +232,66 @@ namespace Khronos_Test_Export
             new TwoArg<float, bool>()
             {
                 schema = "math/eq",
+                autoCreateTestsForAllSupportedInputs = false,
                 a = 1.324f,
                 b = 2.32423f,
                 operation = (a, b) => a == b,
+            },
+            new TwoArg<bool, bool>()
+            {
+                schema = "math/eq",
+                autoCreateTestsForAllSupportedInputs = false,
+                a = true,
+                b = false,
+                operation = (a, b) => a == b,
+            },
+            new TwoArg<Vector2, bool>()
+            {
+                schema = "math/eq",
+                autoCreateTestsForAllSupportedInputs = false,
+                a = new Vector2(4,5),
+                b = new Vector2(4,5),
+                operation = (a, b) => a == b,
+            },
+            new TwoArg<float, bool>()
+            {
+                schema = "math/eq",
+                autoCreateTestsForAllSupportedInputs = false,
+                a = float.NaN,
+                b = float.NaN,
+                operation = (a, b) => false,
+            },
+            new TwoArg<float, bool>()
+            {
+                schema = "math/eq",
+                autoCreateTestsForAllSupportedInputs = false,
+                a = float.NaN,
+                b = 1f,
+                operation = (a, b) => false,
+            },
+            new TwoArg<float, bool>()
+            {
+                schema = "math/eq",
+                autoCreateTestsForAllSupportedInputs = false,
+                a = float.PositiveInfinity,
+                b = float.PositiveInfinity,
+                operation = (a, b) => true,
+            },
+            new TwoArg<float, bool>()
+            {
+                schema = "math/eq",
+                autoCreateTestsForAllSupportedInputs = false,
+                a = float.PositiveInfinity,
+                b = float.NegativeInfinity,
+                operation = (a, b) => false,
+            },
+            new TwoArg<Matrix4x4, bool>()
+            {
+                schema = "math/eq",
+                autoCreateTestsForAllSupportedInputs = false,
+                a = Matrix4x4.TRS(Vector3.one, Quaternion.identity, Vector3.up),
+                b = Matrix4x4.TRS(Vector3.one, Quaternion.identity, Vector3.up),
+                operation = (a, b) => true,
             },
             new TwoArg<float, bool>()
             {
@@ -244,8 +330,20 @@ namespace Khronos_Test_Export
             },
             new OneArg<float, bool>()
             {
+                schema = "math/isnan",
+                a = 1f,
+                operation = (a) => float.IsNaN(a),
+            },
+            new OneArg<float, bool>()
+            {
                 schema = "math/isinf",
                 a = float.PositiveInfinity,
+                operation = (a) => float.IsInfinity(a),
+            },
+            new OneArg<float, bool>()
+            {
+                schema = "math/isinf",
+                a = float.NegativeInfinity,
                 operation = (a) => float.IsInfinity(a),
             },
             // math/select
@@ -253,48 +351,56 @@ namespace Khronos_Test_Export
             {
                 schema = "math/rad",
                 a = 75,
+                approximate = true,
                 operation = (a) => a * Mathf.PI / 180,
             },
             new OneArg<float, float>()
             {
                 schema = "math/deg",
                 a = Mathf.PI * 0.35f,
+                approximate = true,
                 operation = (a) => a * 180 / Mathf.PI,
             },
             new OneArg<float, float>()
             {
                 schema = "math/sin",
                 a = 4.324f,
+                approximate = true,
                 operation = (a) => Mathf.Sin(a),
             },
             new OneArg<float, float>()
             {
                 schema = "math/cos",
                 a = 4.324f,
+                approximate = true,
                 operation = (a) => Mathf.Cos(a),
             },
             new OneArg<float, float>()
             {
                 schema = "math/tan",
                 a = 4.324f,
+                approximate = true,
                 operation = (a) => Mathf.Tan(a),
             },
             new OneArg<float, float>()
             {
                 schema = "math/asin",
                 a = 0.5f,
+                approximate = true,
                 operation = (a) => Mathf.Asin(a),
             },
             new OneArg<float, float>()
             {
                 schema = "math/acos",
                 a = 0.5f,
+                approximate = true,
                 operation = (a) => Mathf.Acos(a),
             },
             new OneArg<float, float>()
             {
                 schema = "math/atan",
                 a = 0.5f,
+                approximate = true,
                 operation = (a) => Mathf.Atan(a),
             },
             new TwoArg<float, float>()
@@ -302,6 +408,7 @@ namespace Khronos_Test_Export
                 schema = "math/atan2",
                 a = 0.5f,
                 b = 0.5f,
+                approximate = true,
                 operation = (a, b) => Mathf.Atan2(a, b),
             },
             // Hyperbolic nodes
@@ -309,36 +416,42 @@ namespace Khronos_Test_Export
             {
                 schema = "math/sinh",
                 a = 4.324f,
+                approximate = true,
                 operation = (a) => (float)Math.Sinh(a),
             },
             new OneArg<float, float>()
             {
                 schema = "math/cosh",
                 a = 4.324f,
+                approximate = true,
                 operation = (a) => (float)Math.Cosh(a),
             },
             new OneArg<float, float>()
             {
                 schema = "math/tanh",
                 a = 4.324f,
+                approximate = true,
                 operation = (a) => (float)Math.Tanh(a),
             },
             new OneArg<float, float>()
             {
                 schema = "math/asinh",
                 a = 0.5f,
+                approximate = true,
                 operation = (a) => (float)Math.Asinh(a),
             },
             new OneArg<float, float>()
             {
                 schema = "math/acosh",
                 a = 1.5f,
+                approximate = true,
                 operation = (a) => (float)Math.Acosh(a),
             },
             new OneArg<float, float>()
             {
                 schema = "math/atanh",
                 a = 0.5f,
+                approximate = true,
                 operation = (a) => (float)Math.Atanh(a),
             },
             // Exponential nodes
@@ -346,36 +459,42 @@ namespace Khronos_Test_Export
             {
                 schema = "math/exp",
                 a = 1.2132f,
+                approximate = true,
                 operation = (a) => Mathf.Exp(a),
             },
             new OneArg<float, float>()
             {
                 schema = "math/log",
                 a = 26436.23423f,
+                approximate = true,
                 operation = (a) => Mathf.Log(a),
             },
             new OneArg<float, float>()
             {
                 schema = "math/log2",
                 a = 6443.243f,
+                approximate = true,
                 operation = (a) => Mathf.Log(a, 2),
             },
             new OneArg<float, float>()
             {
                 schema = "math/log10",
                 a = 8768.24f,
+                approximate = true,
                 operation = (a) => Mathf.Log10(a),
             },
             new OneArg<float, float>()
             {
                 schema = "math/sqrt",
                 a = 4556.234f,
+                approximate = true,
                 operation = (a) => Mathf.Sqrt(a),
             },
             new OneArg<float, float>()
             {
                 schema = "math/cbrt",
                 a = 9769.234f,
+                approximate = true,
                 operation = (a) => Mathf.Pow(a, 1f / 3f),
             },
             new TwoArg<float, float>()
@@ -383,6 +502,7 @@ namespace Khronos_Test_Export
                 schema = "math/pow",
                 a = 7.764f,
                 b = 2.345f,
+                approximate = true,
                 operation = (a, b) => Mathf.Pow(a, b),
             },
         };
@@ -398,20 +518,110 @@ namespace Khronos_Test_Export
 
         protected override ITestCase[] GetTests()
         {
-            var newTestCases = new List<ITestCase>();
-            foreach (var testCase in mathCases)
+            object CreateValueByGltfType(object value, string gltfType)
             {
-                testCase.Run();
-                var newTest = new MathTestCase();
-                newTest.schema = testCase.schema;
-                newTest.a = testCase.A;
-                newTest.b = testCase.B;
-                newTest.c = testCase.C;
-                newTest.expected = testCase.Expected;
-                newTestCases.Add(newTest);
+                if (value is not float)
+                {
+                    Debug.Log("Value is not float: " + value);
+                    return value;
+                }
+                if (gltfType == "float2")
+                {
+                    return new Vector2((float)value, (float)value);
+                }
+
+                if (gltfType == "float3")
+                {
+                    return new Vector3((float)value, (float)value, (float)value);
+                }
+
+                if (gltfType == "float4")
+                {
+                    return new Vector4((float)value, (float)value, (float)value, (float)value);
+                }
+
+                if (gltfType == "float4x4")
+                {
+                    var v4 = new Vector4((float)value, (float)value, (float)value, (float)value);
+                    return new Matrix4x4(v4, v4, v4, v4);
+                }
+
+                if (gltfType == "int")
+                {
+                    return Mathf.RoundToInt((float)value);
+                }
+
+                return null;
             }
 
-            return newTestCases.ToArray();
+            var newTestCases = new List<ITestCase>();
+            foreach (var group in mathCases.GroupBy(t => t.schema))
+            {
+                var newTest = new MathTestCase();
+                newTestCases.Add(newTest);
+                newTest.schema = group.First().schema;
+                var schemaInstance = MathTestCase.GetSchemaInstance(newTest.schema);
+                
+                Type typeA = null;
+                foreach (var testCase in group)
+                {
+                    testCase.Run();
+                    var newTestCase = newTest.AddSubTest();
+                    newTestCase.a = testCase.A;
+                    newTestCase.b = testCase.B;
+                    newTestCase.c = testCase.C;
+                    newTestCase.expected = testCase.Expected;
+                    newTestCase.approximateEquality = testCase.approximate;
+
+                    typeA = testCase.A.GetType();
+                }
+
+                if (newTest.schema == "math/mul")
+                {
+                    Debug.Log("");
+                }
+
+                if (typeA == typeof(float))
+                if (schemaInstance.InputValueSockets.TryGetValue("a", out var aSocket))
+                {
+                    bool first = true;
+                    foreach (var suppType in aSocket.SupportedTypes.Where(s =>
+                                 GltfTypes.GetTypeMapping(typeA).GltfSignature != s))
+                    {
+                        first = true;
+                        foreach (var testCase in group)
+                        {
+                            if (!testCase.autoCreateTestsForAllSupportedInputs)
+                                continue;
+                            var newA = CreateValueByGltfType(testCase.A, suppType);
+                            object newB = testCase.B;
+                            object newC = testCase.C;
+
+                            object newExpected = testCase.Expected;
+                            if (schemaInstance.OutputValueSockets["value"].SupportedTypes.Length > 1)
+                                newExpected = CreateValueByGltfType(testCase.Expected, suppType);
+                            
+                            if (schemaInstance.InputValueSockets.TryGetValue("b", out var bSocket))
+                                newB = CreateValueByGltfType(testCase.B, suppType);
+                            if (schemaInstance.InputValueSockets.TryGetValue("c", out var cSocket))
+                                newC = CreateValueByGltfType(testCase.C, suppType);
+
+                            if (newA == null || newB == null || newC == null)
+                                continue;
+
+                            var extraCase = newTest.AddSubTest();
+                            extraCase.a = newA;
+                            extraCase.b = newB;
+                            extraCase.c = newC;
+                            extraCase.expected = newExpected;
+                            extraCase.approximateEquality = testCase.approximate;
+                            first = false;
+                        }
+                    }
+                }
+            }
+
+            return newTestCases.OrderBy(c => c.GetTestName()).ToArray();
         }
 
         public override void ExportTests(bool exportAllInOne = true, bool exportIndividual = true)
@@ -427,7 +637,7 @@ namespace Khronos_Test_Export
         {
             public bool exportAllInOne = true;
             public bool exportIndividual = true;
-            
+
             public override void OnInspectorGUI()
             {
                 EditorGUILayout.PropertyField(serializedObject.FindProperty(nameof(MathTestCreator.testExporter)));
