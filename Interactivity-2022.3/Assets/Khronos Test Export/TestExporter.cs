@@ -133,7 +133,7 @@ namespace Khronos_Test_Export
                 entry.label = test.Item1.GetTestName();
                 entry.name = test.Item1.GetTestName();
                 entry.tags = _schemaUsedInCase[test.Item1].ToArray();
-                entry.variants.Add("gltf-Binary", test.Item2.Replace(@"\", "/"));
+                entry.variants.Add("glTF-Binary", test.Item2.Replace(@"\", "/"));
                 entry.variants.Add("test-Json", test.Item3.Replace(@"\", "/"));
                 indexData.Add(entry);
             }
