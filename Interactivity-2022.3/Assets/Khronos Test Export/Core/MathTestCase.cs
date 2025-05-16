@@ -156,7 +156,6 @@ namespace Khronos_Test_Export
                 else
                     return v.ToString();
             }
-
             
             _checkBoxes = new CheckBox[subTests.Count];
             int index = 0;

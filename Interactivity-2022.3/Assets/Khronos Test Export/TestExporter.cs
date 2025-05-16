@@ -62,6 +62,8 @@ namespace Khronos_Test_Export
                 public string resultVarName;
                 public int resultVarId;
                 public object expectedResultValue;
+                public int successResultVarId;
+                public string successResultVarName;
             }
 
             public SubTests[] subTests;
@@ -98,6 +100,8 @@ namespace Khronos_Test_Export
                     obj["resultVarType"] = GltfTypes.GetTypeMapping(value.expectedResultValue.GetType()).GltfSignature;
                     GltfInteractivityNode.ValueSerializer.Serialize(value.expectedResultValue, obj);
                     obj[nameof(SubTests.expectedResultValue)] = obj["value"];
+                    obj["successResultVarId"] = value.successResultVarId;
+                    obj["successResultVarName"] = value.successResultVarName;
                     obj.Remove("value");
                     obj.WriteTo(writer);
                 }
@@ -185,6 +189,8 @@ namespace Khronos_Test_Export
                     subTest.resultVarName = check.GetResultVariableName();
                     subTest.resultVarId = check.ResultValueVarId;
                     subTest.expectedResultValue = check.expectedValue;
+                    subTest.successResultVarId = check.ResultPassValueVarId;
+                    subTest.successResultVarName = check.GetResultPassVariableName();
                     subTests.Add(subTest);
                 }
 

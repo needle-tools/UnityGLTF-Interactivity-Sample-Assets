@@ -145,6 +145,7 @@ namespace Khronos_Test_Export
             {
                 schema = "math/fract",
                 a = -32434.96784f,
+                approximate = true,
                 operation = (a) => a - Mathf.Floor(a),
             },
             new OneArg<float, float>()
@@ -575,14 +576,8 @@ namespace Khronos_Test_Export
 
                     typeA = testCase.A.GetType();
                 }
-
-                if (newTest.schema == "math/mul")
-                {
-                    Debug.Log("");
-                }
-
-                if (typeA == typeof(float))
-                if (schemaInstance.InputValueSockets.TryGetValue("a", out var aSocket))
+                
+                if (typeA == typeof(float) && schemaInstance.InputValueSockets.TryGetValue("a", out var aSocket))
                 {
                     bool first = true;
                     foreach (var suppType in aSocket.SupportedTypes.Where(s =>
@@ -621,7 +616,12 @@ namespace Khronos_Test_Export
                 }
             }
 
-            return newTestCases.OrderBy(c => c.GetTestName()).ToArray();
+            List<ITestCase> additionalCases = new List<ITestCase>();
+            additionalCases.Add(new Math_SelectTest());
+            additionalCases.Add(new Math_SwitchTest());
+            additionalCases.Add(new Math_RandomTest());
+            
+            return newTestCases.Concat(additionalCases).OrderBy(c => c.GetTestName()).ToArray();
         }
 
         public override void ExportTests(bool exportAllInOne = true, bool exportIndividual = true)

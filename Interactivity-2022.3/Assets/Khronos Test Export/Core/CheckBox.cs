@@ -24,6 +24,7 @@ namespace Khronos_Test_Export
         public object expectedValue = null;
 
         public int ResultValueVarId { get; private set; } = -1;
+        public int ResultPassValueVarId { get; private set; } = -1;
 
         public float proximityCheckDistance = 0.0001f;
 
@@ -34,6 +35,7 @@ namespace Khronos_Test_Export
         private bool proximityCheck = false;
 
         private string resultVarName = null;
+        private string resultPassVarName = null;
         
         private void OnDrawGizmosSelected()
         {
@@ -83,10 +85,26 @@ namespace Khronos_Test_Export
             
             if (context.interactivityExportContext.Context.variables.Exists(v => v.Id == name))
             {
-                var existingCount = context.interactivityExportContext.Context.variables.Count(v => v.Id == name);
+                var existingCount = context.interactivityExportContext.Context.variables.Count(v => v.Id.StartsWith(name));
                 name += $" ({existingCount.ToString()})";
             }
             resultVarName = name;
+            return name;
+        }
+
+        public string GetResultPassVariableName()
+        {
+            if (resultPassVarName != null)
+                return resultPassVarName;
+            
+            var name = "TestResult_HasPassed_" + _testCase.CaseName + "_" + text.text;
+            
+            if (context.interactivityExportContext.Context.variables.Exists(v => v.Id == name))
+            {
+                var existingCount = context.interactivityExportContext.Context.variables.Count(v => v.Id.StartsWith(name));
+                name += $" ({existingCount.ToString()})";
+            }
+            resultPassVarName = name;
             return name;
         }
 
@@ -119,6 +137,17 @@ namespace Khronos_Test_Export
             return expectedValue.ToString();
         }
         
+        private void SavePassResult(out ValueInRef boolValue, out FlowInRef flowIn, out FlowOutRef flowOut)
+        {
+            if (ResultPassValueVarId == -1)
+                ResultPassValueVarId = context.interactivityExportContext.Context.AddVariableWithIdIfNeeded(GetResultPassVariableName(), false, GltfTypes.Bool);
+            
+            var setVar = VariablesHelpers.SetVariable(context.interactivityExportContext, ResultPassValueVarId);
+            boolValue = setVar.ValueIn(Variable_SetNode.IdInputValue);
+            flowIn = setVar.FlowIn();
+            flowOut = setVar.FlowOut();
+        }
+        
         private void SaveResult(FlowOutRef flow)
         {
             if (ResultValueVarId == -1)
@@ -126,6 +155,7 @@ namespace Khronos_Test_Export
             
             VariablesHelpers.SetVariableStaticValue(context.interactivityExportContext, ResultValueVarId, true, out var setFlow, out _);
             flow.ConnectToFlowDestination(setFlow);
+            ResultPassValueVarId = ResultValueVarId;
         }
 
         private void SaveResult(out ValueInRef value, FlowOutRef flow, Type type)
@@ -193,29 +223,35 @@ namespace Khronos_Test_Export
                     out var resultVarRef);
 
                 GltfInteractivityExportNode eqNode = null;
-                if (proximityCheck)
-                {
-                    var subtractNode = context.interactivityExportContext.CreateNode<Math_SubNode>();
-                    subtractNode.ValueIn(Math_SubNode.IdValueA).ConnectToSource(resultVarRef);
-                    subtractNode.ValueIn("b").SetValue(expectedValue);
+                // if (proximityCheck)
+                // {
+                //     var subtractNode = context.interactivityExportContext.CreateNode<Math_SubNode>();
+                //     subtractNode.ValueIn(Math_SubNode.IdValueA).ConnectToSource(resultVarRef);
+                //     subtractNode.ValueIn("b").SetValue(expectedValue);
+                //
+                //     var absNode = context.interactivityExportContext.CreateNode<Math_AbsNode>();
+                //     absNode.ValueIn("a").ConnectToSource(subtractNode.FirstValueOut());
+                //
+                //     var lessThanNode = context.interactivityExportContext.CreateNode<Math_LtNode>();
+                //     lessThanNode.ValueIn("a").ConnectToSource(absNode.FirstValueOut());
+                //     lessThanNode.SetValueInSocket("b", proximityCheckDistance);
+                //     eqNode = lessThanNode;
+                // }
+                // else
+                // {
+                //     eqNode = context.interactivityExportContext.CreateNode<Math_EqNode>();
+                //     if (ResultPassValueVarId != -1)
+                //         eqNode.ValueIn(Math_EqNode.IdValueA).ConnectToSource(ResultPassValueVarId);
+                //     else
+                //         eqNode.ValueIn(Math_EqNode.IdValueA).ConnectToSource(resultVarRef);
+                //     eqNode.ValueIn(Math_EqNode.IdValueB).SetValue(expectedValue);
+                // }
 
-                    var absNode = context.interactivityExportContext.CreateNode<Math_AbsNode>();
-                    absNode.ValueIn("a").ConnectToSource(subtractNode.FirstValueOut());
-
-                    var lessThanNode = context.interactivityExportContext.CreateNode<Math_LtNode>();
-                    lessThanNode.ValueIn("a").ConnectToSource(absNode.FirstValueOut());
-                    lessThanNode.SetValueInSocket("b", proximityCheckDistance);
-                    eqNode = lessThanNode;
-                }
-                else
-                {
-                    eqNode = context.interactivityExportContext.CreateNode<Math_EqNode>();
-                    eqNode.ValueIn(Math_EqNode.IdValueA).ConnectToSource(resultVarRef);
-                    eqNode.ValueIn(Math_EqNode.IdValueB).SetValue(expectedValue);
-                }
-
+                VariablesHelpers.GetVariable(context.interactivityExportContext, ResultPassValueVarId,
+                    out var passValueRef);
+                
                 var branchNode = context.interactivityExportContext.CreateNode<Flow_BranchNode>();
-                branchNode.ValueIn(Flow_BranchNode.IdCondition).ConnectToSource(eqNode.FirstValueOut());
+                branchNode.ValueIn(Flow_BranchNode.IdCondition).ConnectToSource(passValueRef);
                 if (isNegated)
                     branchNode.FlowOut(Flow_BranchNode.IdFlowOutTrue).ConnectToFlowDestination(fallbackFlowCheck());
                 else
@@ -282,7 +318,7 @@ namespace Khronos_Test_Export
             context.AddLog(logText+ $": All Flows triggered (Number: {count})", out var logFlowIn, out var logFlowOut);
             flowOutSetValid.ConnectToFlowDestination(logFlowIn);
             SaveResult(logFlowOut);
-            
+        
             PostCheck(() =>
             {
                 context.AddLog("ERROR! "+logText+ ": Not all flows got triggered! This should not happened!", out var logFlowInFallback, out var nextFlowOut);
@@ -447,6 +483,40 @@ namespace Khronos_Test_Export
             return valueToCompare is Vector2 || valueToCompare is Vector3 || valueToCompare is Vector4 ||
                    valueToCompare is Quaternion || valueToCompare is Matrix4x4;
         }
+
+        public void SetupCheckValueDiffers(out ValueInRef valueA, out ValueInRef valueB, out FlowInRef flow)
+        {
+            var eqNode = context.interactivityExportContext.CreateNode<Math_EqNode>();
+            valueA = eqNode.ValueIn(Math_EqNode.IdValueA);
+            valueB =  eqNode.ValueIn(Math_EqNode.IdValueB);
+
+            var validNode = context.interactivityExportContext.CreateNode<Flow_BranchNode>();
+            validNode.ValueIn(Flow_BranchNode.IdCondition).ConnectToSource(eqNode.FirstValueOut());
+
+            SetPassed(out var setPosition, out var flowOutSetValid);
+            
+            validNode.FlowOut(Flow_BranchNode.IdFlowOutFalse)
+                .ConnectToFlowDestination(setPosition);
+            
+            expectedValue = true;
+            context.AddLog(logText+ ": Value A is {0} and Value B is {1}. Should be not-equal.", out var logFlowIn, out var logFlowOut, 2, out var logValueRef);
+            flow = logFlowIn;
+            logFlowOut.ConnectToFlowDestination(validNode.FlowIn());
+            
+            valueA = valueA.Link(logValueRef[0]);
+            valueB = valueB.Link(logValueRef[1]);
+            
+            context.AddLog(logText+ ": Test Successful", out var logSuccesFlowIn, out var logSuccessFlowOut);
+            flowOutSetValid.ConnectToFlowDestination(logSuccesFlowIn);
+            
+            SaveResult(logSuccessFlowOut);
+            
+            PostCheck(() =>
+            {
+                context.AddLog("ERROR! "+logText+ ": Test Failed", out var logFailedFlowIn, out _);
+                return logFailedFlowIn;
+            });
+        }
         
         public void SetupCheck(out ValueInRef inputValue, out FlowInRef flow, object valueToCompare,
             bool proximityCheck = false)
@@ -490,14 +560,33 @@ namespace Khronos_Test_Export
                 if (RequiresDotForApproximationCheck(valueToCompare))
                 {
                     var dotNode = context.interactivityExportContext.CreateNode<Math_DotNode>();
-                    inputValue = dotNode.ValueIn(Math_DotNode.IdValueA);
-                    dotNode.ValueIn(Math_DotNode.IdValueB).SetValue(valueToCompare);
+                    var normalizeNode = context.interactivityExportContext.CreateNode<Math_NormalizeNode>();
+                    inputValue = normalizeNode.ValueIn(Math_NormalizeNode.IdValueA);
+                    
+                    dotNode.ValueIn(Math_DotNode.IdValueA).ConnectToSource(normalizeNode.FirstValueOut());
+                    object valueToCompareNorm = null;
+                    if (valueToCompare is Vector2 v2)
+                        valueToCompareNorm = v2.normalized;
+                    else if (valueToCompare is Vector3 v3)
+                        valueToCompareNorm = v3.normalized;
+                    else if (valueToCompare is Vector4 v4)
+                        valueToCompareNorm = v4.normalized;
+                    else if (valueToCompare is Quaternion q)
+                        valueToCompareNorm = q.normalized;
+                    
+                    dotNode.ValueIn(Math_DotNode.IdValueB).SetValue(valueToCompareNorm);
                     
                     var gtNode = context.interactivityExportContext.CreateNode<Math_GtNode>();
                     gtNode.ValueIn(Math_GtNode.IdValueA).ConnectToSource(dotNode.FirstValueOut());
                     gtNode.SetValueInSocket("b", 1f-proximityCheckDistance);
                     
                     eqNode = gtNode;
+                    
+                   
+                    // context.AddLog("DOT={0}  shouldbe=", out var dotLogFlowIn, out var dotLogFlowOut, dotNode.FirstValueOut());
+                    // flow = dotLogFlowIn;
+                    // expectedValue = valueToCompare;
+                    // return;
                 }
                 else
                 {
@@ -516,9 +605,19 @@ namespace Khronos_Test_Export
             }
             else
             {
-                eqNode = context.interactivityExportContext.CreateNode<Math_EqNode>();
-                inputValue = eqNode.ValueIn(Math_EqNode.IdValueA);
-                eqNode.ValueIn(Math_EqNode.IdValueB).SetType(TypeRestriction.LimitToType(compareValueType)).SetValue(valueToCompare);
+                if (valueToCompare is float f && float.IsNaN(f))
+                {
+                    var isNaNNode = context.interactivityExportContext.CreateNode<Math_IsNaNNode>();
+                    inputValue = isNaNNode.ValueIn(Math_IsNaNNode.IdValueA);
+                    eqNode = isNaNNode;
+                    eqNode = isNaNNode;
+                }
+                else
+                {
+                    eqNode = context.interactivityExportContext.CreateNode<Math_EqNode>();
+                    inputValue = eqNode.ValueIn(Math_EqNode.IdValueA);
+                    eqNode.ValueIn(Math_EqNode.IdValueB).SetType(TypeRestriction.LimitToType(compareValueType)).SetValue(valueToCompare);
+                }
             }
             
             var validNode = context.interactivityExportContext.CreateNode<Flow_BranchNode>();
@@ -532,13 +631,16 @@ namespace Khronos_Test_Export
                 .ConnectToFlowDestination(setPosition);
             
             expectedValue = valueToCompare;
-            context.AddLog(logText+ ": Value is {0}, should be "+ExpectedValueToString(), out var logFlowIn, out var logFlowOut, 1, out var logValueRef);
+            context.AddLog(logText+ ": Value is {0}, should be "+ExpectedValueToString()+ (proximityCheck ? $"(Proximity range: {proximityCheckDistance})" : ""), out var logFlowIn, out var logFlowOut, 1, out var logValueRef);
             inputValue = inputValue.Link(logValueRef[0]);
             validNode.FlowOut(Flow_BranchNode.IdFlowOutFalse).ConnectToFlowDestination(logFlowIn);
             
             context.AddLog(logText+ ": Test Successful", out var logSuccesFlowIn, out var logSuccessFlowOut);
 
-            flowOutSetValid.ConnectToFlowDestination(logSuccesFlowIn);
+            SavePassResult(out var passValue, out var flowInPass, out var flowOutPass);
+            passValue.ConnectToSource(eqNode.FirstValueOut());
+            flowOutSetValid.ConnectToFlowDestination(flowInPass);
+            flowOutPass.ConnectToFlowDestination(logSuccesFlowIn);
             logSuccessFlowOut.ConnectToFlowDestination(logFlowIn);
             
             SaveResult(out var saveResultInputValue, logFlowOut, valueToCompare.GetType());
