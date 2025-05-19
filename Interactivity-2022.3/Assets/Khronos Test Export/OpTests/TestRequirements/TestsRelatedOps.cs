@@ -13,7 +13,7 @@ namespace Khronos_Test_Export.OpTests.TestRequirements
         
         public string GetTestName()
         {
-            return "Tests required operations";
+            return "prerequisites/Tests required operations";
         }
 
         public string GetTestDescription()
