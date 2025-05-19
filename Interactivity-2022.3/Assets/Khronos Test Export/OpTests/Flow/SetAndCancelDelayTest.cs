@@ -46,20 +46,19 @@ namespace Khronos_Test_Export
             
             var setDelayNode = nodeCreator.CreateNode<Flow_SetDelayNode>();
 
-            var tickNode = nodeCreator.CreateNode<Event_OnTickNode>();
             setDelayNode.ValueIn(Flow_SetDelayNode.IdDuration).SetValue(1f);
+            TimeHelpers.AddTickNode(nodeCreator, TimeHelpers.GetTimeValueOption.TimeSinceStartup, out var timeSinceStartValueRef);
 
             var startTimeVarId = context.interactivityExportContext.Context.AddVariableWithIdIfNeeded(
                 "startTime_" + System.Guid.NewGuid().ToString(), 0, GltfTypes.Float);
             var setStartTimeVar = VariablesHelpers.SetVariable(nodeCreator, startTimeVarId);
-            setStartTimeVar.ValueIn(Variable_SetNode.IdInputValue).ConnectToSource(tickNode.ValueOut(Event_OnTickNode.IdOutTimeSinceStart));
-            
+            setStartTimeVar.ValueIn(Variable_SetNode.IdInputValue).ConnectToSource(timeSinceStartValueRef);
             context.AddToCurrentEntrySequence(setStartTimeVar.FlowIn(Variable_SetNode.IdFlowIn));
             context.AddToCurrentEntrySequence(setDelayNode.FlowIn(Flow_SetDelayNode.IdFlowIn));
             
             VariablesHelpers.GetVariable(nodeCreator, startTimeVarId, out var startTimeVarRef);
             var subtractNode = nodeCreator.CreateNode<Math_SubNode>();
-            subtractNode.ValueIn(Math_SubNode.IdValueA).ConnectToSource(tickNode.ValueOut(Event_OnTickNode.IdOutTimeSinceStart));
+            subtractNode.ValueIn(Math_SubNode.IdValueA).ConnectToSource(timeSinceStartValueRef);
             subtractNode.ValueIn(Math_SubNode.IdValueB).ConnectToSource(startTimeVarRef);
             
             _flowDoneCheckBox.SetupCheck(out var flowDoneCheckFlow);
