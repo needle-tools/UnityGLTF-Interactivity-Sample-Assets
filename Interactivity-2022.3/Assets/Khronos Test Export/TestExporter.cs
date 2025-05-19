@@ -235,13 +235,14 @@ namespace Khronos_Test_Export
             Debug.Log("Test case md file created at: " + filename);
         }
 
-        public void ShowDestinationFolderDialog()
+        public string ShowDestinationFolderDialog()
         {
             var path = EditorPrefs.GetString("GLTFTestExportPath", "");
             path = UnityEditor.EditorUtility.SaveFolderPanel("Destination Folder", path, "");
             EditorPrefs.SetString("GLTFTestExportPath", path);
+            return path;
         }
-
+        
         public void ExportTest(ITestCase[] cases, bool batchExport, string allInOneName, string indexFileName)
         {
             var settings = GLTFSettings.GetDefaultSettings();
@@ -261,9 +262,10 @@ namespace Khronos_Test_Export
 
             var path = EditorPrefs.GetString("GLTFTestExportPath", "");
             if (string.IsNullOrEmpty(path))
-                path = UnityEditor.EditorUtility.SaveFolderPanel("Destination Folder", path, "");
-            EditorPrefs.SetString("GLTFTestExportPath", path);
-
+            {
+                path = ShowDestinationFolderDialog();
+            }
+            
             _testCase.Clear();
             _schemaUsedInCase.Clear();
 
@@ -379,6 +381,31 @@ namespace Khronos_Test_Export
                 }
 
                 index++;
+            }
+        }
+        
+        [CustomEditor(typeof(TestExporter))]
+        public class Inspector : Editor
+        {
+            public override void OnInspectorGUI()
+            {
+                base.OnInspectorGUI();
+                var exporter = target as TestExporter;
+                
+                var path = EditorPrefs.GetString("GLTFTestExportPath", "");
+                GUILayout.Label("Export Path: ");
+                EditorGUILayout.BeginHorizontal();
+                EditorGUI.BeginDisabledGroup(true);
+                EditorGUILayout.TextField(path, GUILayout.ExpandWidth(true));
+                EditorGUI.EndDisabledGroup();
+                
+                var btn = GUILayout.Button("Select Exporter Folder", GUILayout.MinWidth(150));
+                EditorGUILayout.EndHorizontal();
+                if (btn)
+                {
+                    exporter.ShowDestinationFolderDialog();
+                }
+          
             }
         }
     }

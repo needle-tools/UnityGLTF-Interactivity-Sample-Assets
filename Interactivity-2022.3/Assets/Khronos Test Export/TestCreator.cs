@@ -123,9 +123,7 @@ namespace Khronos_Test_Export
             }
 
             var cases = GetTests();
-
-            testExporter.ShowDestinationFolderDialog();
-
+            
             if (exportAllInOne)
             {
                 testExporter.ExportTest(cases, false, testName, indexFilename);
