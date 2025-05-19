@@ -524,6 +524,91 @@ namespace Khronos_Test_Export
                 approximate = true,
                 operation = (a,b,c) =>  Matrix4x4.TRS(a, b, c),
             },
+            new OneArg<Math_LengthNode, Vector2, float>()
+            {
+                a = new Vector2(13f, 2f),
+                approximate = true,
+                autoCreateTestsForAllSupportedInputs = false,
+                operation = (a) => a.magnitude,
+            },
+            new OneArg<Math_LengthNode, Vector3, float>()
+            {
+                a = new Vector3(13f, 2f, 15f),
+                approximate = true,
+                autoCreateTestsForAllSupportedInputs = false,
+                operation = (a) => a.magnitude,
+            },            
+            new OneArg<Math_LengthNode, Vector4, float>()
+            {
+                a = new Vector4(13f, 2f,23f,123f),
+                approximate = true,
+                autoCreateTestsForAllSupportedInputs = false,
+                operation = (a) => a.magnitude,
+            },      
+            new TwoArg<Math_AndNode, bool, bool>()
+            {
+                a = true,
+                b = false,
+                operation = (a, b) => a && b,
+            },
+            new TwoArg<Math_AndNode, bool, bool>()
+            {
+                a = true,
+                b = true,
+                operation = (a, b) => a && b,
+            },
+            new TwoArg<Math_AndNode, bool, bool>()
+            {
+                a = false,
+                b = false,
+                operation = (a, b) => a && b,
+            },
+            new TwoArg<Math_OrNode, bool, bool>()
+            {
+                a = true,
+                b = false,
+                operation = (a, b) => a || b,
+            },
+            new TwoArg<Math_OrNode, bool, bool>()
+            {
+                a = false,
+                b = false,
+                operation = (a, b) => a || b,
+            },
+            new TwoArg<Math_OrNode, bool, bool>()
+            {
+                a = true,
+                b = true,
+                operation = (a, b) => a || b,
+            },
+            new TwoArg<Math_XorNode, bool, bool>()
+            {
+                a = true,
+                b = false,
+                operation = (a, b) => a ^ b,
+            },
+            new TwoArg<Math_XorNode, bool, bool>()
+            {
+                a = false,
+                b = false,
+                operation = (a, b) => a ^ b,
+            },
+            new TwoArg<Math_XorNode, bool, bool>()
+            {
+                a = true,
+                b = true,
+                operation = (a, b) => a ^ b,
+            },
+            new OneArg<Math_NotNode, bool, bool>()
+            {
+                a = true,
+                operation = (a) => !a,
+            },
+            new OneArg<Math_NotNode, bool, bool>()
+            {
+                a = false,
+                operation = (a) => !a,
+            },
             
         };
 
