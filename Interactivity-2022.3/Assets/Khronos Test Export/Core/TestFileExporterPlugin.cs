@@ -39,7 +39,8 @@ namespace Khronos_Test_Export
                 ActiveGltfRoot = gltfRoot;
 
                 TriggerInterfaceExportCallbacks();
-
+                RemoveUnconnectedNodes();
+                
                 // For Value Conversion, we need to presort the nodes, otherwise we might get wrong results
                 TopologicalSort();
                 CheckForImplicitValueConversions();
