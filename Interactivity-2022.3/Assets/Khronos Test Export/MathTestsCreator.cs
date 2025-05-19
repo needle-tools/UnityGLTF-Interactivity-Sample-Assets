@@ -609,6 +609,31 @@ namespace Khronos_Test_Export
                 a = false,
                 operation = (a) => !a,
             },
+            new TwoArg<Math_DotNode, Vector2, float>()
+            {
+                a = new Vector2(1f, 2f),
+                b = new Vector2(3f, 4f),
+                approximate = true,
+                operation = (a, b) => Vector2.Dot(a, b),
+                autoCreateTestsForAllSupportedInputs = false,
+            },
+            new TwoArg<Math_DotNode, Vector3, float>()
+            {
+                a = new Vector3(1f, 2f, 3f),
+                b = new Vector3(4f, 5f, 6f),
+                approximate = true,
+                operation = (a, b) => Vector3.Dot(a, b),
+                autoCreateTestsForAllSupportedInputs = false,
+            },
+            new TwoArg<Math_DotNode, Vector4, float>()
+            {
+                a = new Vector4(1f, 2f, 3f, 4f),
+                b = new Vector4(5f, 6f, 7f, 8f),
+                approximate = true,
+                operation = (a, b) => Vector4.Dot(a, b),
+                autoCreateTestsForAllSupportedInputs = false,
+            },
+            
             
         };
 
