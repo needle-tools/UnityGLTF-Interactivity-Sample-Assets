@@ -565,26 +565,58 @@ namespace Khronos_Test_Export
                     
                     dotNode.ValueIn(Math_DotNode.IdValueA).ConnectToSource(normalizeNode.FirstValueOut());
                     object valueToCompareNorm = null;
+                    float valueToCompareLength = 0f;
                     if (valueToCompare is Vector2 v2)
+                    {
+                        valueToCompareLength = v2.magnitude;
                         valueToCompareNorm = v2.normalized;
+                    }
                     else if (valueToCompare is Vector3 v3)
+                    {
+                        valueToCompareLength = v3.magnitude;
                         valueToCompareNorm = v3.normalized;
+                    }
                     else if (valueToCompare is Vector4 v4)
+                    {
+                        valueToCompareLength = v4.magnitude;
                         valueToCompareNorm = v4.normalized;
+                    }
                     else if (valueToCompare is Quaternion q)
+                    {
+                        valueToCompareLength = new Vector4(q.x, q.y, q.z, q.w).magnitude;
                         valueToCompareNorm = q.normalized;
+                    }
                     
                     dotNode.ValueIn(Math_DotNode.IdValueB).SetValue(valueToCompareNorm);
                     
                     var gtNode = context.interactivityExportContext.CreateNode<Math_GtNode>();
                     gtNode.ValueIn(Math_GtNode.IdValueA).ConnectToSource(dotNode.FirstValueOut());
                     gtNode.SetValueInSocket("b", 1f-proximityCheckDistance);
+
+                    var lengthNode = context.interactivityExportContext.CreateNode<Math_LengthNode>();
+                    inputValue = inputValue.Link(lengthNode.ValueIn(Math_LengthNode.IdValueA));
                     
-                    eqNode = gtNode;
+                    var gtLengthNode = context.interactivityExportContext.CreateNode<Math_GtNode>();
+                    gtLengthNode.ValueIn(Math_GtNode.IdValueA).ConnectToSource(lengthNode.FirstValueOut());
+                    gtLengthNode.SetValueInSocket("b", valueToCompareLength-proximityCheckDistance);
                     
-                   
-                    // context.AddLog("DOT={0}  shouldbe=", out var dotLogFlowIn, out var dotLogFlowOut, dotNode.FirstValueOut());
-                    // flow = dotLogFlowIn;
+                    var andNode = context.interactivityExportContext.CreateNode<Math_AndNode>();
+                    andNode.ValueIn(Math_AndNode.IdValueA).ConnectToSource(gtLengthNode.FirstValueOut());
+                    andNode.ValueIn(Math_AndNode.IdValueB).ConnectToSource(gtNode.FirstValueOut());
+                    
+                    eqNode = andNode;
+
+                    // context.AddLog($"{valueToCompare}   Value={{0}}  ", out var valueInLogFlowIn, out _, 1, out var lvOut);
+                    // inputValue = inputValue.Link(lvOut[0]);
+                    // context.AddToCurrentEntrySequence(valueInLogFlowIn);
+                    // context.AddLog($"{valueToCompare}   Normalized={{0}}  ", out var normLogFlowIn, out _, normalizeNode.FirstValueOut());
+                    // context.AddToCurrentEntrySequence(normLogFlowIn);
+                    //
+                    //  context.AddLog($"{valueToCompare}   Length={{0}}  ", out var lengthLogFlowIn, out _, lengthNode.FirstValueOut());
+                    //  context.AddToCurrentEntrySequence(lengthLogFlowIn);
+                    //  context.AddLog($"{valueToCompare}   Dot={{0}}  ", out var dotLogFlowIn, out _, dotNode.FirstValueOut());
+                    //  context.AddToCurrentEntrySequence(dotLogFlowIn);
+         
                     // expectedValue = valueToCompare;
                     // return;
                 }
