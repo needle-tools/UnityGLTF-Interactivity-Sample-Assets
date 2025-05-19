@@ -7,6 +7,7 @@ using UnityEditor;
 #endif
 using UnityEngine;
 using UnityGLTF.Interactivity;
+using UnityGLTF.Interactivity.Schema;
 
 namespace Khronos_Test_Export
 {
@@ -14,8 +15,6 @@ namespace Khronos_Test_Export
     {
         abstract class TestCase
         {
-            public string schema;
-
             public virtual void Run()
             {
             }
@@ -28,9 +27,11 @@ namespace Khronos_Test_Export
             public abstract object B { get; }
             public abstract object C { get; }
             public abstract object Expected { get; }
+            
+            public abstract Type SchemaType { get; }
         }
 
-        abstract class TestCase<I, O> : TestCase
+        abstract class TestCase<TSchema, I, O> : TestCase where TSchema : GltfInteractivityNodeSchema
         {
             public I a;
             public I b;
@@ -40,27 +41,28 @@ namespace Khronos_Test_Export
             public override object B => b;
             public override object C => c;
             public override object Expected => expected;
+            public override Type SchemaType => typeof(TSchema);
         }
 
-        class ZeroArg<O> : TestCase<float, O>
+        class ZeroArg<TSchema, O> : TestCase<TSchema, float, O> where TSchema : GltfInteractivityNodeSchema
         {
             public Func<O> operation;
             public override void Run() => expected = operation();
         }
 
-        class OneArg<I, O> : TestCase<I, O>
+        class OneArg<TSchema, I, O> : TestCase<TSchema, I, O> where TSchema : GltfInteractivityNodeSchema
         {
             public Func<I, O> operation;
             public override void Run() => expected = operation(a);
         }
 
-        class TwoArg<I, O> : TestCase<I, O>
+        class TwoArg<TSchema, I, O> : TestCase<TSchema, I, O> where TSchema : GltfInteractivityNodeSchema
         {
             public Func<I, I, O> operation;
             public override void Run() => expected = operation(a, b);
         }
 
-        class ThreeArg<I, O> : TestCase<I, O>
+        class ThreeArg<TSchema, I, O> : TestCase<TSchema, I, O> where TSchema : GltfInteractivityNodeSchema
         {
             public Func<I, I, I, O> operation;
             public override void Run() => expected = operation(a, b, c);
@@ -69,438 +71,376 @@ namespace Khronos_Test_Export
         private static List<TestCase> mathCases = new List<TestCase>()
         {
             // Constant Nodes
-            new ZeroArg<float>()
+            new ZeroArg<Math_ENode, float>()
             {
-                schema = "math/e",
                 approximate = true,
                 operation = () => 2.718281828459045f,
             },
-            new ZeroArg<float>()
+            new ZeroArg<Math_PiNode, float>()
             {
-                schema = "math/pi",
                 approximate = true,
                 operation = () => Mathf.PI,
             },
-            new ZeroArg<float>()
+            new ZeroArg<Math_InfNode, float>()
             {
-                schema = "math/inf",
                 operation = () => Mathf.Infinity,
             },
-            new ZeroArg<float>()
+            new ZeroArg<Math_NaNNode, float>()
             {
-                schema = "math/nan",
                 operation = () => float.NaN,
             },
 
             // Arithmetic Nodes
-            new OneArg<float, float>()
+            new OneArg<Math_AbsNode, float, float>()
             {
-                schema = "math/abs",
                 a = -7,
                 operation = (a) => Mathf.Abs(a),
             },
-            new OneArg<float, float>()
+            new OneArg<Math_AbsNode, float, float>()
             {
-                schema = "math/abs",
                 a = 7,
                 operation = (a) => Mathf.Abs(a),
             },
-            new OneArg<float, float>()
+            new OneArg<Math_AbsNode, float, float>()
             {
-                schema = "math/abs",
                 a = 0,
                 operation = (a) => Mathf.Abs(a),
             },
-            new OneArg<float, float>()
+            new OneArg<Math_SignNode, float, float>()
             {
-                schema = "math/sign",
                 a = -9,
                 operation = (a) => Mathf.Sign(a),
             },
-            new OneArg<float, float>()
+            new OneArg<Math_SignNode, float, float>()
             {
-                schema = "math/sign",
                 a = 9,
                 operation = (a) => Mathf.Sign(a),
             },
-            new OneArg<float, float>()
+            new OneArg<Math_TruncNode, float, float>()
             {
-                schema = "math/trunc",
                 a = 9.234324f,
                 operation = (a) => Mathf.Sign(a) * Mathf.Floor(Mathf.Abs(a)),
             },
-            new OneArg<float, float>()
+            new OneArg<Math_FloorNode, float, float>()
             {
-                schema = "math/floor",
                 a = -2323.4346f,
                 operation = (a) => Mathf.Floor(a),
             },
-            new OneArg<float, float>()
+            new OneArg<Math_CeilNode, float, float>()
             {
-                schema = "math/ceil",
                 a = 757.003244f,
                 operation = (a) => Mathf.Ceil(a),
             },
-            new OneArg<float, float>()
+            new OneArg<Math_FractNode, float, float>()
             {
-                schema = "math/fract",
                 a = -32434.96784f,
                 approximate = true,
                 operation = (a) => a - Mathf.Floor(a),
             },
-            new OneArg<float, float>()
+            new OneArg<Math_NegNode, float, float>()
             {
-                schema = "math/neg",
                 a = -8923448.234f,
                 operation = (a) => -a,
             },
             // Arithmetic with two inputs
-            new TwoArg<float, float>()
+            new TwoArg<Math_AddNode, float, float>()
             {
-                schema = "math/add",
                 a = -1f,
                 b = 3f,
                 operation = (a, b) => a + b,
             },
-            new TwoArg<float, float>()
+            new TwoArg<Math_SubNode, float, float>()
             {
-                schema = "math/sub",
                 a = 7f,
                 b = 9f,
                 operation = (a, b) => a - b,
             },
-            new TwoArg<float, float>()
+            new TwoArg<Math_MulNode, float, float>()
             {
-                schema = "math/mul",
                 a = 345.234432f,
                 b = 1 / 345.234432f,
                 approximate = true,
                 operation = (a, b) => a * b,
             },
-            new TwoArg<float, float>()
+            new TwoArg<Math_DivNode, float, float>()
             {
-                schema = "math/div",
                 a = 8989.324f,
                 b = 2134.234f,
                 approximate = true,
                 operation = (a, b) => a / b,
             },
-            new TwoArg<float, float>()
+            new TwoArg<Math_RemNode, float, float>()
             {
-                schema = "math/rem",
                 a = 19.423534f,
                 b = 2.234f,
                 approximate = true,
                 operation = (a, b) => a % b,
             },
-            new TwoArg<float, float>()
+            new TwoArg<Math_MinNode, float, float>()
             {
-                schema = "math/min",
                 a = 17.21323f,
                 b = -324.234f,
                 operation = (a, b) => Mathf.Min(a, b),
             },
-            new TwoArg<float, float>()
+            new TwoArg<Math_MaxNode, float, float>()
             {
-                schema = "math/max",
                 a = 4653.234f,
                 b = 91293923.234f,
                 operation = (a, b) => Mathf.Max(a, b),
             },
-            new ThreeArg<float, float>()
+            new ThreeArg<Math_ClampNode, float, float>()
             {
-                schema = "math/clamp",
                 a = 9,
                 b = 2,
                 c = 3,
                 operation = (a, b, c) => Mathf.Clamp(a, b, c),
             },
-            new OneArg<float, float>()
+            new OneArg<Math_SaturateNode, float, float>()
             {
-                schema = "math/saturate",
                 a = -1.5f,
                 operation = (a) => Mathf.Clamp01(a),
             },
-            new ThreeArg<float, float>()
+            new ThreeArg<Math_MixNode, float, float>()
             {
-                schema = "math/mix",
                 a = 1f,
                 b = 2f,
                 c = 2f,
                 operation = (a, b, c) => Mathf.LerpUnclamped(a, b, c),
             },
             // Comparison Nodes
-            new TwoArg<float, bool>()
+            new TwoArg<Math_EqNode, float, bool>()
             {
-                schema = "math/eq",
                 autoCreateTestsForAllSupportedInputs = false,
                 a = 1.324f,
                 b = 2.32423f,
                 operation = (a, b) => a == b,
             },
-            new TwoArg<bool, bool>()
+            new TwoArg<Math_EqNode, bool, bool>()
             {
-                schema = "math/eq",
                 autoCreateTestsForAllSupportedInputs = false,
                 a = true,
                 b = false,
                 operation = (a, b) => a == b,
             },
-            new TwoArg<Vector2, bool>()
+            new TwoArg<Math_EqNode, Vector2, bool>()
             {
-                schema = "math/eq",
                 autoCreateTestsForAllSupportedInputs = false,
                 a = new Vector2(4,5),
                 b = new Vector2(4,5),
                 operation = (a, b) => a == b,
             },
-            new TwoArg<float, bool>()
+            new TwoArg<Math_EqNode, float, bool>()
             {
-                schema = "math/eq",
                 autoCreateTestsForAllSupportedInputs = false,
                 a = float.NaN,
                 b = float.NaN,
                 operation = (a, b) => false,
             },
-            new TwoArg<float, bool>()
+            new TwoArg<Math_EqNode, float, bool>()
             {
-                schema = "math/eq",
                 autoCreateTestsForAllSupportedInputs = false,
                 a = float.NaN,
                 b = 1f,
                 operation = (a, b) => false,
             },
-            new TwoArg<float, bool>()
+            new TwoArg<Math_EqNode, float, bool>()
             {
-                schema = "math/eq",
                 autoCreateTestsForAllSupportedInputs = false,
                 a = float.PositiveInfinity,
                 b = float.PositiveInfinity,
                 operation = (a, b) => true,
             },
-            new TwoArg<float, bool>()
+            new TwoArg<Math_EqNode, float, bool>()
             {
-                schema = "math/eq",
                 autoCreateTestsForAllSupportedInputs = false,
                 a = float.PositiveInfinity,
                 b = float.NegativeInfinity,
                 operation = (a, b) => false,
             },
-            new TwoArg<Matrix4x4, bool>()
+            new TwoArg<Math_EqNode, Matrix4x4, bool>()
             {
-                schema = "math/eq",
                 autoCreateTestsForAllSupportedInputs = false,
                 a = Matrix4x4.TRS(Vector3.one, Quaternion.identity, Vector3.up),
                 b = Matrix4x4.TRS(Vector3.one, Quaternion.identity, Vector3.up),
                 operation = (a, b) => true,
             },
-            new TwoArg<float, bool>()
+            new TwoArg<Math_LtNode, float, bool>()
             {
-                schema = "math/lt",
                 a = 1,
                 b = 2,
                 operation = (a, b) => a < b,
             },
-            new TwoArg<float, bool>()
+            new TwoArg<Math_LeNode, float, bool>()
             {
-                schema = "math/le",
                 a = 1.3465f,
                 b = 1.3465f,
                 operation = (a, b) => a <= b,
             },
-            new TwoArg<float, bool>()
+            new TwoArg<Math_GtNode, float, bool>()
             {
-                schema = "math/gt",
                 a = 1,
                 b = 2,
                 operation = (a, b) => a > b,
             },
-            new TwoArg<float, bool>()
+            new TwoArg<Math_GeNode, float, bool>()
             {
-                schema = "math/ge",
                 a = 1.3465f,
                 b = 1.3465f,
                 operation = (a, b) => a >= b,
             },
             // Special nodes
-            new OneArg<float, bool>()
+            new OneArg<Math_IsNaNNode, float, bool>()
             {
-                schema = "math/isnan",
                 a = float.NaN,
                 operation = (a) => float.IsNaN(a),
             },
-            new OneArg<float, bool>()
+            new OneArg<Math_IsNaNNode, float, bool>()
             {
-                schema = "math/isnan",
                 a = 1f,
                 operation = (a) => float.IsNaN(a),
             },
-            new OneArg<float, bool>()
+            new OneArg<Math_IsInfNode, float, bool>()
             {
-                schema = "math/isinf",
                 a = float.PositiveInfinity,
                 operation = (a) => float.IsInfinity(a),
             },
-            new OneArg<float, bool>()
+            new OneArg<Math_IsInfNode, float, bool>()
             {
-                schema = "math/isinf",
                 a = float.NegativeInfinity,
                 operation = (a) => float.IsInfinity(a),
             },
             // math/select
-            new OneArg<float, float>()
+            new OneArg<Math_RadNode, float, float>()
             {
-                schema = "math/rad",
                 a = 75,
                 approximate = true,
                 operation = (a) => a * Mathf.PI / 180,
             },
-            new OneArg<float, float>()
+            new OneArg<Math_DegNode, float, float>()
             {
-                schema = "math/deg",
                 a = Mathf.PI * 0.35f,
                 approximate = true,
                 operation = (a) => a * 180 / Mathf.PI,
             },
-            new OneArg<float, float>()
+            new OneArg<Math_SinNode, float, float>()
             {
-                schema = "math/sin",
                 a = 4.324f,
                 approximate = true,
                 operation = (a) => Mathf.Sin(a),
             },
-            new OneArg<float, float>()
+            new OneArg<Math_CosNode, float, float>()
             {
-                schema = "math/cos",
                 a = 4.324f,
                 approximate = true,
                 operation = (a) => Mathf.Cos(a),
             },
-            new OneArg<float, float>()
+            new OneArg<Math_TanNode, float, float>()
             {
-                schema = "math/tan",
                 a = 4.324f,
                 approximate = true,
                 operation = (a) => Mathf.Tan(a),
             },
-            new OneArg<float, float>()
+            new OneArg<Math_AsinNode, float, float>()
             {
-                schema = "math/asin",
                 a = 0.5f,
                 approximate = true,
                 operation = (a) => Mathf.Asin(a),
             },
-            new OneArg<float, float>()
+            new OneArg<Math_AcosNode, float, float>()
             {
-                schema = "math/acos",
                 a = 0.5f,
                 approximate = true,
                 operation = (a) => Mathf.Acos(a),
             },
-            new OneArg<float, float>()
+            new OneArg<Math_AtanNode, float, float>()
             {
-                schema = "math/atan",
                 a = 0.5f,
                 approximate = true,
                 operation = (a) => Mathf.Atan(a),
             },
-            new TwoArg<float, float>()
+            new TwoArg<Math_Atan2Node, float, float>()
             {
-                schema = "math/atan2",
                 a = 0.5f,
                 b = 0.5f,
                 approximate = true,
                 operation = (a, b) => Mathf.Atan2(a, b),
             },
             // Hyperbolic nodes
-            new OneArg<float, float>()
+            new OneArg<Math_SinHNode, float, float>()
             {
-                schema = "math/sinh",
                 a = 4.324f,
                 approximate = true,
                 operation = (a) => (float)Math.Sinh(a),
             },
-            new OneArg<float, float>()
+            new OneArg<Math_CosHNode, float, float>()
             {
-                schema = "math/cosh",
                 a = 4.324f,
                 approximate = true,
                 operation = (a) => (float)Math.Cosh(a),
             },
-            new OneArg<float, float>()
+            new OneArg<Math_TanHNode, float, float>()
             {
-                schema = "math/tanh",
                 a = 4.324f,
                 approximate = true,
                 operation = (a) => (float)Math.Tanh(a),
             },
-            new OneArg<float, float>()
+            new OneArg<Math_AsinHNode, float, float>()
             {
-                schema = "math/asinh",
                 a = 0.5f,
                 approximate = true,
                 operation = (a) => (float)Math.Asinh(a),
             },
-            new OneArg<float, float>()
+            new OneArg<Math_AcosHNode, float, float>()
             {
-                schema = "math/acosh",
                 a = 1.5f,
                 approximate = true,
                 operation = (a) => (float)Math.Acosh(a),
             },
-            new OneArg<float, float>()
+            new OneArg<Math_AtanHNode, float, float>()
             {
-                schema = "math/atanh",
                 a = 0.5f,
                 approximate = true,
                 operation = (a) => (float)Math.Atanh(a),
             },
             // Exponential nodes
-            new OneArg<float, float>()
+            new OneArg<Math_ExpNode, float, float>()
             {
-                schema = "math/exp",
                 a = 1.2132f,
                 approximate = true,
                 operation = (a) => Mathf.Exp(a),
             },
-            new OneArg<float, float>()
+            new OneArg<Math_LogNode, float, float>()
             {
-                schema = "math/log",
                 a = 26436.23423f,
                 approximate = true,
                 operation = (a) => Mathf.Log(a),
             },
-            new OneArg<float, float>()
+            new OneArg<Math_Log2Node, float, float>()
             {
-                schema = "math/log2",
                 a = 6443.243f,
                 approximate = true,
                 operation = (a) => Mathf.Log(a, 2),
             },
-            new OneArg<float, float>()
+            new OneArg<Math_Log10Node, float, float>()
             {
-                schema = "math/log10",
                 a = 8768.24f,
                 approximate = true,
                 operation = (a) => Mathf.Log10(a),
             },
-            new OneArg<float, float>()
+            new OneArg<Math_SqrtNode, float, float>()
             {
-                schema = "math/sqrt",
                 a = 4556.234f,
                 approximate = true,
                 operation = (a) => Mathf.Sqrt(a),
             },
-            new OneArg<float, float>()
+            new OneArg<Math_CbrtNode, float, float>()
             {
-                schema = "math/cbrt",
                 a = 9769.234f,
                 approximate = true,
                 operation = (a) => Mathf.Pow(a, 1f / 3f),
             },
-            new TwoArg<float, float>()
+            new TwoArg<Math_PowNode, float, float>()
             {
-                schema = "math/pow",
                 a = 7.764f,
                 b = 2.345f,
                 approximate = true,
@@ -556,12 +496,12 @@ namespace Khronos_Test_Export
             }
 
             var newTestCases = new List<ITestCase>();
-            foreach (var group in mathCases.GroupBy(t => t.schema))
+            foreach (var group in mathCases.GroupBy(t => t.SchemaType))
             {
                 var newTest = new MathTestCase();
                 newTestCases.Add(newTest);
-                newTest.schema = group.First().schema;
-                var schemaInstance = MathTestCase.GetSchemaInstance(newTest.schema);
+                newTest.schemaType = group.First().SchemaType;
+                var schemaInstance = GltfInteractivityNodeSchema.GetSchema(newTest.schemaType);
                 
                 Type typeA = null;
                 foreach (var testCase in group)

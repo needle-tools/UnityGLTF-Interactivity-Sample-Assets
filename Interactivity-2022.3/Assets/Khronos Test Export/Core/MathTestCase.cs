@@ -12,7 +12,7 @@ namespace Khronos_Test_Export
     [TestCreator.IgnoreTestCase]
     public class MathTestCase : ITestCase
     {
-        public string schema = "math/add";
+        public Type schemaType;
 
         public class SubMathTest
         {
@@ -21,8 +21,6 @@ namespace Khronos_Test_Export
             public object expected;
             public bool newRow = false;
         }
-        
-        
         
         public List<SubMathTest> subTests = new List<SubMathTest>();
 
@@ -33,97 +31,12 @@ namespace Khronos_Test_Export
             subTest.newRow = newRow;
             return subTest;
         }
-        
-        
-        private static Dictionary<string, Type> schemasByTypeName = null;
-        private static Dictionary<Type, GltfInteractivityNodeSchema> schemaInstances =
-            new Dictionary<Type, GltfInteractivityNodeSchema>();
-        
-        public static IEnumerable<Type> GetLoadableTypes(Assembly assembly)
-        {
-            try
-            {
-                return assembly.GetTypes();
-            }
-            catch (ReflectionTypeLoadException e)
-            {
-                return e.Types.Where(t => t != null);
-            }
-        }
-
-        static void Setup()
-        {
-            var schemas = AppDomain.CurrentDomain
-                .GetAssemblies()
-                .SelectMany(assembly => GetLoadableTypes(assembly))
-                .Where(t => t.IsSubclassOf(typeof(GltfInteractivityNodeSchema)))
-                .Where(t => !t.IsAbstract)
-                .ToList();
-
-            // Is not collecting all schema classes
-            // > maybe https://issuetracker.unity3d.com/issues/not-all-assemblies-are-found-in-the-current-appdomain-when-scanning-with-typecache
-            //var schemas = TypeCache.GetTypesDerivedFrom<GltfInteractivityNodeSchema>();
-
-            schemasByTypeName = new Dictionary<string, Type>();
-            foreach (var schema in schemas)
-            {
-                var instance = (GltfInteractivityNodeSchema)System.Activator.CreateInstance(schema);
-                if (instance == null)
-                {
-                    Debug.LogWarning($"Failed to create instance of schema: {schema.FullName}");
-                    continue;
-                }
-
-                if (!schemasByTypeName.ContainsKey(instance.Op))
-                {
-                    schemasByTypeName.Add(instance.Op, schema);
-                    schemaInstances.Add(schema, instance);
-                }
-                else
-                {
-                    Debug.LogWarning($"Duplicate schema found: {instance.Op} Type: " + schema.FullName);
-                }
-            }
-        }
-        
-        public static GltfInteractivityNodeSchema GetSchemaInstance(string name)
-        {
-            if (schemasByTypeName == null)
-                Setup();
-
-            if (schemasByTypeName == null)
-                throw new Exception("No schemas found");
-            
-            
-            if (schemaInstances.TryGetValue(GetSchema(name), out var schemaInstance))
-            {
-                return schemaInstance;
-            }
-
-            throw new Exception($"Schema not found: {name}");
-        }
-        
-        public static Type GetSchema(string name)
-        {
-            if (schemasByTypeName == null)
-                Setup();
-
-            if (schemasByTypeName == null)
-                throw new Exception("No schemas found");
-
-            if (schemasByTypeName.TryGetValue(name, out var schemaType))
-            {
-                return schemaType;
-            }
-
-            throw new Exception($"Schema not found: {name}");
-        }
-        
+   
         private CheckBox[] _checkBoxes;
 
         public string GetTestName()
         {
-            return schema;
+            return GltfInteractivityNodeSchema.GetSchema(schemaType).Op;
         }
 
         public string GetTestDescription()
@@ -164,8 +77,8 @@ namespace Khronos_Test_Export
                 if (subTest.newRow)
                     context.NewRow();
                 var testName = "";
-
-                var schemaInstance = GltfInteractivityNodeSchema.GetSchema(GetSchema(schema));
+                GltfInteractivityNodeSchema.GetSchema(schemaType);
+                var schemaInstance = GltfInteractivityNodeSchema.GetSchema(schemaType);
                 if (schemaInstance.InputValueSockets.ContainsKey("a"))
                     testName += "[a] " + ValueToStr(subTest.a) + " ";
                 if (schemaInstance.InputValueSockets.ContainsKey("b"))
@@ -187,7 +100,7 @@ namespace Khronos_Test_Export
             int index = 0;
             foreach (var subTest in subTests)
             {
-                var testNode = nodeCreator.CreateNode(GetSchema(schema));
+                var testNode = nodeCreator.CreateNode(schemaType);
                 context.NewEntryPoint(_checkBoxes[index].GetText());
 
                 if (testNode.ValueInConnection.ContainsKey("a"))
