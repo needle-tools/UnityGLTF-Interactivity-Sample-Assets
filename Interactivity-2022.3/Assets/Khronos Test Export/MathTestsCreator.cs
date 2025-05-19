@@ -44,6 +44,32 @@ namespace Khronos_Test_Export
             public override Type SchemaType => typeof(TSchema);
         }
 
+        abstract class TestCase<TSchema, I1, I2, O> : TestCase where TSchema : GltfInteractivityNodeSchema
+        {
+            public I1 a;
+            public I2 b;
+            public I1 c;
+            public O expected;
+            public override object A => a;
+            public override object B => b;
+            public override object C => c;
+            public override object Expected => expected;
+            public override Type SchemaType => typeof(TSchema);
+        }
+        
+        abstract class TestCase<TSchema, I1, I2, I3, O> : TestCase where TSchema : GltfInteractivityNodeSchema
+        {
+            public I1 a;
+            public I2 b;
+            public I3 c;
+            public O expected;
+            public override object A => a;
+            public override object B => b;
+            public override object C => c;
+            public override object Expected => expected;
+            public override Type SchemaType => typeof(TSchema);
+        }
+        
         class ZeroArg<TSchema, O> : TestCase<TSchema, float, O> where TSchema : GltfInteractivityNodeSchema
         {
             public Func<O> operation;
@@ -62,9 +88,21 @@ namespace Khronos_Test_Export
             public override void Run() => expected = operation(a, b);
         }
 
+        class TwoArg<TSchema, I1, I2, O> : TestCase<TSchema, I1, I2, O> where TSchema : GltfInteractivityNodeSchema
+        {
+            public Func<I1, I2, O> operation;
+            public override void Run() => expected = operation(a, b);
+        }
+        
         class ThreeArg<TSchema, I, O> : TestCase<TSchema, I, O> where TSchema : GltfInteractivityNodeSchema
         {
             public Func<I, I, I, O> operation;
+            public override void Run() => expected = operation(a, b, c);
+        }
+        
+        class ThreeArg<TSchema, I1, I2, I3, O> : TestCase<TSchema, I1, I2, I3, O> where TSchema : GltfInteractivityNodeSchema
+        {
+            public Func<I1, I2, I3, O> operation;
             public override void Run() => expected = operation(a, b, c);
         }
 
@@ -446,6 +484,47 @@ namespace Khronos_Test_Export
                 approximate = true,
                 operation = (a, b) => Mathf.Pow(a, b),
             },
+            new OneArg<Math_TransposeNode, Matrix4x4, Matrix4x4>()
+            {
+                a = Matrix4x4.TRS(Vector3.one, Quaternion.identity, Vector3.up),
+                approximate = true,
+                operation = (a) => Matrix4x4.Transpose(a),
+            },
+            new OneArg<Math_InverseNode, Matrix4x4, Matrix4x4>()
+            {
+                a = Matrix4x4.TRS(Vector3.one, Quaternion.identity, Vector3.up),
+                approximate = true,
+                operation = (a) => Matrix4x4.Inverse(a),
+            },
+            new OneArg<Math_DeterminantNode, Matrix4x4, float>()
+            {
+                a = Matrix4x4.TRS(Vector3.one, Quaternion.identity, Vector3.up),
+                approximate = true,
+                operation = (a) => Matrix4x4.Determinant(a),
+            },
+            new TwoArg<Math_Transform_Float4Node, Vector4, Matrix4x4, Vector4>()
+            {
+                a = new Vector4(1f,2f,3f,4f),
+                b = Matrix4x4.TRS(Vector3.right, Quaternion.identity, Vector3.up),
+                approximate = true,
+                operation = (a,b) =>  b * a,
+            },
+            new TwoArg<Math_MatMulNode, Matrix4x4, Matrix4x4>()
+            {
+                a = Matrix4x4.TRS(Vector3.one, Quaternion.identity, Vector3.up),
+                b = Matrix4x4.TRS(Vector3.right, Quaternion.identity, Vector3.up),
+                approximate = true,
+                operation = (a,b) =>  a * b,
+            },
+            new ThreeArg<Math_MatComposeNode, Vector3, Quaternion, Vector3, Matrix4x4>()
+            {
+                a = Vector3.one,
+                b = Quaternion.identity,
+                c = Vector3.up,
+                approximate = true,
+                operation = (a,b,c) =>  Matrix4x4.TRS(a, b, c),
+            },
+            
         };
 
         private void OnValidate()
