@@ -663,11 +663,6 @@ MonoBehaviour:
   testExporter: {fileID: 1481517795}
   testCases:
   - Enabled: 1
-    Name: Tests required operations
-    Description: Testing required operations for proper test execution. This tests
-      should be passed before testing all other tests.
-    typeFullName: Khronos_Test_Export.OpTests.TestRequirements.TestsRelatedOps
-  - Enabled: 1
     Name: flow/branch
     Description: 
     typeFullName: Khronos_Test_Export.BranchTest
@@ -708,11 +703,24 @@ MonoBehaviour:
     Description: 
     typeFullName: Khronos_Test_Export.WhileLoopTest
   - Enabled: 1
+    Name: prerequisites/Tests required operations
+    Description: Testing required operations for proper test execution. This tests
+      should be passed before testing all other tests.
+    typeFullName: Khronos_Test_Export.OpTests.TestRequirements.TestsRelatedOps
+  - Enabled: 1
+    Name: variable/interpolate
+    Description: 
+    typeFullName: Khronos_Test_Export.VariableInterpolateTest
+  - Enabled: 1
     Name: variable/set and get
     Description: Set and Get variable test
     typeFullName: Khronos_Test_Export.VariableSetGetTest
+  - Enabled: 1
+    Name: variable/setMultiple
+    Description: 
+    typeFullName: Khronos_Test_Export.VariableSetMultipleTest
   testName: Overview
-  indexFilename: index
+  indexFilename: test-index
 --- !u!4 &1481517797
 Transform:
   m_ObjectHideFlags: 0
@@ -742,8 +750,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   testExporter: {fileID: 1481517795}
   testCases: []
-  testName: Math Tests
-  indexFilename: MathTests-Index
+  testName: mathtests
+  indexFilename: mathtests-index
 --- !u!4 &135977184900898654
 Transform:
   m_ObjectHideFlags: 0
