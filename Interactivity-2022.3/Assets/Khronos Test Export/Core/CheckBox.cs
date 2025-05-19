@@ -222,7 +222,7 @@ namespace Khronos_Test_Export
                 VariablesHelpers.GetVariable(context.interactivityExportContext, ResultValueVarId,
                     out var resultVarRef);
 
-                GltfInteractivityExportNode eqNode = null;
+                //GltfInteractivityExportNode eqNode = null;
                 // if (proximityCheck)
                 // {
                 //     var subtractNode = context.interactivityExportContext.CreateNode<Math_SubNode>();

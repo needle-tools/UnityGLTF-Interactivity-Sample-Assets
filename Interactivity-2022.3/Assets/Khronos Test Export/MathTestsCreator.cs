@@ -683,11 +683,11 @@ namespace Khronos_Test_Export
                 
                 if (typeA == typeof(float) && schemaInstance.InputValueSockets.TryGetValue("a", out var aSocket))
                 {
-                    bool first = true;
+                    //bool first = true;
                     foreach (var suppType in aSocket.SupportedTypes.Where(s =>
                                  GltfTypes.GetTypeMapping(typeA).GltfSignature != s))
                     {
-                        first = true;
+                        //first = true;
                         foreach (var testCase in group)
                         {
                             if (!testCase.autoCreateTestsForAllSupportedInputs)
@@ -714,7 +714,7 @@ namespace Khronos_Test_Export
                             extraCase.c = newC;
                             extraCase.expected = newExpected;
                             extraCase.approximateEquality = testCase.approximate;
-                            first = false;
+                            //first = false;
                         }
                     }
                 }
