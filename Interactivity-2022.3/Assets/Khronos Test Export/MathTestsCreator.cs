@@ -692,12 +692,7 @@ namespace Khronos_Test_Export
             },
             
         };
-
-        private void OnValidate()
-        {
-            testName = "Math Tests";
-        }
-
+        
         protected override void GenerateTestList()
         {
         }
@@ -809,13 +804,7 @@ namespace Khronos_Test_Export
             
             return newTestCases.Concat(additionalCases).OrderBy(c => c.GetTestName()).ToArray();
         }
-
-        public override void ExportTests(bool exportAllInOne = true, bool exportIndividual = true)
-        {
-            testName = "Math Tests";
-            indexFilename = "MathTests-Index";
-            base.ExportTests(exportAllInOne, exportIndividual);
-        }
+        
 #if UNITY_EDITOR
 
         [CustomEditor(typeof(MathTestCreator))]
@@ -826,11 +815,20 @@ namespace Khronos_Test_Export
 
             public override void OnInspectorGUI()
             {
+                EditorGUI.BeginChangeCheck();
                 EditorGUILayout.PropertyField(serializedObject.FindProperty(nameof(MathTestCreator.testExporter)));
 
                 exportIndividual = GUILayout.Toggle(exportIndividual, "Export Individual Tests");
                 exportAllInOne = GUILayout.Toggle(exportAllInOne, "Export All In One");
 
+                EditorGUILayout.PropertyField(serializedObject.FindProperty(nameof(MathTestCreator.indexFilename)));
+                EditorGUILayout.PropertyField(serializedObject.FindProperty(nameof(MathTestCreator.testName)));
+                
+                if (EditorGUI.EndChangeCheck())
+                {
+                    serializedObject.ApplyModifiedProperties();
+                }
+                
                 if (GUILayout.Button("Export Tests"))
                 {
                     ((MathTestCreator)target).ExportTests(exportAllInOne, exportIndividual);
