@@ -254,37 +254,59 @@ namespace Khronos_Test_Export
     }
 
     [TestCreator.IgnoreTestCase]
-    public class RandomLog : ITestCase
+    public class Math_MatDecomposeTest : ITestCase
     {
+        private CheckBox _translateCheckBox;
+        private CheckBox _rotateCheckBox;
+        private CheckBox _scaleCheckBox;
+
         public string GetTestName()
         {
-            return "RANDOMOUT";
+            return "math/matDecompose";
         }
 
         public string GetTestDescription()
         {
-            return "RANDOMOUT";
+            return "";
         }
 
         public void PrepareObjects(TestContext context)
         {
-           
+            _translateCheckBox = context.AddCheckBox("Translate");
+            _rotateCheckBox = context.AddCheckBox("Rotate");
+            _scaleCheckBox = context.AddCheckBox("Scale");
         }
 
         public void CreateNodes(TestContext context)
         {
             var nodeCreator = context.interactivityExportContext;
 
-            var forLoopNode = nodeCreator.CreateNode<Flow_ForLoopNode>();
-            forLoopNode.ValueIn(Flow_ForLoopNode.IdEndIndex).SetValue(5000);
-            forLoopNode.ValueIn(Flow_ForLoopNode.IdStartIndex).SetValue(0);
-            context.NewEntryPoint("output");
-            var randomNode2 = nodeCreator.CreateNode<Math_RandomNode>();
-            var randomNode3 = nodeCreator.CreateNode<Math_RandomNode>();
+            var translate = new Vector3(1f, 2f, 3f);
+            var rotate = Quaternion.Euler(30f, 45f, 60f);
+            var scale = new Vector3(2f, 2f, 2f);
+            var mat = Matrix4x4.TRS(translate, rotate, scale);
+
+            var matComposeNode = nodeCreator.CreateNode<Math_MatComposeNode>();
+            matComposeNode.ValueIn(Math_MatComposeNode.IdInputTranslation).SetValue(translate);
+            matComposeNode.ValueIn(Math_MatComposeNode.IdInputRotation).SetValue(rotate);
+            matComposeNode.ValueIn(Math_MatComposeNode.IdInputScale).SetValue(scale);
             
-            context.AddLog("Random: {0} {1}",out var logFlow, out var logout, randomNode2.FirstValueOut(), randomNode3.FirstValueOut());
-            context.AddToCurrentEntrySequence(forLoopNode.FlowIn());
-            forLoopNode.FlowOut(Flow_ForLoopNode.IdLoopBody).ConnectToFlowDestination(logFlow);
+            var matDecomposeNode = nodeCreator.CreateNode<Math_MatDecomposeNode>();
+            matDecomposeNode.ValueIn(Math_MatDecomposeNode.IdInput).ConnectToSource(matComposeNode.FirstValueOut());
+            //matDecomposeNode.ValueIn(Math_MatDecomposeNode.IdInput).SetValue(mat);
+
+            context.NewEntryPoint("matDecompose");
+
+            _translateCheckBox.proximityCheckDistance = 0.001f;
+            _rotateCheckBox.proximityCheckDistance = 0.001f;
+            _scaleCheckBox.proximityCheckDistance = 0.001f;
+
+            _translateCheckBox.SetupCheck(matDecomposeNode.ValueOut(Math_MatDecomposeNode.IdOutputTranslation), out var flowTranslate, translate, true);
+            context.AddToCurrentEntrySequence(flowTranslate);
+            _rotateCheckBox.SetupCheck(matDecomposeNode.ValueOut(Math_MatDecomposeNode.IdOutputRotation), out var flowRotate, rotate, true);
+            context.AddToCurrentEntrySequence(flowRotate);
+            _scaleCheckBox.SetupCheck(matDecomposeNode.ValueOut(Math_MatDecomposeNode.IdOutputScale), out var flowScale, scale, true);
+            context.AddToCurrentEntrySequence(flowScale);
         }
     }
 }

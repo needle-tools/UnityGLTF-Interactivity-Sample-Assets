@@ -749,6 +749,7 @@ namespace Khronos_Test_Export
             additionalCases.Add(new Math_SelectTest());
             additionalCases.Add(new Math_SwitchTest());
             additionalCases.Add(new Math_RandomTest());
+            additionalCases.Add(new Math_MatDecomposeTest());
             
             return newTestCases.Concat(additionalCases).OrderBy(c => c.GetTestName()).ToArray();
         }
