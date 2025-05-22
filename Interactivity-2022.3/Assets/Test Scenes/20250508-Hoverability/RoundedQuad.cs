@@ -37,6 +37,14 @@ public class RoundedQuad : MonoBehaviour
     public int _outlineLoopCount = 1;
     public Vector2 _outlineOffset = Vector2.zero;
     
+    // Outline UV mapping
+    public enum OutlineUVMode {
+        Default,        // Standard UVs (0-1 mapping from object bounds)
+        FlowAlongPath   // UV flows along the outline path (for gradient textures)
+    }
+    
+    public OutlineUVMode _outlineUVMode = OutlineUVMode.Default;
+    
     // Debug visualization options
     [HideInInspector]
     public bool _debugDistances = false;
@@ -52,6 +60,7 @@ public class RoundedQuad : MonoBehaviour
     private int _lastOutlineLoopCount;
     private Vector2 _lastOutlineOffset;
     private bool _lastDebugDistances;
+    private OutlineUVMode _lastOutlineUVMode;
     
     // Helper function to calculate colors for outline vertices using percentage-based approach
     private Color32 CalculateColor(float percentageToEdge)
@@ -68,6 +77,7 @@ public class RoundedQuad : MonoBehaviour
         else
         {
             // Simple linear interpolation based on the loop percentage
+            percentageToEdge = Mathf.Pow(percentageToEdge, 0.75f);
             return Color32.Lerp(_outlineInnerColor, _outlineColor, percentageToEdge);
         }
     }
@@ -89,6 +99,7 @@ public class RoundedQuad : MonoBehaviour
         _lastOutlineLoopCount = _outlineLoopCount;
         _lastOutlineOffset = _outlineOffset;
         _lastDebugDistances = _debugDistances;
+        _lastOutlineUVMode = _outlineUVMode;
         
         GenerateMesh(1f, _color.linear, _color.linear);
     }
@@ -125,7 +136,7 @@ public class RoundedQuad : MonoBehaviour
             _lastColor = _color;
         }
         
-        if (_outlineWidth != _lastOutlineWidth || _outlineColor != _lastOutlineColor || _outlineInnerColor != _lastOutlineInnerColor || _outlineLoopCount != _lastOutlineLoopCount || _outlineOffset != _lastOutlineOffset)
+        if (_outlineWidth != _lastOutlineWidth || _outlineColor != _lastOutlineColor || _outlineInnerColor != _lastOutlineInnerColor || _outlineLoopCount != _lastOutlineLoopCount || _outlineOffset != _lastOutlineOffset || _outlineUVMode != _lastOutlineUVMode)
         {
             needsUpdate = true;
             _lastOutlineWidth = _outlineWidth;
@@ -133,6 +144,7 @@ public class RoundedQuad : MonoBehaviour
             _lastOutlineInnerColor = _outlineInnerColor;
             _lastOutlineLoopCount = _outlineLoopCount;
             _lastOutlineOffset = _outlineOffset;
+            _lastOutlineUVMode = _outlineUVMode;
         }
         
         if (_debugDistances != _lastDebugDistances)
@@ -353,9 +365,10 @@ public class RoundedQuad : MonoBehaviour
             for (int i = 0; i < segments - 1; i++)
             {
                 // Triangle between corner center, current segment and next segment
+                // Flip the winding order
                 triangles[triangleIndex++] = cornerCenter;
-                triangles[triangleIndex++] = cornerStartVertex + i;
                 triangles[triangleIndex++] = cornerStartVertex + i + 1;
+                triangles[triangleIndex++] = cornerStartVertex + i;
             }
             
             // For max rounding case, we only need some of the connecting quads
@@ -388,12 +401,12 @@ public class RoundedQuad : MonoBehaviour
                 int lastPointOfCorner = cornerStartVertex + segments - 1;
                 int firstPointOfNextCorner = nextCornerFirstVertex;
                 
-                // First triangle: last corner point, next corner center, corner center (flipped winding order)
+                // First triangle: last corner point, next corner center, corner center (unchanged - already flipped)
                 triangles[triangleIndex++] = lastPointOfCorner;
                 triangles[triangleIndex++] = nextCornerCenter;
                 triangles[triangleIndex++] = cornerCenter;
                 
-                // Second triangle: last corner point, first point of next corner, next corner center (flipped winding order)
+                // Second triangle: last corner point, first point of next corner, next corner center (unchanged - already flipped)
                 triangles[triangleIndex++] = lastPointOfCorner;
                 triangles[triangleIndex++] = firstPointOfNextCorner;
                 triangles[triangleIndex++] = nextCornerCenter;
@@ -446,6 +459,9 @@ public class RoundedQuad : MonoBehaviour
                     float offsetX = _outlineOffset.x * offsetPercentage * _outlineWidth;
                     float offsetY = _outlineOffset.y * offsetPercentage * _outlineWidth;
                     
+                    // Calculate position along outline (normalized 0-1)
+                    float outlinePosition = (float)i / outerEdgeVertices.Count;
+                    
                     // 1. Create inner vertex for this loop
                     int innerVertexIndex = innerEdgeStartIndex + i;
                     Vector3 sourceVertexPos;
@@ -469,10 +485,24 @@ public class RoundedQuad : MonoBehaviour
                     // Set inner vertex properties
                     vertices[innerVertexIndex] = sourceVertexPos;
                     normals[innerVertexIndex] = sourceVertexNormal;
-                    uvs[innerVertexIndex] = sourceVertexUV;
+
+                    var percentage  = offsetPercentage - 1f / actualLoopCount;
+                    
+                    // UV mapping depends on the selected mode
+                    if (_outlineUVMode == OutlineUVMode.FlowAlongPath)
+                    {
+                        // U is position along outline path (consistent across all loops)
+                        // V is fixed at 0 for inner vertices
+                        uvs[innerVertexIndex] = new Vector2(outlinePosition, percentage);
+                    }
+                    else
+                    {
+                        // Default UV mapping mode - use source vertex UVs
+                        uvs[innerVertexIndex] = sourceVertexUV;
+                    }
                     
                     // Calculate color for inner vertex based on percentage
-                    colors[innerVertexIndex] = CalculateColor(offsetPercentage - 1f / actualLoopCount);
+                    colors[innerVertexIndex] = CalculateColor(percentage);
                     
                     innerEdgeVertices.Add(innerVertexIndex);
                     
@@ -489,10 +519,22 @@ public class RoundedQuad : MonoBehaviour
                     // Set outer vertex properties
                     vertices[outlineVertIndex] = new Vector3(x, y, 0);
                     normals[outlineVertIndex] = sourceVertexNormal;
-                    uvs[outlineVertIndex] = new Vector2(
-                        Mathf.InverseLerp(-halfWidth, halfWidth, x),
-                        Mathf.InverseLerp(-halfHeight, halfHeight, y)
-                    );
+                    
+                    // UV mapping for outer edge
+                    if (_outlineUVMode == OutlineUVMode.FlowAlongPath)
+                    {
+                        // For outer edge, maintain same U coordinate (position along outline)
+                        // but set V coordinate to 1 (edge of texture)
+                        uvs[outlineVertIndex] = new Vector2(outlinePosition, offsetPercentage);
+                    }
+                    else
+                    {
+                        // Default UV mapping mode - standard mapping based on position
+                        uvs[outlineVertIndex] = new Vector2(
+                            Mathf.InverseLerp(-halfWidth, halfWidth, x),
+                            Mathf.InverseLerp(-halfHeight, halfHeight, y)
+                        );
+                    }
                     
                     // Calculate color for outer vertex
                     colors[outlineVertIndex] = CalculateColor(offsetPercentage);
