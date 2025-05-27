@@ -1,6 +1,6 @@
 using UnityGLTF.Interactivity.Export;
 
-namespace Khronos_Test_Export.OpTests.TestRequirements
+namespace Khronos_Test_Export
 {
     public class TestsRelatedOps : ITestCase
     {
