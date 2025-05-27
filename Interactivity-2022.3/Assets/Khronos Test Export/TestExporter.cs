@@ -315,6 +315,9 @@ namespace Khronos_Test_Export
                     }
                     finally
                     {
+                        if (testCase is IDisposable disposable)
+                            disposable.Dispose();
+
                         currentTestContext.Dispose();
                     }
                     
@@ -350,6 +353,8 @@ namespace Khronos_Test_Export
                 }
                 finally
                 {
+                    foreach (var testCase in cases.Where( t => t is IDisposable).Cast<IDisposable>())
+                        testCase.Dispose();
                     currentTestContext.Dispose();
                 }
             }
