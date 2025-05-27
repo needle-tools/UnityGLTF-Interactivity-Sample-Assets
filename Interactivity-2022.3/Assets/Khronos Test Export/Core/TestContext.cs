@@ -19,6 +19,8 @@ namespace Khronos_Test_Export
         
         private Transform _root;
 
+        public Transform Root => _root;
+
         public IEnumerable<TextMeshPro> CaseLabels => cases.Select(c => c.caseLabel);
         public IEnumerable<CheckBox> CheckBoxes => cases.SelectMany(c => c.checkBoxes);
 
