@@ -633,29 +633,12 @@ namespace Khronos_Test_Export
                 operation = (a, b) => Vector4.Dot(a, b),
                 autoCreateTestsForAllSupportedInputs = false,
             },
-            new ThreeArg<Math_Rotate3dNode, Vector3, Vector3, float, Vector3>()
+            new TwoArg<Math_Rotate3dNode, Vector3, Quaternion, Vector3>()
             {
                 a = new Vector3(1f, 2f, 3f),
-                b = new Vector3(0f, 1f, 0f),
-                c = 0.5f,
+                b = Quaternion.Euler(0, 180f, 0),
                 approximate = true,
-                operation = (a, b, c) => Quaternion.AngleAxis(Mathf.Rad2Deg * c, b) * a,
-            },
-            new ThreeArg<Math_Rotate3dNode, Vector3, Vector3, float, Vector3>()
-            {
-                a = new Vector3(1f, 2f, 3f),
-                b = new Vector3(1f, 0f, 0f),
-                c = -0.5f,
-                approximate = true,
-                operation = (a, b, c) => Quaternion.AngleAxis(Mathf.Rad2Deg * c, b) * a,
-            },
-            new ThreeArg<Math_Rotate3dNode, Vector3, Vector3, float, Vector3>()
-            {
-                a = new Vector3(1f, 2f, 3f),
-                b = new Vector3(0f, 0f, 1f),
-                c = -0.5f,
-                approximate = true,
-                operation = (a, b, c) => Quaternion.AngleAxis(Mathf.Rad2Deg * c, b) * a,
+                operation = (a, b) => b * a,
             },
             new TwoArg<Math_Rotate2dNode, Vector2, float, Vector2>()
             {
