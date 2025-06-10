@@ -7,6 +7,46 @@ using UnityGLTF.Interactivity.Schema;
 namespace Khronos_Test_Export
 {
     [TestCreator.IgnoreTestCase]
+    public class Math_QuatToAxisAngleTest : ITestCase
+    {
+        private CheckBox _axisCheckBox;
+        private CheckBox _angleCheckBox;
+        
+        public string GetTestName()
+        {
+            return "math/quatToAxisAngle";
+        }
+
+        public string GetTestDescription()
+        {
+            return "";
+        }
+
+        public void PrepareObjects(TestContext context)
+        {
+            _axisCheckBox = context.AddCheckBox("Axis");
+            _angleCheckBox = context.AddCheckBox("Angle");
+        }
+
+        public void CreateNodes(TestContext context)
+        {
+            var nodeCreator = context.interactivityExportContext;
+
+            var quat = Quaternion.Euler(30f, 45f, 60f);
+            var axisAngleNode = nodeCreator.CreateNode<Math_QuatToAxisAngleNode>();
+            axisAngleNode.ValueIn(Math_QuatToAxisAngleNode.IdValueA).SetValue(quat);
+
+            quat.ToAngleAxis(out var angle, out var axis);
+            context.NewEntryPoint("quatToAxisAngle");
+
+            _axisCheckBox.SetupCheck(axisAngleNode.ValueOut(Math_QuatToAxisAngleNode.IdOutAxis), out var flowAxis, axis, true);
+            context.AddToCurrentEntrySequence(flowAxis);
+            _angleCheckBox.SetupCheck(axisAngleNode.ValueOut(Math_QuatToAxisAngleNode.IdOutAngle), out var flowAngle, angle, true);
+            context.AddToCurrentEntrySequence(flowAngle);
+        }
+    }
+    
+    [TestCreator.IgnoreTestCase]
     public class Math_SelectTest : ITestCase
     {
         private CheckBox _whenTrueCheckBox;

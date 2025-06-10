@@ -673,7 +673,40 @@ namespace Khronos_Test_Export
                     return new Vector2(r.x, r.y);
                 },
             },
-            
+            new OneArg<Math_QuatConjugateNode, Quaternion, Quaternion>()
+            {
+                a = Quaternion.Euler(0, 180f, 0),
+                approximate = true,
+                operation = (a) => Quaternion.Inverse(a),
+            },
+            new TwoArg<Math_QuatMulNode, Quaternion, Quaternion>()
+            {
+                a = Quaternion.Euler(0, 180f, 0),
+                b = Quaternion.Euler(0, 90f, 0),
+                approximate = true,
+                operation = (a, b) => a * b,
+            },
+            new TwoArg<Math_QuatAngleBetweenNode, Quaternion, float>()
+            {
+                a = Quaternion.Euler(0, 180f, 0),
+                b = Quaternion.Euler(0, 90f, 0),
+                approximate = true,
+                operation = (a, b) => Quaternion.Angle(a, b),
+            },
+            new TwoArg<Math_QuatFromAxisAngleNode, float, Vector3, Quaternion>()
+            {
+                a = 90f,
+                b = new Vector3(0, 1, 0),
+                approximate = true,
+                operation = (a, b) => Quaternion.AngleAxis(a, b),
+            },
+            new TwoArg<Math_QuatFromDirectionsNode, Vector3, Quaternion>()
+            {
+                a = new Vector3(1f, 0f, 0f),
+                b = new Vector3(0f, 1f, 0f),
+                approximate = true,
+                operation = (a, b) => Quaternion.FromToRotation(a, b),
+            },
         };
         
         protected override void GenerateTestList()
