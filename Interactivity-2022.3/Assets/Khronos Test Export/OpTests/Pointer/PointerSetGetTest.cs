@@ -17,13 +17,47 @@ namespace Khronos_Test_Export
         {
             public string Extension = null;
             
+            public virtual string TestName { get; }
+            
             public abstract IEnumerable<(object value, int gltfType, string template, string label)> subTests { get; }
+            
+            public virtual Func<GameObject> CustomObjectCreator { get; } = null;
+        }
+
+        public class LightPointerTest : PointerTest
+        {
+            public string template;
+
+            public override string TestName { get => template; }
+
+            public object value;
+            public int GltfTypeIndex => GltfTypes.TypeIndex(value.GetType());
+
+            public LightType LightType = LightType.Directional;
+            public override Func<GameObject> CustomObjectCreator => GetGameObject;
+            private GameObject GetGameObject() 
+            {
+                var go = new GameObject("LightPointerTest"+Guid.NewGuid());
+                var light = go.AddComponent<Light>();
+                light.type = LightType;
+                return go;
+            }
+
+            public override IEnumerable<(object value, int gltfType, string template, string label)> subTests 
+            {
+                get
+                {
+                    yield return new() { gltfType = GltfTypeIndex, value = value, template = template, label = template};
+                }
+            }      
         }
         
         public class SinglePointerTest : PointerTest
         {
             public string template;
-
+            
+            public override string TestName { get => template; }
+            
             public object value;
             public int GltfTypeIndex => GltfTypes.TypeIndex(value.GetType());
 
@@ -58,6 +92,7 @@ namespace Khronos_Test_Export
             
             public MaterialProperty[] materialProperties;
             public string[] textures;
+            public override string TestName { get => materialTemplate; }
 
             public override IEnumerable<(object value, int gltfType, string template, string label)> subTests
             {
@@ -129,30 +164,33 @@ namespace Khronos_Test_Export
 
         private PointerTest[] tests = new PointerTest[]
         {
-            new SinglePointerTest()
+            new LightPointerTest()
             {
                 template = "/extensions/KHR_lights_punctual/lights/{"+PointersHelper.IdPointerLightIndex+"}/color",
-                value = ColorRGB(Color.red)
+                value = ColorRGB(Color.red),
+                LightType = LightType.Spot
             },
-            new SinglePointerTest()
+            new LightPointerTest()
             {
                 template = "/extensions/KHR_lights_punctual/lights/{"+PointersHelper.IdPointerLightIndex+"}/intensity",
                 value = 4f
             },
-            new SinglePointerTest()
+            new LightPointerTest()
             {
                 template = "/extensions/KHR_lights_punctual/lights/{"+PointersHelper.IdPointerLightIndex+"}/range",
                 value = 9f
             },
-            new SinglePointerTest()
+            new LightPointerTest()
             {
                 template = "/extensions/KHR_lights_punctual/lights/{"+PointersHelper.IdPointerLightIndex+"}/spot/innerConeAngle",
-                value = 2f
+                value = 2f,
+                LightType = LightType.Spot
             },
-            new SinglePointerTest()
+            new LightPointerTest()
             {
                 template = "/extensions/KHR_lights_punctual/lights/{"+PointersHelper.IdPointerLightIndex+"}/spot/outerConeAngle",
-                value = 5f
+                value = 5f,
+                LightType = LightType.Spot
             },
   
 
@@ -278,8 +316,9 @@ namespace Khronos_Test_Export
 
         private List<(PointerTest test, CheckBox[] checkBoxes)> testCheckboxes = new();
         private Dictionary<PointerTest, Material> testMaterials = new();
+        private Dictionary<PointerTest, Light> testLights = new();
         private Material material;
-        private GameObject dummyObject;
+        private List<GameObject> dummyObjects = new List<GameObject>();
         
         public string GetTestName()
         {
@@ -295,7 +334,7 @@ namespace Khronos_Test_Export
         {
             var shader = Shader.Find("UnityGLTF/PBRGraph");
             material = new Material(shader);
-            material.name = "PointerTestMaterial";
+            material.name = "PointerTestMaterial-"+test.TestName;
             material.EnableKeyword("_TEXTURE_TRANSFORM_ON");
             var kw = material.shader.keywordSpace.keywords;
             foreach (var k in kw)
@@ -309,11 +348,10 @@ namespace Khronos_Test_Export
             
             material.SetFloat("_ANISOTROPY", 1f);
             material.SetFloat("_VOLUME_ON", 1f);
-
             
             var cube = GameObject.CreatePrimitive(PrimitiveType.Cube);
-            dummyObject = cube;
-            cube.name = "pointer-tests";
+            dummyObjects.Add(cube);
+            cube.name = $"pointer-tests [{testMaterials.Count}]";
             cube.transform.SetParent(context.Root);
             cube.transform.localPosition = new Vector3(1, 1, 1);
             cube.transform.localScale = Vector3.zero;
@@ -327,7 +365,8 @@ namespace Khronos_Test_Export
         public void PrepareObjects(TestContext context)
         {
             testCheckboxes.Clear();
-            
+            testLights.Clear();
+            testMaterials.Clear();
             for (int i = 0; i < tests.Length; i++)
             {
                 var test = tests[i];
@@ -341,13 +380,25 @@ namespace Khronos_Test_Export
                 if (i < tests.Length - 1)
                     context.NewRow();
 
-                if (test is MaterialPointerTest mTest && mTest.textures != null)
+                if (test.CustomObjectCreator != null)
+                {
+                    var newGo = test.CustomObjectCreator();
+                    newGo.transform.SetParent(context.Root);
+                    if (newGo.GetComponentInChildren<Light>())
+                        testLights.Add(test, newGo.GetComponentInChildren<Light>());
+                    dummyObjects.Add(newGo);
+                }
+                
+                if (test is MaterialPointerTest mTest)
                 {
                     CreateMaterialForTest(context, test);
-                    foreach (var tex in mTest.textures)
+                    if (mTest.textures != null)
                     {
-                        if (material.HasTexture(tex))
-                            material.SetTexture(tex, Texture2D.redTexture);
+                        foreach (var tex in mTest.textures)
+                        {
+                            if (material.HasTexture(tex))
+                                material.SetTexture(tex, Texture2D.redTexture);
+                        }
                     }
                 }
             }
@@ -399,6 +450,8 @@ namespace Khronos_Test_Export
                 case KHR_materials_transmission_Factory.EXTENSION_NAME:
                     ext.Add(extensionName, new KHR_materials_transmission());
                     break;
+                case "pbrMetallicRoughness":
+                    break;
                 // case KHR_materials_pbrSpecularGlossinessExtensionFactory.EXTENSION_NAME:
                 //     ext.Add(extensionName, new KHR_materials_pbrSpecularGlossinessExtension(
                 //         ));
@@ -416,25 +469,33 @@ namespace Khronos_Test_Export
             exporter.DeclareExtensionUsage(ExtTextureTransformExtensionFactory.EXTENSION_NAME);
             
             int materialIndex = -1;
+            int lightIndex = -1;
             foreach (var check in testCheckboxes)
             {
+                lightIndex = -1;
                 materialIndex = -1;
                 if (check.test is MaterialPointerTest matTest)
                 {
+                    if (!testMaterials.ContainsKey(check.test))
+                    {
+                        Debug.LogWarning("Material for test " + check.test + " not found.");
+                        continue;
+                    }
                     materialIndex = context.interactivityExportContext.Context.exporter.GetMaterialIndex(testMaterials[check.test]);
                     AddMaterialExtension(exporter, materialIndex, check.test.Extension);
                 }
+                
+                if (testLights.TryGetValue(check.test, out var l))
+                    lightIndex = context.interactivityExportContext.Context.exporter.GetLightIndex(l);
                 
                 if (!string.IsNullOrEmpty(check.test.Extension))
                 {
                     exporter.DeclareExtensionUsage(check.test.Extension);
                 }
                 
-                
                 int subIndex = 0;
                 foreach (var sub in check.test.subTests)
                 {
-                    
                     context.NewEntryPoint(check.checkBoxes[subIndex].GetText());
 
                     var pSet = context.interactivityExportContext.CreateNode<Pointer_SetNode>();
@@ -449,6 +510,15 @@ namespace Khronos_Test_Export
                     {
                         pSet.ValueIn(PointersHelper.IdPointerMaterialIndex).SetValue(materialIndex);
                         pGet.ValueIn(PointersHelper.IdPointerMaterialIndex).SetValue(materialIndex);
+                        var gltfMaterial = context.interactivityExportContext.Context.exporter.GetRoot().Materials[materialIndex];
+                        gltfMaterial.AlphaMode = AlphaMode.MASK;
+                        gltfMaterial.AlphaCutoff = 1f;
+                    }
+                    
+                    if (sub.template.Contains(PointersHelper.IdPointerLightIndex))
+                    {
+                        pSet.ValueIn(PointersHelper.IdPointerLightIndex).SetValue(lightIndex);
+                        pGet.ValueIn(PointersHelper.IdPointerLightIndex).SetValue(lightIndex);
                     }
 
                     context.AddLog("ERROR! Flow-[err] on Set pointer: " + sub.template + " with " + sub.value+ " can't be set.", out var logErrFlowIn, out _);
@@ -465,7 +535,9 @@ namespace Khronos_Test_Export
         {
             testCheckboxes.Clear();
             testMaterials.Clear();
-            Object.DestroyImmediate(dummyObject);
+            foreach (var d in dummyObjects)
+                Object.DestroyImmediate(d);
+            dummyObjects.Clear();
         }
     }
 }
