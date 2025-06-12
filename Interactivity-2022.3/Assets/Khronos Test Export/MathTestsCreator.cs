@@ -691,14 +691,7 @@ namespace Khronos_Test_Export
                 a = Quaternion.Euler(0, 180f, 0),
                 b = Quaternion.Euler(0, 90f, 0),
                 approximate = true,
-                operation = (a, b) => Quaternion.Angle(a, b),
-            },
-            new TwoArg<Math_QuatFromAxisAngleNode, float, Vector3, Quaternion>()
-            {
-                a = 90f,
-                b = new Vector3(0, 1, 0),
-                approximate = true,
-                operation = (a, b) => Quaternion.AngleAxis(a, b),
+                operation = (a, b) => Quaternion.Angle(a, b) * Mathf.Deg2Rad,
             },
             new TwoArg<Math_QuatFromDirectionsNode, Vector3, Quaternion>()
             {
@@ -817,6 +810,8 @@ namespace Khronos_Test_Export
             additionalCases.Add(new Math_SwitchTest());
             additionalCases.Add(new Math_RandomTest());
             additionalCases.Add(new Math_MatDecomposeTest());
+            additionalCases.Add(new Math_QuatToAxisAngleTest());
+            additionalCases.Add(new Math_QuatFromAxisAngleTest());
             
             return newTestCases.Concat(additionalCases).OrderBy(c => c.GetTestName()).ToArray();
         }

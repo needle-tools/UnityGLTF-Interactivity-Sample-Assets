@@ -7,6 +7,44 @@ using UnityGLTF.Interactivity.Schema;
 namespace Khronos_Test_Export
 {
     [TestCreator.IgnoreTestCase]
+    public class Math_QuatFromAxisAngleTest : ITestCase
+    {
+        private CheckBox _angleCheckBox;
+     
+        public string GetTestName()
+        {
+            return "math/quatFromAxisAngle";
+        }
+
+        public string GetTestDescription()
+        {
+            return "";
+        }
+
+        public void PrepareObjects(TestContext context)
+        {
+           _angleCheckBox = context.AddCheckBox("quatFromAxisAngle");
+        }
+
+        public void CreateNodes(TestContext context)
+        {
+            var nodeCreator = context.interactivityExportContext;
+
+            var axis =  new Vector3(0, 1, 0);
+            var angle = 90f;
+            var angleNode = nodeCreator.CreateNode<Math_QuatFromAxisAngleNode>();
+            angleNode.ValueIn(Math_QuatFromAxisAngleNode.IdAngle).SetValue(angle * Mathf.Deg2Rad);
+            angleNode.ValueIn(Math_QuatFromAxisAngleNode.IdAxis).SetValue(axis);
+
+            var quat = Quaternion.AngleAxis(angle, axis);
+            context.NewEntryPoint("quatFromAxisAngle");
+            _angleCheckBox.proximityCheckDistance = 0.01f;
+            _angleCheckBox.SetupCheck(angleNode.FirstValueOut(), out var flow, quat, true);
+            context.AddToCurrentEntrySequence(flow);
+        }
+    }
+    
+    [TestCreator.IgnoreTestCase]
     public class Math_QuatToAxisAngleTest : ITestCase
     {
         private CheckBox _axisCheckBox;
@@ -40,8 +78,10 @@ namespace Khronos_Test_Export
             context.NewEntryPoint("quatToAxisAngle");
 
             _axisCheckBox.SetupCheck(axisAngleNode.ValueOut(Math_QuatToAxisAngleNode.IdOutAxis), out var flowAxis, axis, true);
+            _axisCheckBox.proximityCheckDistance = 0.01f;
             context.AddToCurrentEntrySequence(flowAxis);
-            _angleCheckBox.SetupCheck(axisAngleNode.ValueOut(Math_QuatToAxisAngleNode.IdOutAngle), out var flowAngle, angle, true);
+            _angleCheckBox.proximityCheckDistance = 0.01f;
+            _angleCheckBox.SetupCheck(axisAngleNode.ValueOut(Math_QuatToAxisAngleNode.IdOutAngle), out var flowAngle, Mathf.Deg2Rad * angle, true);
             context.AddToCurrentEntrySequence(flowAngle);
         }
     }
