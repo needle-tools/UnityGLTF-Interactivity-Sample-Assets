@@ -609,6 +609,67 @@ namespace Khronos_Test_Export
                 a = false,
                 operation = (a) => !a,
             },
+            new TwoArg<Math_RightShiftNode, int, int>()
+            {
+                a = 14,
+                b = 2,
+                approximate = false,
+                operation = (a, b) => a >> b
+            },
+            new TwoArg<Math_LeftShiftNode, int, int>()
+            {
+                a = 20,
+                b = 2,
+                approximate = false,
+                operation = (a, b) => a << b
+            },
+            new OneArg<Math_CountingLeadingZerosNode, int, int>()
+            {
+                a = 20,
+                approximate = false,
+                operation = (a) =>
+                {
+                    if (a == 0) return 32;
+                    int count = 0;
+                    while ((a & 0x80000000) == 0)
+                    {
+                        a <<= 1;
+                        count++;
+                    }
+                    return count;
+                }
+            },
+            new OneArg<Math_CountingTrailingZerosNode, int, int>()
+            {
+                a = 20,
+                approximate = false,
+                operation = (a) =>
+                {
+                    if (a == 0) return 32;
+                    int count = 0;
+                    while ((a & 1) == 0)
+                    {
+                        a >>= 1;
+                        count++;
+                    }
+                    return count;
+                }
+            },
+            new OneArg<Math_CountOneBitsNode, int, int>()
+            {
+                a = 23,
+                approximate = false,
+                operation = (a) =>
+                {
+                    int count = 0;
+                    while (a != 0)
+                    {
+                        count += a & 1;
+                        a >>= 1;
+                    }
+                    return count;
+                }
+            },
             new TwoArg<Math_DotNode, Vector2, float>()
             {
                 a = new Vector2(1f, 2f),
