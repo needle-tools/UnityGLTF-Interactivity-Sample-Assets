@@ -663,8 +663,9 @@ namespace Khronos_Test_Export
                 .ConnectToFlowDestination(setPosition);
             
             expectedValue = valueToCompare;
-            context.AddLog(logText+ ": Value is {0}, should be "+ExpectedValueToString()+ (proximityCheck ? $"(Proximity range: {proximityCheckDistance})" : ""), out var logFlowIn, out var logFlowOut, 1, out var logValueRef);
+            context.AddLog(logText+ ": Value is {0}, should be {1} " + (proximityCheck ? $"(Proximity range: {proximityCheckDistance})" : ""), out var logFlowIn, out var logFlowOut, 2, out var logValueRef);
             inputValue = inputValue.Link(logValueRef[0]);
+            logValueRef[1].SetValue(expectedValue);
             validNode.FlowOut(Flow_BranchNode.IdFlowOutFalse).ConnectToFlowDestination(logFlowIn);
             
             context.AddLog(logText+ ": Test Successful", out var logSuccesFlowIn, out var logSuccessFlowOut);
