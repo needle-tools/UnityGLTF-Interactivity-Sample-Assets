@@ -7,6 +7,174 @@ using UnityGLTF.Interactivity.Schema;
 namespace Khronos_Test_Export
 {
     [TestCreator.IgnoreTestCase]
+    public class Math_Combine4x4Test : ITestCase
+    {
+        private CheckBox _checkBox;
+     
+        public string GetTestName()
+        {
+            return "math/combine4x4";
+        }
+
+        public string GetTestDescription()
+        {
+            return "";
+        }
+
+        public void PrepareObjects(TestContext context)
+        {
+            _checkBox = context.AddCheckBox("combine4x4");
+        }
+
+        public void CreateNodes(TestContext context)
+        {
+            var nodeCreator = context.interactivityExportContext;
+
+            var matrix = new Matrix4x4();
+            for (int i = 0; i < 16; i++)
+                matrix[i] = i;
+          
+            var combineNode = nodeCreator.CreateNode<Math_Combine4x4Node>();
+            var index = 0;
+            foreach (var v in combineNode.ValueInConnection)
+            {
+                combineNode.SetValueInSocket(v.Key, matrix[index]);
+                index++;
+            }
+            
+            context.NewEntryPoint(_checkBox.GetText());
+            _checkBox.SetupCheck(combineNode.FirstValueOut(), out var flow, matrix, false);
+            context.AddToCurrentEntrySequence(flow);
+        }
+    }
+    
+    [TestCreator.IgnoreTestCase]
+    public class Math_Extract4x4Test : AbstractMath_ExtractTest<Math_Extract4x4Node>
+    {
+        public override object Value
+        {
+            get
+            {
+                var m = new Matrix4x4(
+                    new Vector4(0, 1, 2, 3),
+                    new Vector4(4, 5, 6, 7),
+                    new Vector4(8, 9, 10, 11),
+                    new Vector4(12, 13, 14, 15));
+                return m;
+            }
+        }
+
+        public override float ValueComponent(int index)
+        {
+            var v = (Matrix4x4)Value;
+            return MatrixHelpers.GltfGetElement(v, index);
+        }
+    }
+    
+    [TestCreator.IgnoreTestCase]
+    public class Math_Extract4Test : AbstractMath_ExtractTest<Math_Extract4Node>
+    {
+        public override object Value { get => new Vector4(2f, 4f, 6f, 8f); }
+        public override float ValueComponent(int index)
+        {
+            var v = (Vector4)Value;
+            switch (index)
+            {
+                case 0 : return v.x;
+                case 1 : return v.y;
+                case 2 : return v.z;
+                case 3 : return v.w;
+            }
+            return 0;
+        }
+    }
+    
+    [TestCreator.IgnoreTestCase]
+    public class Math_Extract3Test : AbstractMath_ExtractTest<Math_Extract3Node>
+    {
+        public override object Value { get => new Vector3(2f, 4f, 6f); }
+        public override float ValueComponent(int index)
+        {
+            var v = (Vector3)Value;
+            switch (index)
+            {
+                case 0 : return v.x;
+                case 1 : return v.y;
+                case 2 : return v.z;
+            }
+            return 0;
+        }
+    }
+    
+    [TestCreator.IgnoreTestCase]
+    public class Math_Extract2Test : AbstractMath_ExtractTest<Math_Extract2Node>
+    {
+        public override object Value { get => new Vector2(2f, 4f); }
+        public override float ValueComponent(int index)
+        {
+            var v = (Vector2)Value;
+            switch (index)
+            {
+                case 0 : return v.x;
+                case 1 : return v.y;
+            }
+            return 0;
+        }
+    }
+        
+    public abstract class AbstractMath_ExtractTest<TSchema> : ITestCase where TSchema : GltfInteractivityNodeSchema, new() 
+    {
+        private CheckBox[] _checkBoxes;
+        private string[] _socketName;
+        
+        public abstract object Value { get; }
+
+        public abstract float ValueComponent(int index);
+        
+        public string GetTestName()
+        {
+            return  GltfInteractivityNodeSchema.GetSchema<TSchema>().Op;
+        }
+
+        public string GetTestDescription()
+        {
+            return "";
+        }
+
+        public void PrepareObjects(TestContext context)
+        {
+            var outSockets = GltfInteractivityNodeSchema.GetSchema<TSchema>().OutputValueSockets;
+            _checkBoxes = new CheckBox[outSockets.Count];
+            _socketName = new string[outSockets.Count];
+            int index = 0;
+            foreach (var s in outSockets)
+            {
+                var checkBox = context.AddCheckBox(s.Key);
+                _socketName[index] = s.Key;
+                checkBox.proximityCheckDistance = 0.01f;
+                _checkBoxes[index] = checkBox;
+                index++;
+            }
+        }
+
+        public void CreateNodes(TestContext context)
+        {
+            var nodeCreator = context.interactivityExportContext;
+
+            var extractNode = nodeCreator.CreateNode<TSchema>();
+            extractNode.ValueIn(Math_Extract2Node.IdValueIn).SetValue(Value);
+            context.NewEntryPoint(GetTestName());
+            int index = 0;
+            foreach (var c in _checkBoxes)
+            {
+                c.SetupCheck(extractNode.ValueOut(_socketName[index]), out var flow, ValueComponent(index), false);
+                context.AddToCurrentEntrySequence(flow);
+                index++;
+            }
+        }
+    }
+    
+    [TestCreator.IgnoreTestCase]
     public class Math_QuatFromAxisAngleTest : ITestCase
     {
         private CheckBox _angleCheckBox;

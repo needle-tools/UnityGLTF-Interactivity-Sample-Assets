@@ -16,7 +16,7 @@ namespace Khronos_Test_Export
 
         public class SubMathTest
         {
-            public object a, b, c;
+            public object a, b, c, d;
             public bool approximateEquality = false;
             public object expected;
             public bool newRow = false;
@@ -85,7 +85,9 @@ namespace Khronos_Test_Export
                     testName += "[b] " + ValueToStr(subTest.b) + " ";
                 if (schemaInstance.InputValueSockets.ContainsKey("c"))
                     testName += "[c] " + ValueToStr(subTest.c) + " ";
-                
+                if (schemaInstance.InputValueSockets.ContainsKey("d"))
+                    testName += "[d] " + ValueToStr(subTest.d) + " ";
+
                 testName += "= " + ValueToStr(subTest.expected);
                 
                 _checkBoxes[index] = context.AddCheckBox(testName);
@@ -109,6 +111,8 @@ namespace Khronos_Test_Export
                     testNode.SetValueInSocket("b", subTest.b, TypeRestriction.LimitToType(GltfTypes.TypeIndex(subTest.b.GetType())));
                 if (testNode.ValueInConnection.ContainsKey("c"))
                     testNode.SetValueInSocket("c", subTest.c, TypeRestriction.LimitToType(GltfTypes.TypeIndex(subTest.c.GetType())));
+                if (testNode.ValueInConnection.ContainsKey("d"))
+                    testNode.SetValueInSocket("d", subTest.d, TypeRestriction.LimitToType(GltfTypes.TypeIndex(subTest.d.GetType())));
 
                 var schemaExpectedType = testNode.Schema.OutputValueSockets["value"].expectedType;
                 

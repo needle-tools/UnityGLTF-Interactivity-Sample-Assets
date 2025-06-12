@@ -26,6 +26,8 @@ namespace Khronos_Test_Export
             public abstract object A { get; }
             public abstract object B { get; }
             public abstract object C { get; }
+            
+            public abstract object D { get; }
             public abstract object Expected { get; }
             
             public abstract Type SchemaType { get; }
@@ -36,10 +38,12 @@ namespace Khronos_Test_Export
             public I a;
             public I b;
             public I c;
+            public I d;
             public O expected;
             public override object A => a;
             public override object B => b;
             public override object C => c;
+            public override object D => d;
             public override object Expected => expected;
             public override Type SchemaType => typeof(TSchema);
         }
@@ -49,10 +53,12 @@ namespace Khronos_Test_Export
             public I1 a;
             public I2 b;
             public I1 c;
+            public I2 d;
             public O expected;
             public override object A => a;
             public override object B => b;
             public override object C => c;
+            public override object D => d;
             public override object Expected => expected;
             public override Type SchemaType => typeof(TSchema);
         }
@@ -62,10 +68,12 @@ namespace Khronos_Test_Export
             public I1 a;
             public I2 b;
             public I3 c;
+            public I1 d;
             public O expected;
             public override object A => a;
             public override object B => b;
             public override object C => c;
+            public override object D => d;
             public override object Expected => expected;
             public override Type SchemaType => typeof(TSchema);
         }
@@ -98,6 +106,12 @@ namespace Khronos_Test_Export
         {
             public Func<I, I, I, O> operation;
             public override void Run() => expected = operation(a, b, c);
+        }
+        
+        class FourArg<TSchema, I, O> : TestCase<TSchema, I, O> where TSchema : GltfInteractivityNodeSchema
+        {
+            public Func<I, I, I, I, O> operation;
+            public override void Run() => expected = operation(a, b, c, d);
         }
         
         class ThreeArg<TSchema, I1, I2, I3, O> : TestCase<TSchema, I1, I2, I3, O> where TSchema : GltfInteractivityNodeSchema
@@ -761,6 +775,28 @@ namespace Khronos_Test_Export
                 approximate = true,
                 operation = (a, b) => Quaternion.FromToRotation(a, b),
             },
+            new TwoArg<Math_Combine2Node, float, Vector2>()
+            {
+                a = 1f,
+                b = 2f,
+                operation = (a, b) => new Vector2(a, b),
+            },
+            new ThreeArg<Math_Combine3Node, float, Vector3>()
+            {
+                a = 1f,
+                b = 2f,
+                c = 3f,
+                operation = (a, b, c) => new Vector3(a, b, c),
+            },
+            new FourArg<Math_Combine4Node, float, Vector4>()
+            {
+                a = 1f,
+                b = 2f,
+                c = 3f,
+                d = 4f,
+                operation = (a, b, c, d) => new Vector4(a, b, c, d),
+            }
+            
         };
         
         protected override void GenerateTestList()
@@ -821,6 +857,7 @@ namespace Khronos_Test_Export
                     newTestCase.a = testCase.A;
                     newTestCase.b = testCase.B;
                     newTestCase.c = testCase.C;
+                    newTestCase.d = testCase.D;
                     newTestCase.expected = testCase.Expected;
                     newTestCase.approximateEquality = testCase.approximate;
 
@@ -841,6 +878,7 @@ namespace Khronos_Test_Export
                             var newA = CreateValueByGltfType(testCase.A, suppType);
                             object newB = testCase.B;
                             object newC = testCase.C;
+                            object newD = testCase.D;
 
                             object newExpected = testCase.Expected;
                             if (schemaInstance.OutputValueSockets["value"].SupportedTypes.Length > 1)
@@ -850,14 +888,18 @@ namespace Khronos_Test_Export
                                 newB = CreateValueByGltfType(testCase.B, suppType);
                             if (schemaInstance.InputValueSockets.TryGetValue("c", out var cSocket))
                                 newC = CreateValueByGltfType(testCase.C, suppType);
+                            if (schemaInstance.InputValueSockets.TryGetValue("d", out var dSocket))
+                                newD = CreateValueByGltfType(testCase.D, suppType);
 
-                            if (newA == null || newB == null || newC == null)
+
+                            if (newA == null || newB == null || newC == null || newD == null)
                                 continue;
 
                             var extraCase = newTest.AddSubTest();
                             extraCase.a = newA;
                             extraCase.b = newB;
                             extraCase.c = newC;
+                            extraCase.d = newD;
                             extraCase.expected = newExpected;
                             extraCase.approximateEquality = testCase.approximate;
                             //first = false;
@@ -873,6 +915,11 @@ namespace Khronos_Test_Export
             additionalCases.Add(new Math_MatDecomposeTest());
             additionalCases.Add(new Math_QuatToAxisAngleTest());
             additionalCases.Add(new Math_QuatFromAxisAngleTest());
+            additionalCases.Add(new Math_Extract2Test());
+            additionalCases.Add(new Math_Extract3Test());
+            additionalCases.Add(new Math_Extract4Test());
+            additionalCases.Add(new Math_Extract4x4Test());
+            additionalCases.Add(new Math_Combine4x4Test());
             
             return newTestCases.Concat(additionalCases).OrderBy(c => c.GetTestName()).ToArray();
         }
