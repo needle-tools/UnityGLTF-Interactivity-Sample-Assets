@@ -43,7 +43,7 @@ public class RoundedQuad : MonoBehaviour
         FlowAlongPath   // UV flows along the outline path (for gradient textures)
     }
     
-    public OutlineUVMode _outlineUVMode = OutlineUVMode.Default;
+    public OutlineUVMode _outlineUVMode = OutlineUVMode.FlowAlongPath;
     
     // Debug visualization options
     [HideInInspector]
@@ -347,8 +347,8 @@ public class RoundedQuad : MonoBehaviour
             for (int i = 0; i < 4; i++)
             {
                 triangles[triangleIndex++] = 0;  // Center vertex
-                triangles[triangleIndex++] = i + 1;  // This corner center
                 triangles[triangleIndex++] = ((i + 1) % 4) + 1;  // Next corner center
+                triangles[triangleIndex++] = i + 1;  // This corner center
             }
         }
         
@@ -365,7 +365,7 @@ public class RoundedQuad : MonoBehaviour
             for (int i = 0; i < segments - 1; i++)
             {
                 // Triangle between corner center, current segment and next segment
-                // Flip the winding order
+                // Keep original winding order (already correct)
                 triangles[triangleIndex++] = cornerCenter;
                 triangles[triangleIndex++] = cornerStartVertex + i + 1;
                 triangles[triangleIndex++] = cornerStartVertex + i;
@@ -401,15 +401,15 @@ public class RoundedQuad : MonoBehaviour
                 int lastPointOfCorner = cornerStartVertex + segments - 1;
                 int firstPointOfNextCorner = nextCornerFirstVertex;
                 
-                // First triangle: last corner point, next corner center, corner center (unchanged - already flipped)
-                triangles[triangleIndex++] = lastPointOfCorner;
-                triangles[triangleIndex++] = nextCornerCenter;
+                // First triangle: corner center, next corner center, last corner point
                 triangles[triangleIndex++] = cornerCenter;
-                
-                // Second triangle: last corner point, first point of next corner, next corner center (unchanged - already flipped)
-                triangles[triangleIndex++] = lastPointOfCorner;
-                triangles[triangleIndex++] = firstPointOfNextCorner;
                 triangles[triangleIndex++] = nextCornerCenter;
+                triangles[triangleIndex++] = lastPointOfCorner;
+                
+                // Second triangle: next corner center, first point of next corner, last corner point
+                triangles[triangleIndex++] = nextCornerCenter;
+                triangles[triangleIndex++] = firstPointOfNextCorner;
+                triangles[triangleIndex++] = lastPointOfCorner;
             }
             
             cornerStartVertex += segments;
@@ -547,15 +547,15 @@ public class RoundedQuad : MonoBehaviour
                 {
                     int nextIndex = (i + 1) % innerEdgeVertices.Count;
                     
-                    // First triangle of the quad
+                    // First triangle of the quad - flipped winding order
                     outlineTrianglesArray[outlinesIndex++] = innerEdgeVertices[i];
-                    outlineTrianglesArray[outlinesIndex++] = outerOutlineVertices[i];
                     outlineTrianglesArray[outlinesIndex++] = innerEdgeVertices[nextIndex];
+                    outlineTrianglesArray[outlinesIndex++] = outerOutlineVertices[i];
                     
-                    // Second triangle of the quad
+                    // Second triangle of the quad - flipped winding order
                     outlineTrianglesArray[outlinesIndex++] = innerEdgeVertices[nextIndex];
-                    outlineTrianglesArray[outlinesIndex++] = outerOutlineVertices[i];
                     outlineTrianglesArray[outlinesIndex++] = outerOutlineVertices[nextIndex];
+                    outlineTrianglesArray[outlinesIndex++] = outerOutlineVertices[i];
                 }
             }
         }
