@@ -86,6 +86,7 @@ MonoBehaviour:
   KHR_materials_clearcoat: 1
   KHR_materials_emissive_strength: 1
   KHR_materials_sheen: 1
+  KHR_materials_anisotropy: 1
 --- !u!114 &-6607705388984866566
 MonoBehaviour:
   m_ObjectHideFlags: 3
@@ -107,6 +108,7 @@ MonoBehaviour:
   KHR_materials_clearcoat: 1
   KHR_materials_emissive_strength: 1
   KHR_materials_sheen: 1
+  KHR_materials_anisotropy: 1
 --- !u!114 &-6442387276424217699
 MonoBehaviour:
   m_ObjectHideFlags: 3
@@ -120,9 +122,20 @@ MonoBehaviour:
   m_Name: VisualScriptingExportPlugin
   m_EditorClassIdentifier: 
   enabled: 1
-  debugLogSetting:
-    ADBEConsole: 0
-    BabylonLog: 1
+  cleanUpAndOptimizeExportedGraph: 1
+--- !u!114 &-6162609676322506399
+MonoBehaviour:
+  m_ObjectHideFlags: 3
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 6a3011a000a64498d8297909d5cc472a, type: 3}
+  m_Name: SpriteRendererExport
+  m_EditorClassIdentifier: 
+  enabled: 1
 --- !u!114 &-6100253865612741739
 MonoBehaviour:
   m_ObjectHideFlags: 3
@@ -170,9 +183,7 @@ MonoBehaviour:
   m_Name: GltfInteractivityExportPlugin
   m_EditorClassIdentifier: 
   enabled: 1
-  debugLogSetting:
-    ADBEConsole: 1
-    BabylonLog: 1
+  cleanUpAndOptimizeExportedGraph: 1
 --- !u!114 &-3857604256152664990
 MonoBehaviour:
   m_ObjectHideFlags: 3
@@ -221,6 +232,7 @@ MonoBehaviour:
   KHR_materials_sheen: 1
   KHR_materials_pbrSpecularGlossiness: 1
   KHR_materials_emissive_strength: 1
+  KHR_materials_anisotropy: 1
 --- !u!114 &-2728185602778602881
 MonoBehaviour:
   m_ObjectHideFlags: 3
@@ -286,6 +298,19 @@ MonoBehaviour:
   m_Name: DracoImport
   m_EditorClassIdentifier: 
   enabled: 1
+--- !u!114 &-1615010314244547167
+MonoBehaviour:
+  m_ObjectHideFlags: 3
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a59cc7d090dc43ef86b454e445bdbf9a, type: 3}
+  m_Name: AudioExport
+  m_EditorClassIdentifier: 
+  enabled: 0
 --- !u!114 &-1105774486562213006
 MonoBehaviour:
   m_ObjectHideFlags: 3
@@ -308,6 +333,7 @@ MonoBehaviour:
   KHR_materials_sheen: 1
   KHR_materials_pbrSpecularGlossiness: 1
   KHR_materials_emissive_strength: 1
+  KHR_materials_anisotropy: 1
 --- !u!114 &-645521550803615626
 MonoBehaviour:
   m_ObjectHideFlags: 3
@@ -349,6 +375,7 @@ MonoBehaviour:
   - {fileID: -2728185602778602881}
   - {fileID: 7051131831910677672}
   - {fileID: -3393203447235478603}
+  - {fileID: 8340072865184580298}
   ExportPlugins:
   - {fileID: 2872263056974072544}
   - {fileID: -8275798409290171459}
@@ -362,9 +389,13 @@ MonoBehaviour:
   - {fileID: -9114232557462604611}
   - {fileID: 5699131051538002066}
   - {fileID: -6442387276424217699}
+  - {fileID: 6885537624667087009}
+  - {fileID: -1615010314244547167}
+  - {fileID: -6162609676322506399}
   exportNames: 1
   exportFullPath: 0
-  requireExtensions: 0
+  EditorExportTransformMode: 0
+  EditorExportFileFormat: 0
   useMainCameraVisibility: 1
   exportDisabledGameObjects: 1
   tryExportTexturesFromDisk: 0
@@ -508,6 +539,19 @@ MonoBehaviour:
   m_Name: BakeParticleSystem
   m_EditorClassIdentifier: 
   enabled: 0
+--- !u!114 &6885537624667087009
+MonoBehaviour:
+  m_ObjectHideFlags: 3
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 58d90ac7d6a94283b30a6a6d50547907, type: 3}
+  m_Name: TestFileExporterPlugin
+  m_EditorClassIdentifier: 
+  enabled: 0
 --- !u!114 &7051131831910677672
 MonoBehaviour:
   m_ObjectHideFlags: 3
@@ -543,6 +587,19 @@ MonoBehaviour:
   KHR_materials_sheen: 1
   KHR_materials_pbrSpecularGlossiness: 1
   KHR_materials_emissive_strength: 1
+--- !u!114 &8340072865184580298
+MonoBehaviour:
+  m_ObjectHideFlags: 3
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d106e4b0674b44e09e9c8d85ba6216df, type: 3}
+  m_Name: AudioImport
+  m_EditorClassIdentifier: 
+  enabled: 0
 --- !u!114 &8778880493564263605
 MonoBehaviour:
   m_ObjectHideFlags: 3
