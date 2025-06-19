@@ -1,12 +1,14 @@
 using UnityEngine;
-using System.Linq;
 
 [ExecuteAlways]
 [RequireComponent(typeof(MeshFilter), typeof(MeshRenderer))]
 public class RoundedCube : MonoBehaviour
 {
+    [Header("Mesh Options")]
     public float edgeRadius = 0.1f;
     public int _subdivisions = 2;
+    
+    [Header("Surface Options")]
     [Range(0, 1)]
     public float spherifyAmount = 0f;
 
@@ -40,24 +42,25 @@ public class RoundedCube : MonoBehaviour
             _lastScale = transform.lossyScale;
             Generate();
         }
-    }
-
-    private void OnValidate()
-    {
+        
         // Regenerate mesh when values change in the inspector
         if (_lastEdgeRadius != edgeRadius || _lastSubdivisions != _subdivisions || _lastSpherifyAmount != spherifyAmount)
         {
-            Generate();
             // Store current values to compare against on next change
             _lastEdgeRadius = edgeRadius;
             _lastSubdivisions = _subdivisions;
-            _lastSpherifyAmount = spherifyAmount;
+            _lastSpherifyAmount = spherifyAmount; 
+            Generate();
         }
     }
 
     private void Generate()
     {
-        GetComponent<MeshFilter>().mesh = mesh = new Mesh();
+        if (!this) return;
+        var mf = GetComponent<MeshFilter>();
+        if (!mf) return;
+        
+        mf.mesh = mesh = new Mesh();
         mesh.name = "Rounded Cube";
 		var subdivisions = _subdivisions;
         
@@ -137,8 +140,30 @@ public class RoundedCube : MonoBehaviour
             // Generate vertices for this face
             for (int sy = 0; sy < subdivisions; sy++)
             {
-                bool firstHalfY = sy < subdivisions / 2;
-                int y = firstHalfY ? sy : sy - 1;
+                // For odd subdivisions, we need to handle the center differently
+                int halfSub = subdivisions / 2;
+                bool firstHalfY = sy < halfSub;
+                
+                // Calculate the actual y index for interpolation
+                int y;
+                if (firstHalfY)
+                {
+                    y = sy;
+                }
+                else
+                {
+                    // For the second half, we need to account for the center point in odd subdivisions
+                    if (subdivisions % 2 == 1 && sy == halfSub)
+                    {
+                        // This is the center row for odd subdivisions
+                        y = sy - 1;
+                    }
+                    else
+                    {
+                        y = sy - (subdivisions % 2 == 1 ? 2 : 1);
+                    }
+                }
+                
                 Vector3 stretchA = firstHalfY ? p1 : p4;
                 Vector3 stretchB = firstHalfY ? p2 : p3;
                 
@@ -183,8 +208,30 @@ public class RoundedCube : MonoBehaviour
 
                 for (int sx = 0; sx < subdivisions; sx++)
                 {
-                    bool firstHalfX = sx < subdivisions / 2;
-                    int x = firstHalfX ? sx : sx - 1;
+                    // Apply the same logic for X direction
+                    int halfSubX = subdivisions / 2;
+                    bool firstHalfX = sx < halfSubX;
+                    
+                    // Calculate the actual x index for interpolation
+                    int x;
+                    if (firstHalfX)
+                    {
+                        x = sx;
+                    }
+                    else
+                    {
+                        // For the second half, we need to account for the center point in odd subdivisions
+                        if (subdivisions % 2 == 1 && sx == halfSubX)
+                        {
+                            // This is the center column for odd subdivisions
+                            x = sx - 1;
+                        }
+                        else
+                        {
+                            x = sx - (subdivisions % 2 == 1 ? 2 : 1);
+                        }
+                    }
+                    
                     Vector3 stretch = firstHalfX ? stretchA : stretchB;
                     float stretchU = (faceRadiusU * 2) / sizeU;
                     float offU = firstHalfX ? 0 : 1 - stretchU;
@@ -193,17 +240,20 @@ public class RoundedCube : MonoBehaviour
                     float pu = px * stretchU + offU;
                     int vertIndex = sx + yOff;
 
-                    // Generate vertex normals - in model space
-                    normals[vertIndex] = Vector3.Normalize(Vector3.Lerp(pointLeft, pointRight, px));
+                    // Calculate interpolated normal for vertex positioning (always needed for rounded geometry)
+                    Vector3 positionNormal = Vector3.Normalize(Vector3.Lerp(pointLeft, pointRight, px));
+                    
+                    // For positioning, always use the interpolated normal to maintain rounded geometry
+                    normals[vertIndex] = positionNormal;
 
                     // Calculate vertex position:
                     // Start from the interior cube position (scaled by offset)
-                    // Then add the rounded edge by moving in the normal direction by the radius amount
+                    // Then add the rounded edge by moving in the position normal direction by the radius amount
                     Vector3 interiorPoint = Vector3.Scale(stretch, offset);
-                    var v = interiorPoint + normals[vertIndex] * faceRadiusU;
+                    var v = interiorPoint + positionNormal * faceRadiusU;
                     
                     // Store the original normal before scaling the vertex
-                    Vector3 originalNormal = normals[vertIndex];
+                    Vector3 originalNormal = positionNormal;
                     
                     // Apply spherification if enabled
                     if (spherifyAmount > 0)
@@ -271,6 +321,7 @@ public class RoundedCube : MonoBehaviour
         mesh.uv = uvs;
         mesh.colors32 = colors;
         mesh.triangles = indices;
+        
         mesh.RecalculateBounds();
     }
 
