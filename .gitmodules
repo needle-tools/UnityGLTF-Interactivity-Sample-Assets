@@ -3,4 +3,4 @@
 	url = git@github.com:KhronosGroup/UnityGLTF.git
 [submodule "glTF-Interactivity-Sample-Assets"]
 	path = glTF-Interactivity-Sample-Assets
-	url = https://github.com/needle-tools/glTF-Interactivity-Sample-Assets.git
+	url = git@github.com:needle-tools/glTF-Interactivity-Sample-Assets.git
