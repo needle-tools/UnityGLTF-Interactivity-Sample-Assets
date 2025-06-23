@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -209,25 +210,49 @@ namespace Khronos_Test_Export
             Debug.Log("Test case json file created at: " + filename);
         }
 
+        private string ValueToStr(object v)
+        {
+            if (v is float f)
+                return f.ToString("F5", CultureInfo.InvariantCulture);
+            else if (v is bool b)
+                return b.ToString(CultureInfo.InvariantCulture);
+            else if (v is double d)
+                return d.ToString("F5", CultureInfo.InvariantCulture);
+            else if (v is Vector2 v2)
+                return v2.ToString("F5");
+            else if (v is Vector3 v3)
+                return v3.ToString("F5");
+            else if (v is Vector4 v4)
+                return v4.ToString("F5");
+            else if (v is Quaternion q)
+                return q.ToString("F5");
+            else if (v is Matrix4x4 m)
+                return m.ToString("F5");      
+            else
+                return v.ToString();
+        }
+        
         private void CreateTestCaseReadmeFile(ITestCase testCase, string filename)
         {
             var sb = new StringBuilder();
-            sb.AppendLine("Test Sample: " + testCase.GetTestName());
-            sb.AppendLine("Description: " + testCase.GetTestDescription());
+            sb.AppendLine("### **Test Sample:** " + testCase.GetTestName());
+            sb.AppendLine("### **Description:** " + testCase.GetTestDescription());
             sb.AppendLine();
-            sb.AppendLine("Tests:");
+            sb.AppendLine("### Tests:");
             var caseContext = _testCase[testCase];
+            sb.AppendLine("| Sub Test | Result Var.Name | Result Var.Id | Expected Value");
+            sb.AppendLine("| ----------- | ----------- | ----------- |----------- |");
+            
             foreach (var test in caseContext.checkBoxes)
             {
-                sb.AppendLine(
-                    $"\t**{test.GetText()}** - Result saved in Variable **{test.GetResultVariableName()}** with Id **{test.ResultValueVarId}**");
+                sb.AppendLine( $"| {test.GetText()} | {test.GetResultVariableName()} | {test.ResultValueVarId} | {ValueToStr(test.expectedValue)}".Replace("\n", ""));
             }
 
             sb.AppendLine();
             sb.AppendLine("Schemas used in this test case:");
             foreach (var schema in _schemaUsedInCase[testCase].OrderBy(s => s))
             {
-                sb.AppendLine($"\t{schema}");
+                sb.AppendLine($"- {schema}");
             }
 
             System.IO.Directory.CreateDirectory(System.IO.Path.GetDirectoryName(filename));
