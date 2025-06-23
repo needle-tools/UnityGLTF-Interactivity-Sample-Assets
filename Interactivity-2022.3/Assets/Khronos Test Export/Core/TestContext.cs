@@ -222,7 +222,7 @@ namespace Khronos_Test_Export
             UpdateEntrySequences();
         }
         
-        public void AddSequence(FlowOutRef flowIn, FlowInRef[] sequences)
+        public void AddSequence(FlowOutRef flowIn, params FlowInRef[] sequences)
         {
             var nodeCreator = interactivityExportContext;
             
