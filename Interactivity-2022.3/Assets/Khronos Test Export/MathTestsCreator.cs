@@ -20,6 +20,8 @@ namespace Khronos_Test_Export
             }
 
             public bool autoCreateTestsForAllSupportedInputs = true;
+            public bool isValidTest = false;
+            public bool isValid = false;
             
             public bool approximate = false;
 
@@ -852,6 +854,18 @@ namespace Khronos_Test_Export
                 Type typeA = null;
                 foreach (var testCase in group)
                 {
+                    if (testCase.isValidTest)
+                    {
+                        var isValidTestCase = newTest.AddIsValidTest();
+                        isValidTestCase.a = testCase.A;
+                        isValidTestCase.b = testCase.B;
+                        isValidTestCase.c = testCase.C;
+                        isValidTestCase.d = testCase.D;
+
+                        isValidTestCase.shouldBeValid = testCase.isValid;
+                        continue;
+                    }
+                    
                     testCase.Run();
                     var newTestCase = newTest.AddSubTest();
                     newTestCase.a = testCase.A;
