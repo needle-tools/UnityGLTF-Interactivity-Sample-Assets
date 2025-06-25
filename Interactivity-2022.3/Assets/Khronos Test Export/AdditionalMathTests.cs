@@ -507,6 +507,13 @@ namespace Khronos_Test_Export
         private CheckBox _translateCheckBox;
         private CheckBox _rotateCheckBox;
         private CheckBox _scaleCheckBox;
+        private CheckBox _isValidCheckBox;
+
+        private CheckBox _invalidTranslateCheckBox;
+        private CheckBox _invalidRotateCheckBox;
+        private CheckBox _invalidScaleCheckBox;
+        private CheckBox _invalidIsValidCheckBox;
+        
 
         public string GetTestName()
         {
@@ -523,6 +530,13 @@ namespace Khronos_Test_Export
             _translateCheckBox = context.AddCheckBox("Translate");
             _rotateCheckBox = context.AddCheckBox("Rotate");
             _scaleCheckBox = context.AddCheckBox("Scale");
+            _isValidCheckBox = context.AddCheckBox("isValid");
+            context.NewRow();
+            
+            _invalidTranslateCheckBox = context.AddCheckBox("invalid, Translate");
+            _invalidRotateCheckBox = context.AddCheckBox("invalid, Rotate");
+            _invalidScaleCheckBox = context.AddCheckBox("invalid, Scale");
+            _invalidIsValidCheckBox = context.AddCheckBox("invalid. isValid");
         }
 
         public void CreateNodes(TestContext context)
@@ -532,8 +546,7 @@ namespace Khronos_Test_Export
             var translate = new Vector3(1f, 2f, 3f);
             var rotate = Quaternion.Euler(30f, 45f, 60f);
             var scale = new Vector3(2f, 2f, 2f);
-            var mat = Matrix4x4.TRS(translate, rotate, scale);
-
+            
             var matComposeNode = nodeCreator.CreateNode<Math_MatComposeNode>();
             matComposeNode.ValueIn(Math_MatComposeNode.IdInputTranslation).SetValue(translate);
             matComposeNode.ValueIn(Math_MatComposeNode.IdInputRotation).SetValue(rotate);
@@ -555,6 +568,34 @@ namespace Khronos_Test_Export
             context.AddToCurrentEntrySequence(flowRotate);
             _scaleCheckBox.SetupCheck(matDecomposeNode.ValueOut(Math_MatDecomposeNode.IdOutputScale), out var flowScale, scale, true);
             context.AddToCurrentEntrySequence(flowScale);
+            
+            _isValidCheckBox.SetupCheck(matDecomposeNode.ValueOut(Math_MatDecomposeNode.IdOutputIsValid), out var flowValid, true, false);
+            context.AddToCurrentEntrySequence(flowValid);
+            
+            //Invalid Test
+            
+            translate = new Vector3(1f, 2f, float.NaN);
+            rotate = Quaternion.Euler(30f, 45f, 60f);
+            scale = new Vector3(2f, 2f, 2f);
+
+            var invalidMatComposeNode = nodeCreator.CreateNode<Math_MatComposeNode>();
+            invalidMatComposeNode.ValueIn(Math_MatComposeNode.IdInputTranslation).SetValue(translate);
+            invalidMatComposeNode.ValueIn(Math_MatComposeNode.IdInputRotation).SetValue(rotate);
+            invalidMatComposeNode.ValueIn(Math_MatComposeNode.IdInputScale).SetValue(scale);
+            
+            var invalidMatDecomposeNode = nodeCreator.CreateNode<Math_MatDecomposeNode>();
+            invalidMatDecomposeNode.ValueIn(Math_MatDecomposeNode.IdInput).ConnectToSource(invalidMatComposeNode.FirstValueOut());
+
+            context.NewEntryPoint("matDecompose - invalid result");
+            
+            _invalidTranslateCheckBox.SetupCheck(invalidMatDecomposeNode.ValueOut(Math_MatDecomposeNode.IdOutputTranslation), out var invalidFlowTranslate, Vector3.zero, true);
+            context.AddToCurrentEntrySequence(invalidFlowTranslate);
+            _invalidRotateCheckBox.SetupCheck(invalidMatDecomposeNode.ValueOut(Math_MatDecomposeNode.IdOutputRotation), out var invalidFlowRotate, Quaternion.identity, true);
+            context.AddToCurrentEntrySequence(invalidFlowRotate);
+            _invalidScaleCheckBox.SetupCheck(invalidMatDecomposeNode.ValueOut(Math_MatDecomposeNode.IdOutputScale), out var invalidFlowScale, Vector3.one, true);
+            context.AddToCurrentEntrySequence(invalidFlowScale);
+            _invalidIsValidCheckBox.SetupCheck(invalidMatDecomposeNode.ValueOut(Math_MatDecomposeNode.IdOutputIsValid), out var invalidFlowValid, false, false);
+            context.AddToCurrentEntrySequence(invalidFlowValid);
         }
     }
 }

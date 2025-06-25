@@ -508,10 +508,22 @@ namespace Khronos_Test_Export
             },
             new OneArg<Math_InverseNode, Matrix4x4, Matrix4x4>()
             {
-                a = Matrix4x4.TRS(Vector3.one, Quaternion.identity, Vector3.up),
+                a = Matrix4x4.TRS(new Vector3(3f,1f,2f), Quaternion.Euler(45f,90f,0), new Vector3(3f,3f,1f)),
                 approximate = true,
                 operation = (a) => Matrix4x4.Inverse(a),
             },
+            new OneArg<Math_InverseNode, Matrix4x4, Matrix4x4>()
+            {
+                a = new Matrix4x4(Vector4.zero, Vector4.zero, Vector4.zero, Vector4.zero),
+                isValidTest = true,
+                isValid = false
+            }, 
+            new OneArg<Math_InverseNode, Matrix4x4, Matrix4x4>()
+            {
+                a = new Matrix4x4(Vector3.positiveInfinity, new Vector4(float.NegativeInfinity, float.NaN, 0, 0), Vector3.up, Vector4.zero),
+                isValidTest = true,
+                isValid = false
+            }, 
             new OneArg<Math_DeterminantNode, Matrix4x4, float>()
             {
                 a = Matrix4x4.TRS(Vector3.one, Quaternion.identity, Vector3.up),
@@ -797,7 +809,46 @@ namespace Khronos_Test_Export
                 c = 3f,
                 d = 4f,
                 operation = (a, b, c, d) => new Vector4(a, b, c, d),
-            }
+            },
+            new OneArg<Math_NormalizeNode, Vector2, Vector2>()
+            {
+                a = new Vector2(1,2),
+                autoCreateTestsForAllSupportedInputs = false,
+                approximate = true,
+                operation = (a) => a.normalized,
+            },
+            new OneArg<Math_NormalizeNode, Vector3, Vector3>()
+            {
+                a = new Vector3(1,2,3),
+                approximate = true,
+                autoCreateTestsForAllSupportedInputs = false,
+                operation = (a) => a.normalized,
+            },
+            new OneArg<Math_NormalizeNode, Vector4, Vector4>()
+            {
+                a = new Vector4(1,2,3,4),
+                approximate = true,
+                autoCreateTestsForAllSupportedInputs = false,
+                operation = (a) => a.normalized,
+            },
+            new OneArg<Math_NormalizeNode, Vector3, Vector3>()
+            {
+                a = new Vector3(0,0,0),
+                isValidTest = true,
+                isValid = false
+            },
+            new OneArg<Math_NormalizeNode, Vector3, Vector3>()
+            {
+                a = new Vector3(float.NaN,0,0),
+                isValidTest = true,
+                isValid = false
+            },           
+            new OneArg<Math_NormalizeNode, Vector3, Vector3>()
+            {
+                a = new Vector3(float.PositiveInfinity,0,0),
+                isValidTest = true,
+                isValid = false
+            },      
             
         };
         
