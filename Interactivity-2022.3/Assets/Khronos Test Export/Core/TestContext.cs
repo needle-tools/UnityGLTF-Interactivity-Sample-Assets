@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using TMPro;
 using UnityEngine;
+using UnityGLTF.Interactivity;
 using UnityGLTF.Interactivity.Export;
 using UnityGLTF.Interactivity.Schema;
 
@@ -51,7 +52,78 @@ namespace Khronos_Test_Export
         private GltfInteractivityExportNode _lastDelayedFallback = null;
         private List<FlowInRef> _currentEntryFlows = new List<FlowInRef>();
         private List<FlowInRef> _currentFallbackFlows = new List<FlowInRef>();
-        
+
+        public void AddResultEventForAllTests()
+        {
+            var maxExecutionTime = cases.Select( c => c.entryNodes.Max( e => e.delayedExecutionTime ?? 0)).Max();
+            var allCheckBoxes = cases.SelectMany(c => c.checkBoxes).Where( c => c.ResultPassValueVarId != -1);
+            if (maxExecutionTime > 0)
+                maxExecutionTime += 0.5f; // Add some buffer time to ensure all checks are done
+            
+            var start = interactivityExportContext.CreateNode<Event_OnStartNode>();
+            var startEvent = interactivityExportContext.CreateNode<Event_SendNode>();
+            var onStartEventArgs = new Dictionary<string, GltfInteractivityNode.EventValues>();
+            onStartEventArgs.Add("expectedDuration", new GltfInteractivityNode.EventValues
+                {
+                    Type = GltfTypes.TypeIndex(typeof(float)),
+                    Value = maxExecutionTime
+                });
+            var startEventId = interactivityExportContext.Context.AddEventWithIdIfNeeded("test/onStart", onStartEventArgs);
+            startEvent.Configuration[Event_SendNode.IdEvent].Value = startEventId;
+            start.FlowOut().ConnectToFlowDestination(startEvent.FlowIn());
+            startEvent.ValueIn("expectedDuration").SetValue(maxExecutionTime);
+
+            FlowOutRef startFlowToResult = null;
+            if (maxExecutionTime == 0)
+            {
+                startFlowToResult = startEvent.FlowOut();
+            }
+            else
+            {
+                var delayNode = interactivityExportContext.CreateNode<Flow_SetDelayNode>();
+                delayNode.ValueIn(Flow_SetDelayNode.IdDuration).SetValue(maxExecutionTime);
+                startEvent.FlowOut().ConnectToFlowDestination(delayNode.FlowIn());
+                startFlowToResult = delayNode.FlowOut(Flow_SetDelayNode.IdFlowDone);
+            }
+
+            ValueOutRef prevAndResult = null;
+            foreach (var checkBox in allCheckBoxes)
+            {
+                VariablesHelpers.GetVariable(interactivityExportContext, checkBox.ResultPassValueVarId, out var resultVar);
+
+                if (prevAndResult != null)
+                {
+                    var andNode = interactivityExportContext.CreateNode<Math_AndNode>();
+                    andNode.ValueIn("a").ConnectToSource(prevAndResult);
+                    andNode.ValueIn("b").ConnectToSource(resultVar);
+                    prevAndResult = andNode.FirstValueOut();
+                }
+                else
+                {
+                    prevAndResult = resultVar;
+                }
+            }
+
+            if (prevAndResult == null)
+            {
+                Debug.LogError("No checkboxes with ResultPassValueVarId found. Cannot create result event.");
+                return;
+            }
+            
+            var branch = interactivityExportContext.CreateNode<Flow_BranchNode>();
+            branch.ValueIn(Flow_BranchNode.IdCondition).ConnectToSource(prevAndResult);
+            startFlowToResult.ConnectToFlowDestination(branch.FlowIn());
+            
+            var passEvent = interactivityExportContext.CreateNode<Event_SendNode>();
+            passEvent.Configuration[Event_SendNode.IdEvent].Value = interactivityExportContext.Context.AddEventWithIdIfNeeded("test/onSuccess");
+
+            var failEvent = interactivityExportContext.CreateNode<Event_SendNode>();
+            failEvent.Configuration[Event_SendNode.IdEvent].Value = interactivityExportContext.Context.AddEventWithIdIfNeeded("test/onFailed");
+
+            branch.FlowOut(Flow_BranchNode.IdFlowOutTrue).ConnectToFlowDestination(passEvent.FlowIn());
+            branch.FlowOut(Flow_BranchNode.IdFlowOutFalse).ConnectToFlowDestination(failEvent.FlowIn());
+
+        }
         
         public TestContext(CheckBox defaultCheckBox, TextMeshPro caseLabelPrefab, Transform root)
         {

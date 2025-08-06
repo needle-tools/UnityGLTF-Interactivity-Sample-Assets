@@ -414,6 +414,7 @@ namespace Khronos_Test_Export
 
                 index++;
             }
+            currentTestContext.AddResultEventForAllTests();
         }
         
         [CustomEditor(typeof(TestExporter))]
