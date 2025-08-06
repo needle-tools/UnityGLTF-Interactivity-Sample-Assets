@@ -314,8 +314,8 @@ namespace Khronos_Test_Export
             new TwoArg<Math_EqNode, Matrix4x4, bool>()
             {
                 autoCreateTestsForAllSupportedInputs = false,
-                a = Matrix4x4.TRS(Vector3.one, Quaternion.identity, Vector3.up),
-                b = Matrix4x4.TRS(Vector3.one, Quaternion.identity, Vector3.up),
+                a = Matrix4x4.TRS(Vector3.one, Quaternion.identity, new Vector3(1f,1f,1f)),
+                b = Matrix4x4.TRS(Vector3.one, Quaternion.identity, new Vector3(1f,1f,1f)),
                 operation = (a, b) => true,
             },
             new TwoArg<Math_LtNode, float, bool>()
@@ -502,7 +502,7 @@ namespace Khronos_Test_Export
             },
             new OneArg<Math_TransposeNode, Matrix4x4, Matrix4x4>()
             {
-                a = Matrix4x4.TRS(Vector3.one, Quaternion.identity, Vector3.up),
+                a = Matrix4x4.TRS(Vector3.one, Quaternion.identity, new Vector3(1f,1f,1f)),
                 approximate = true,
                 operation = (a) => Matrix4x4.Transpose(a),
             },
@@ -526,21 +526,21 @@ namespace Khronos_Test_Export
             }, 
             new OneArg<Math_DeterminantNode, Matrix4x4, float>()
             {
-                a = Matrix4x4.TRS(Vector3.one, Quaternion.identity, Vector3.up),
+                a = Matrix4x4.TRS(Vector3.one, Quaternion.identity, new Vector3(1f,5f,1f)),
                 approximate = true,
                 operation = (a) => Matrix4x4.Determinant(a),
             },
             new TwoArg<Math_Transform_Float4Node, Vector4, Matrix4x4, Vector4>()
             {
                 a = new Vector4(1f,2f,3f,4f),
-                b = Matrix4x4.TRS(Vector3.right, Quaternion.identity, Vector3.up),
+                b = Matrix4x4.TRS(Vector3.right, Quaternion.identity, new Vector3(1f,1f,1f)),
                 approximate = true,
                 operation = (a,b) =>  b * a,
             },
             new TwoArg<Math_MatMulNode, Matrix4x4, Matrix4x4>()
             {
-                a = Matrix4x4.TRS(Vector3.one, Quaternion.identity, Vector3.up),
-                b = Matrix4x4.TRS(Vector3.right, Quaternion.identity, Vector3.up),
+                a = Matrix4x4.TRS(Vector3.one, Quaternion.identity, new Vector3(1f,1f,1f)),
+                b = Matrix4x4.TRS(Vector3.right, Quaternion.identity, new Vector3(1f,1f,1f)),
                 approximate = true,
                 operation = (a,b) =>  a * b,
             },
@@ -548,7 +548,7 @@ namespace Khronos_Test_Export
             {
                 a = Vector3.one,
                 b = Quaternion.identity,
-                c = Vector3.up,
+                c = new Vector3(1f,1f,1f),
                 approximate = true,
                 operation = (a,b,c) =>  Matrix4x4.TRS(a, b, c),
             },
