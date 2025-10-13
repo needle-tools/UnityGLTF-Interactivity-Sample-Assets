@@ -1,9 +1,12 @@
 {
   "dependencies": {
     "com.needle.compilation-visualizer": "1.8.4",
+    "com.needle.gltf-interactivity-tests": "file:../../glTF-Interactivity-Tests",
+    "com.unity.2d.sprite": "1.0.0",
     "com.unity.cloud.draco": "5.1.8",
     "com.unity.cloud.ktx": "3.4.5",
     "com.unity.feature.development": "1.0.1",
+    "com.unity.recorder": "4.0.3",
     "com.unity.textmeshpro": "3.0.9",
     "com.unity.timeline": "1.7.7",
     "com.unity.ugui": "1.0.0",
