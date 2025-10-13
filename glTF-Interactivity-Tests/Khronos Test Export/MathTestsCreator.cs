@@ -732,7 +732,7 @@ namespace Khronos_Test_Export
                 b = Quaternion.Euler(0, 180f, 0),
                 approximate = true,
                 operation = (a, b) => b * a,
-                socketNames = new []{"a", "angle","c","d"}
+                socketNames = new []{"a", "rotation","c","d"}
             },
             new TwoArg<Math_Rotate2dNode, Vector2, float, Vector2>()
             {
