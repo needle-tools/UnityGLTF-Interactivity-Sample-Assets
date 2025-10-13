@@ -18,6 +18,7 @@ namespace Khronos_Test_Export
         public class SubMathTest
         {
             public object a, b, c, d;
+            public string[] socketNames = new []{"a", "b", "c", "d"};
             public bool approximateEquality = false;
             public object expected;
             public bool newRow = false;
@@ -104,14 +105,14 @@ namespace Khronos_Test_Export
                 if (subTest is IsValidSubTest)
                     testName += "Invalid:";
                 
-                if (schemaInstance.InputValueSockets.ContainsKey("a"))
-                    testName += "[a] " + ValueToStr(subTest.a) + " ";
-                if (schemaInstance.InputValueSockets.ContainsKey("b"))
-                    testName += "[b] " + ValueToStr(subTest.b) + " ";
-                if (schemaInstance.InputValueSockets.ContainsKey("c"))
-                    testName += "[c] " + ValueToStr(subTest.c) + " ";
-                if (schemaInstance.InputValueSockets.ContainsKey("d"))
-                    testName += "[d] " + ValueToStr(subTest.d) + " ";
+                if (schemaInstance.InputValueSockets.ContainsKey(subTest.socketNames[0]))
+                    testName += $"[{subTest.socketNames[0]}] " + ValueToStr(subTest.a) + " ";
+                if (schemaInstance.InputValueSockets.ContainsKey(subTest.socketNames[1]))
+                    testName += $"[{subTest.socketNames[1]}] " + ValueToStr(subTest.b) + " ";
+                if (schemaInstance.InputValueSockets.ContainsKey(subTest.socketNames[2]))
+                    testName += $"[{subTest.socketNames[2]}] " + ValueToStr(subTest.c) + " ";
+                if (schemaInstance.InputValueSockets.ContainsKey(subTest.socketNames[3]))
+                    testName += $"[{subTest.socketNames[3]}] " + ValueToStr(subTest.d) + " ";
 
                 if (subTest.expected != null)
                     testName += "= " + ValueToStr(subTest.expected);
@@ -132,14 +133,14 @@ namespace Khronos_Test_Export
                 var testNode = nodeCreator.CreateNode(schemaType);
                 context.NewEntryPoint(_checkBoxes[index].GetText());
 
-                if (testNode.ValueInConnection.ContainsKey("a"))
-                    testNode.SetValueInSocket("a", subTest.a, TypeRestriction.LimitToType(GltfTypes.TypeIndex(subTest.a.GetType())));
-                if (testNode.ValueInConnection.ContainsKey("b"))
-                    testNode.SetValueInSocket("b", subTest.b, TypeRestriction.LimitToType(GltfTypes.TypeIndex(subTest.b.GetType())));
-                if (testNode.ValueInConnection.ContainsKey("c"))
-                    testNode.SetValueInSocket("c", subTest.c, TypeRestriction.LimitToType(GltfTypes.TypeIndex(subTest.c.GetType())));
-                if (testNode.ValueInConnection.ContainsKey("d"))
-                    testNode.SetValueInSocket("d", subTest.d, TypeRestriction.LimitToType(GltfTypes.TypeIndex(subTest.d.GetType())));
+                if (testNode.ValueInConnection.ContainsKey(subTest.socketNames[0]))
+                    testNode.SetValueInSocket(subTest.socketNames[0], subTest.a, TypeRestriction.LimitToType(GltfTypes.TypeIndex(subTest.a.GetType())));
+                if (testNode.ValueInConnection.ContainsKey(subTest.socketNames[1]))
+                    testNode.SetValueInSocket(subTest.socketNames[1], subTest.b, TypeRestriction.LimitToType(GltfTypes.TypeIndex(subTest.b.GetType())));
+                if (testNode.ValueInConnection.ContainsKey(subTest.socketNames[2]))
+                    testNode.SetValueInSocket(subTest.socketNames[2], subTest.c, TypeRestriction.LimitToType(GltfTypes.TypeIndex(subTest.c.GetType())));
+                if (testNode.ValueInConnection.ContainsKey(subTest.socketNames[3]))
+                    testNode.SetValueInSocket(subTest.socketNames[3], subTest.d, TypeRestriction.LimitToType(GltfTypes.TypeIndex(subTest.d.GetType())));
 
                 var schemaExpectedType = testNode.Schema.OutputValueSockets["value"].expectedType;
                 

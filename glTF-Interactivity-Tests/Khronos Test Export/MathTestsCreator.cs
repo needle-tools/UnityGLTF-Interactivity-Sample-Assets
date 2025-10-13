@@ -24,6 +24,9 @@ namespace Khronos_Test_Export
             public bool isValid = false;
             
             public bool approximate = false;
+            
+            // MUST be always a length of 4!
+            public string[] socketNames = new []{"a", "b", "c", "d"};
 
             public abstract object A { get; }
             public abstract object B { get; }
@@ -551,6 +554,7 @@ namespace Khronos_Test_Export
                 c = new Vector3(1f,1f,1f),
                 approximate = true,
                 operation = (a,b,c) =>  Matrix4x4.TRS(a, b, c),
+                socketNames = new []{"translation", "rotation", "scale", "d"}
             },
             new OneArg<Math_LengthNode, Vector2, float>()
             {
@@ -728,6 +732,7 @@ namespace Khronos_Test_Export
                 b = Quaternion.Euler(0, 180f, 0),
                 approximate = true,
                 operation = (a, b) => b * a,
+                socketNames = new []{"a", "angle","c","d"}
             },
             new TwoArg<Math_Rotate2dNode, Vector2, float, Vector2>()
             {
@@ -739,6 +744,7 @@ namespace Khronos_Test_Export
                     var r = Quaternion.AngleAxis(Mathf.Rad2Deg * b, Vector3.forward) * a;
                     return new Vector2(r.x, r.y);
                 },
+                socketNames = new []{"a", "angle","c","d"}
             },
             new TwoArg<Math_Rotate2dNode, Vector2, float, Vector2>()
             {
@@ -750,6 +756,7 @@ namespace Khronos_Test_Export
                     var r = Quaternion.AngleAxis(Mathf.Rad2Deg * b, Vector3.forward) * a;
                     return new Vector2(r.x, r.y);
                 },
+                socketNames = new []{"a", "angle","c","d"}
             },
             new TwoArg<Math_Rotate2dNode, Vector2, float, Vector2>()
             {
@@ -761,6 +768,7 @@ namespace Khronos_Test_Export
                     var r = Quaternion.AngleAxis(Mathf.Rad2Deg * b, Vector3.forward) * a;
                     return new Vector2(r.x, r.y);
                 },
+                socketNames = new []{"a", "angle","c","d"}
             },
             new OneArg<Math_QuatConjugateNode, Quaternion, Quaternion>()
             {
@@ -903,6 +911,7 @@ namespace Khronos_Test_Export
                 var schemaInstance = GltfInteractivityNodeSchema.GetSchema(newTest.schemaType);
                 
                 Type typeA = null;
+                string sockeNameA = "a";
                 foreach (var testCase in group)
                 {
                     if (testCase.isValidTest)
@@ -919,6 +928,9 @@ namespace Khronos_Test_Export
                     
                     testCase.Run();
                     var newTestCase = newTest.AddSubTest();
+                    newTestCase.socketNames = testCase.socketNames;
+                    if (newTestCase.socketNames == null || newTestCase.socketNames.Length == 0)
+                        Debug.LogError("Socket names is null or empty for " + testCase);
                     newTestCase.a = testCase.A;
                     newTestCase.b = testCase.B;
                     newTestCase.c = testCase.C;
@@ -927,9 +939,10 @@ namespace Khronos_Test_Export
                     newTestCase.approximateEquality = testCase.approximate;
 
                     typeA = testCase.A.GetType();
+                    sockeNameA = testCase.socketNames[0];
                 }
                 
-                if (typeA == typeof(float) && schemaInstance.InputValueSockets.TryGetValue("a", out var aSocket))
+                if (typeA == typeof(float) && schemaInstance.InputValueSockets.TryGetValue(sockeNameA, out var aSocket))
                 {
                     //bool first = true;
                     foreach (var suppType in aSocket.SupportedTypes.Where(s =>
@@ -949,11 +962,11 @@ namespace Khronos_Test_Export
                             if (schemaInstance.OutputValueSockets["value"].SupportedTypes.Length > 1)
                                 newExpected = CreateValueByGltfType(testCase.Expected, suppType);
                             
-                            if (schemaInstance.InputValueSockets.TryGetValue("b", out var bSocket))
+                            if (schemaInstance.InputValueSockets.TryGetValue(testCase.socketNames[1], out var bSocket))
                                 newB = CreateValueByGltfType(testCase.B, suppType);
-                            if (schemaInstance.InputValueSockets.TryGetValue("c", out var cSocket))
+                            if (schemaInstance.InputValueSockets.TryGetValue(testCase.socketNames[2], out var cSocket))
                                 newC = CreateValueByGltfType(testCase.C, suppType);
-                            if (schemaInstance.InputValueSockets.TryGetValue("d", out var dSocket))
+                            if (schemaInstance.InputValueSockets.TryGetValue(testCase.socketNames[3], out var dSocket))
                                 newD = CreateValueByGltfType(testCase.D, suppType);
 
 
@@ -961,6 +974,9 @@ namespace Khronos_Test_Export
                                 continue;
 
                             var extraCase = newTest.AddSubTest();
+                            extraCase.socketNames = testCase.socketNames;
+                            if (extraCase.socketNames == null || extraCase.socketNames.Length == 0)
+                                Debug.LogError("Socket names is null or empty for " + testCase);
                             extraCase.a = newA;
                             extraCase.b = newB;
                             extraCase.c = newC;
