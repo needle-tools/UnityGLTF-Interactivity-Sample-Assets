@@ -611,9 +611,9 @@ namespace Khronos_Test_Export
             
             //Invalid Test
             
-            translate = new Vector3(1f, 2f, float.NaN);
+            translate = new Vector3(1f, 2f, 3f);
             rotate = Quaternion.Euler(30f, 45f, 60f);
-            scale = new Vector3(2f, 2f, 2f);
+            scale = new Vector3(2f, 2f, float.NaN);
 
             var invalidMatComposeNode = nodeCreator.CreateNode<Math_MatComposeNode>();
             invalidMatComposeNode.ValueIn(Math_MatComposeNode.IdInputTranslation).SetValue(translate);
