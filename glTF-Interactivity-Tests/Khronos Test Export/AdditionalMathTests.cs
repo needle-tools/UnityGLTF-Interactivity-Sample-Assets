@@ -498,8 +498,45 @@ namespace Khronos_Test_Export
             AddMonteCarloCheckBox(_monteCarlo10kCheckBox, 10000, 0.08f);
             
             
+
         }
     }
+
+    // [TestCreator.IgnoreTestCase]
+    // public class RandomLog : ITestCase
+    // {
+    //     public string GetTestName()
+    //     {
+    //         return "RANDOMOUT";
+    //     }
+    //
+    //     public string GetTestDescription()
+    //     {
+    //         return "RANDOMOUT";
+    //     }
+    //
+    //     public void PrepareObjects(TestContext context)
+    //     {
+    //
+    //     }
+    //
+    //     public void CreateNodes(TestContext context)
+    //     {
+    //         var nodeCreator = context.interactivityExportContext;
+    //
+    //         var forLoopNode = nodeCreator.CreateNode<Flow_ForLoopNode>();
+    //         forLoopNode.ValueIn(Flow_ForLoopNode.IdEndIndex).SetValue(5000);
+    //         forLoopNode.ValueIn(Flow_ForLoopNode.IdStartIndex).SetValue(0);
+    //         context.NewEntryPoint("output");
+    //         var randomNode2 = nodeCreator.CreateNode<Math_RandomNode>();
+    //         var randomNode3 = nodeCreator.CreateNode<Math_RandomNode>();
+    //
+    //         context.AddLog("Random: {0} {1}", out var logFlow, out var logout, randomNode2.FirstValueOut(),
+    //             randomNode3.FirstValueOut());
+    //         context.AddToCurrentEntrySequence(forLoopNode.FlowIn());
+    //         forLoopNode.FlowOut(Flow_ForLoopNode.IdLoopBody).ConnectToFlowDestination(logFlow);
+    //     }
+    // }
 
     [TestCreator.IgnoreTestCase]
     public class Math_MatDecomposeTest : ITestCase

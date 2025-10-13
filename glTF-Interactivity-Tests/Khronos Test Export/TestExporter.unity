@@ -663,6 +663,19 @@ MonoBehaviour:
   testExporter: {fileID: 1481517795}
   testCases:
   - Enabled: 1
+    Name: Extras/Loop in Loop Tests
+    Description: 
+    typeFullName: Khronos_Test_Export.ExtraTests.LoopInLoopTests
+  - Enabled: 1
+    Name: Extras/Matrix Updates
+    Description: Testing if globalMatrix and matrix will be updated in current frame/flow
+      processing
+    typeFullName: Khronos_Test_Export.ExtraTests.MatrixUpdatesTests
+  - Enabled: 1
+    Name: event/send and receive
+    Description: 
+    typeFullName: Khronos_Test_Export.EventTests
+  - Enabled: 1
     Name: flow/branch
     Description: 
     typeFullName: Khronos_Test_Export.BranchTest
@@ -703,10 +716,18 @@ MonoBehaviour:
     Description: 
     typeFullName: Khronos_Test_Export.WhileLoopTest
   - Enabled: 1
+    Name: pointer/CoreReadOnlyPointers_GetTests
+    Description: 
+    typeFullName: Khronos_Test_Export.ReadOnlyPointersGetTests
+  - Enabled: 1
+    Name: pointer/set and get
+    Description: 
+    typeFullName: Khronos_Test_Export.PointerSetGetTest
+  - Enabled: 1
     Name: prerequisites/Tests required operations
     Description: Testing required operations for proper test execution. This tests
       should be passed before testing all other tests.
-    typeFullName: Khronos_Test_Export.OpTests.TestRequirements.TestsRelatedOps
+    typeFullName: Khronos_Test_Export.TestsRelatedOps
   - Enabled: 1
     Name: variable/interpolate
     Description: 

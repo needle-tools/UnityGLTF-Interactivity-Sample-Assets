@@ -158,12 +158,38 @@ namespace Khronos_Test_Export
             ResultPassValueVarId = ResultValueVarId;
         }
 
+        
+        private object GetDefaultValue(Type type)
+        {
+            const float defaultFloat = -0.0142f;
+            var gltfType = GltfTypes.GetTypeMapping(type).GltfSignature;
+            switch (gltfType)
+            {
+                case GltfTypes.Bool:
+                    return false;
+                case GltfTypes.Int:
+                    return -1;
+                case GltfTypes.Float:
+                    return defaultFloat;
+                case GltfTypes.Float2:
+                    return new Vector2(defaultFloat, defaultFloat);
+                case GltfTypes.Float3:
+                    return new Vector3(defaultFloat, defaultFloat, defaultFloat);
+                case GltfTypes.Float4:
+                    return new Vector4(defaultFloat, defaultFloat, defaultFloat);
+                case GltfTypes.Float4x4:
+                    return new Matrix4x4();
+                default:
+                    return null;
+            }
+        }
+        
         private void SaveResult(out ValueInRef value, FlowOutRef flow, Type type)
         {
             if (ResultValueVarId == -1)
             {
                 var gltfType = GltfTypes.TypeIndex(type);
-                var initValue = GltfTypes.GetNullByType(gltfType);
+                var initValue = GetDefaultValue(type);
                 
                 var resultVarName = GetResultVariableName();
                 if (context.interactivityExportContext.Context.variables.Exists(v => v.Id == resultVarName))
@@ -181,7 +207,7 @@ namespace Khronos_Test_Export
             if (ResultValueVarId == -1)
             {
                 var gltfType = GltfTypes.TypeIndex(type);
-                var initValue = GltfTypes.GetNullByType(gltfType);
+                var initValue = GetDefaultValue(type);
                 
                 var resultVarName = GetResultVariableName();
                 if (context.interactivityExportContext.Context.variables.Exists(v => v.Id == resultVarName))
@@ -641,7 +667,6 @@ namespace Khronos_Test_Export
                 {
                     var isNaNNode = context.interactivityExportContext.CreateNode<Math_IsNaNNode>();
                     inputValue = isNaNNode.ValueIn(Math_IsNaNNode.IdValueA);
-                    eqNode = isNaNNode;
                     eqNode = isNaNNode;
                 }
                 else

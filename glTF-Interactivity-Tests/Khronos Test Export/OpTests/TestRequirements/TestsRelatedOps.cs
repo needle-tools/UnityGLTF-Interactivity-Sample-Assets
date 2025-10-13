@@ -39,7 +39,7 @@ namespace Khronos_Test_Export
             _valueCheckBox.SetupCheck(out var valueCheckRef, out var flowValueCheckFlowIn, 1, false);
             valueCheckRef.SetValue(1);
             float proximityValue = 33.21145566622334233f;
-            _valueProximityCheckBox.SetupCheck(out var valueProximityCheckRef, out var flowValueProximityCheckFlowIn, proximityValue, false);
+            _valueProximityCheckBox.SetupCheck(out var valueProximityCheckRef, out var flowValueProximityCheckFlowIn, proximityValue, true);
             valueProximityCheckRef.SetValue(proximityValue);
             
             context.AddPlusOneCounter(out var counter, out var flowInToIncrease);
