@@ -82,9 +82,14 @@ namespace Khronos_Test_Export
             }
         }
 
+        public class PbrMaterialPointerTest : MaterialPointerTest
+        {
+            public override string materialTemplate => "/materials/{"+PointersHelper.IdPointerMaterialIndex+"}/pbrMetallicRoughness/";
+        }   
+        
         public class MaterialPointerTest : PointerTest
         {
-            public string materialTemplate =>
+            public virtual string materialTemplate =>
                 "/materials/{"+PointersHelper.IdPointerMaterialIndex+"}/" 
                 + (string.IsNullOrEmpty(Extension)
                     ? ""
@@ -205,7 +210,7 @@ namespace Khronos_Test_Export
                     },
                 textures = new[] { "normalTexture", "occlusionTexture", "emissiveTexture" }
             },
-            new MaterialPointerTest()
+            new PbrMaterialPointerTest()
             {
                 Extension = "pbrMetallicRoughness",
                 materialProperties = new[]
@@ -522,7 +527,8 @@ namespace Khronos_Test_Export
                     }
 
                     context.AddLog("ERROR! Flow-[err] on Set pointer: " + sub.template + " with " + sub.value+ " can't be set.", out var logErrFlowIn, out _);
-                    pGet.FlowOut(Pointer_SetNode.IdFlowOutError).ConnectToFlowDestination(logErrFlowIn);
+                    
+                    pSet.FlowOut(Pointer_SetNode.IdFlowOutError).ConnectToFlowDestination(logErrFlowIn);
                     
                     check.checkBoxes[subIndex].SetupCheck(pGet.FirstValueOut(), pSet.FlowOut(), sub.value);
 
