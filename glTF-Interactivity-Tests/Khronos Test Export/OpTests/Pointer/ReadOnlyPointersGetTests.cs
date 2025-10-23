@@ -17,7 +17,7 @@ namespace Khronos_Test_Export
             ("/animations.length", (TestContext c) => (c.interactivityExportContext.Context.exporter.GetRoot().Animations.Count, null)),
             ("/cameras.length", (TestContext c) => (c.interactivityExportContext.Context.exporter.GetRoot().Cameras.Count, null)),
             ("/materials.length", (TestContext c) => (c.interactivityExportContext.Context.exporter.GetRoot().Materials.Count, null)),
-            ("/materials/{}/doubleSided", (TestContext c) =>
+            ("/materials/[]/doubleSided", (TestContext c) =>
                 {
                     var root = c.interactivityExportContext.Context.exporter.GetRoot();
                     var dsMaterialId = c.interactivityExportContext.Context.exporter.GetMaterialId(root, doubleSidedMaterial);
@@ -27,7 +27,7 @@ namespace Khronos_Test_Export
             ("/meshes/0/primitives.length", (TestContext c) => (c.interactivityExportContext.Context.exporter.GetRoot().Meshes[0].Primitives.Count, null)),
             ("/meshes/0/primitives/0/material",(TestContext c) => (c.interactivityExportContext.Context.exporter.GetRoot().Meshes[0].Primitives[0].Material.Id, null)),
            
-            ("/nodes/{}/weights.length", context =>
+            ("/nodes/[]/weights.length", context =>
                 {
                     var root = context.interactivityExportContext.Context.exporter.GetRoot();
                     var nodeWithWeights = root.Nodes.FirstOrDefault(n => n.Weights != null && n.Weights.Count > 0);
@@ -37,13 +37,13 @@ namespace Khronos_Test_Export
                     return (nodeWithWeights.Weights.Count, $"/nodes/{nodeWithWeightsIndex}/weights");
                     
                 }), 
-            ("/meshes/{0}/weights.length", (TestContext c) => 
+            ("/meshes/[]/weights.length", (TestContext c) => 
             {
                 var meshId = c.interactivityExportContext.Context.exporter.GetMeshId(blendShapeMesh);
                 return (meshId.Value.Weights.Count, $"/meshes/{meshId.Id}/weights.length"); 
             }),
             ("/nodes.length", (TestContext c) => (c.interactivityExportContext.Context.exporter.GetRoot().Nodes.Count, null)),
-            ("/nodes/{}/camera", (TestContext c) =>
+            ("/nodes/[]/camera", (TestContext c) =>
             {
                 var cameraNodeId = c.interactivityExportContext.Context.exporter.GetTransformIndex(cameraObject.transform);
                 var root = c.interactivityExportContext.Context.exporter.GetRoot();
@@ -51,7 +51,7 @@ namespace Khronos_Test_Export
             }),
             ("/nodes/0/children.length", (TestContext c) => (c.interactivityExportContext.Context.exporter.GetRoot().Nodes[0].Children.Count, null)),
             
-            ("/nodes/{}/children/{}", (TestContext c) =>
+            ("/nodes/[]/children/[]", (TestContext c) =>
                 {
                     var root = c.interactivityExportContext.Context.exporter.GetRoot();
                     var parentNode = root.Nodes.FirstOrDefault(n => n.Children != null && n.Children.Count > 0);
@@ -61,7 +61,7 @@ namespace Khronos_Test_Export
                     return (parentNode.Children[0].Id, $"/nodes/{parentIndex}/children/0");
                     
                 }),
-            ("/nodes/{nodeWithMesh}/mesh", (TestContext c) => (c.interactivityExportContext.Context.exporter.GetRoot().Nodes.First( n => n.Mesh != null).Mesh.Id, null)),
+            ("/nodes/[]/mesh", (TestContext c) => (c.interactivityExportContext.Context.exporter.GetRoot().Nodes.First( n => n.Mesh != null).Mesh.Id, "/nodes/{nodeWithMesh}/mesh")),
             ("/nodes/1/parent", (TestContext c) =>
             {
                     var r = c.interactivityExportContext.Context.exporter.GetRoot();
@@ -75,7 +75,7 @@ namespace Khronos_Test_Export
             
             ("/scenes/0/nodes/0",  (TestContext c) => (0, null)),
         
-            ("/nodes/{}/skin", context =>
+            ("/nodes/[]/skin", context =>
                 {
                     var root = context.interactivityExportContext.Context.exporter.GetRoot();
                     var skinnedNode = root.Nodes.FirstOrDefault(n => n.Mesh != null && n.Skin != null);
@@ -96,7 +96,7 @@ namespace Khronos_Test_Export
                     var skin = root.Skins[0];
                     return (skin.Joints.Count, null);
                 }),
-            ("/skins/{}/joints/{}", context =>
+            ("/skins/[]/joints/[]", context =>
                 {
                     var root = context.interactivityExportContext.Context.exporter.GetRoot();
                     var skin = root.Skins.FirstOrDefault(s => s.Joints != null && s.Joints.Count > 0);
@@ -105,7 +105,7 @@ namespace Khronos_Test_Export
                     var skinIndex = root.Skins.IndexOf(skin);
                     return (skin.Joints[0].Id, $"/skins/{skinIndex}/joints/0");
                 }),
-            ("/skins/{}/skeleton", context =>
+            ("/skins/[]/skeleton", context =>
                 {
                     var root = context.interactivityExportContext.Context.exporter.GetRoot();
                     var skin = root.Skins.FirstOrDefault();
@@ -133,7 +133,6 @@ namespace Khronos_Test_Export
         public string GetTestName()
         {
             return "pointer/CoreReadOnlyPointers_GetTests";
-            
         }
 
         public string GetTestDescription()
@@ -143,7 +142,6 @@ namespace Khronos_Test_Export
 
         public void PrepareObjects(TestContext context)
         {
-            
             readOnlyPointerCheckBoxes.Clear();
             isValidCheckBoxes.Clear();
             
@@ -265,7 +263,6 @@ namespace Khronos_Test_Export
                 var isValidCheckBox = isValidCheckBoxes[i];
                 isValidCheckBox.SetupCheck(pointerGet.ValueOut(Pointer_GetNode.IdIsValid), out var isValidFlowIn, true);
                 context.AddToCurrentEntrySequence(checkFlowIn, isValidFlowIn); 
-                
             }
             
         }

@@ -378,7 +378,24 @@ namespace Khronos_Test_Export
                 var boxes = new List<CheckBox>();
                 foreach (var sub in test.subTests)
                 {
-                    var newCheckBox = context.AddCheckBox(sub.label);
+                    var formattedLabel = sub.label;
+                    // Remove all {..} from label
+                    while (formattedLabel.Contains("{"))
+                    {
+                        int startIndex = formattedLabel.IndexOf("{");
+                        int endIndex = formattedLabel.IndexOf("}", startIndex);
+                        if (endIndex > startIndex)
+                        {
+                            formattedLabel = formattedLabel.Remove(startIndex, endIndex - startIndex + 1);
+                            formattedLabel = formattedLabel.Insert(startIndex, "[]");
+                        }
+                        else
+                        {
+                            break;
+                        }
+                    }
+                    
+                    var newCheckBox = context.AddCheckBox(formattedLabel);
                     boxes.Add(newCheckBox);
                 }
                 testCheckboxes.Add(new () {checkBoxes = boxes.ToArray(), test = test});
@@ -511,6 +528,7 @@ namespace Khronos_Test_Export
                     var pGet = context.interactivityExportContext.CreateNode<Pointer_GetNode>();
                     PointersHelper.AddPointerConfig(pGet, sub.template, sub.gltfType);
 
+                    var pointerString = sub.template;
                     if (sub.template.Contains(PointersHelper.IdPointerMaterialIndex))
                     {
                         pSet.ValueIn(PointersHelper.IdPointerMaterialIndex).SetValue(materialIndex);
@@ -518,15 +536,17 @@ namespace Khronos_Test_Export
                         var gltfMaterial = context.interactivityExportContext.Context.exporter.GetRoot().Materials[materialIndex];
                         gltfMaterial.AlphaMode = AlphaMode.MASK;
                         gltfMaterial.AlphaCutoff = 1f;
+                        pointerString = pointerString.Replace("{"+PointersHelper.IdPointerMaterialIndex+"}", materialIndex.ToString());
                     }
                     
                     if (sub.template.Contains(PointersHelper.IdPointerLightIndex))
                     {
                         pSet.ValueIn(PointersHelper.IdPointerLightIndex).SetValue(lightIndex);
                         pGet.ValueIn(PointersHelper.IdPointerLightIndex).SetValue(lightIndex);
+                        pointerString = pointerString.Replace("{"+PointersHelper.IdPointerMaterialIndex+"}", lightIndex.ToString());
                     }
-
-                    context.AddLog("ERROR! Flow-[err] on Set pointer: " + sub.template + " with " + sub.value+ " can't be set.", out var logErrFlowIn, out _);
+                    
+                    context.AddLog("ERROR! Flow-[err] on Set pointer: " + pointerString + " with " + sub.value+ " can't be set.", out var logErrFlowIn, out _);
                     
                     pSet.FlowOut(Pointer_SetNode.IdFlowOutError).ConnectToFlowDestination(logErrFlowIn);
                     
