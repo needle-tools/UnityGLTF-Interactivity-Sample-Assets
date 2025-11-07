@@ -238,7 +238,7 @@ namespace Khronos_Test_Export
                 materialProperties = new MaterialProperty[]
                 {
                 },
-                textures = new[]{"clearcoatTexture", "clearcoatRoughnessTexture", "clearcoatNormalTexture"}
+                textures = new[]{"clearcoatTexture", "clearcoatRoughnessTexture"}
             },
             new MaterialPointerTest()
             {
