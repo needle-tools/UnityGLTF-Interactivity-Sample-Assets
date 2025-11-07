@@ -543,7 +543,7 @@ namespace Khronos_Test_Export
                     {
                         pSet.ValueIn(PointersHelper.IdPointerLightIndex).SetValue(lightIndex);
                         pGet.ValueIn(PointersHelper.IdPointerLightIndex).SetValue(lightIndex);
-                        pointerString = pointerString.Replace("{"+PointersHelper.IdPointerMaterialIndex+"}", lightIndex.ToString());
+                        pointerString = pointerString.Replace("{"+PointersHelper.IdPointerLightIndex+"}", lightIndex.ToString());
                     }
                     
                     context.AddLog("ERROR! Flow-[err] on Set pointer: " + pointerString + " with " + sub.value+ " can't be set.", out var logErrFlowIn, out _);
