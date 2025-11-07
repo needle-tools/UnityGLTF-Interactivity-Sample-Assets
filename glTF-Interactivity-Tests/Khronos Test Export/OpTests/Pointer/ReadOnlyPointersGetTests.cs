@@ -71,7 +71,7 @@ namespace Khronos_Test_Export
             }),
             ("/scene", (TestContext c) => (0, null)),
             ("/scenes.length", (TestContext c) => (1, null)),
-            ("/scenes/0/nodes.length", (TestContext c) => (c.interactivityExportContext.Context.exporter.GetRoot().Nodes.Count, null)),
+            ("/scenes/0/nodes.length", (TestContext c) => (c.interactivityExportContext.Context.exporter.GetRoot().Nodes[0].Children.Count, null)),
             
             ("/scenes/0/nodes/0",  (TestContext c) => (0, null)),
         
