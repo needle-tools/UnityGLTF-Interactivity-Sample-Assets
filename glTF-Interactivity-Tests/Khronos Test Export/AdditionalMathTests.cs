@@ -625,11 +625,11 @@ namespace Khronos_Test_Export
 
             context.NewEntryPoint("matDecompose - invalid result");
             
-            _invalidTranslateCheckBox.SetupCheck(invalidMatDecomposeNode.ValueOut(Math_MatDecomposeNode.IdOutputTranslation), out var invalidFlowTranslate, Vector3.zero, true);
+            _invalidTranslateCheckBox.SetupCheck(invalidMatDecomposeNode.ValueOut(Math_MatDecomposeNode.IdOutputTranslation), out var invalidFlowTranslate, Vector3.zero, false);
             context.AddToCurrentEntrySequence(invalidFlowTranslate);
-            _invalidRotateCheckBox.SetupCheck(invalidMatDecomposeNode.ValueOut(Math_MatDecomposeNode.IdOutputRotation), out var invalidFlowRotate, Quaternion.identity, true);
+            _invalidRotateCheckBox.SetupCheck(invalidMatDecomposeNode.ValueOut(Math_MatDecomposeNode.IdOutputRotation), out var invalidFlowRotate, Quaternion.identity, false);
             context.AddToCurrentEntrySequence(invalidFlowRotate);
-            _invalidScaleCheckBox.SetupCheck(invalidMatDecomposeNode.ValueOut(Math_MatDecomposeNode.IdOutputScale), out var invalidFlowScale, Vector3.one, true);
+            _invalidScaleCheckBox.SetupCheck(invalidMatDecomposeNode.ValueOut(Math_MatDecomposeNode.IdOutputScale), out var invalidFlowScale, Vector3.one, false);
             context.AddToCurrentEntrySequence(invalidFlowScale);
             _invalidIsValidCheckBox.SetupCheck(invalidMatDecomposeNode.ValueOut(Math_MatDecomposeNode.IdOutputIsValid), out var invalidFlowValid, false, false);
             context.AddToCurrentEntrySequence(invalidFlowValid);
