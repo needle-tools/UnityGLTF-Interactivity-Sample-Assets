@@ -1,0 +1,14 @@
+{
+  "name": "com.needle.gltf-interactivity-scenes",
+  "displayName": "glTF Interactivity Scenes",
+  "version": "0.0.1", 
+  "unity": "2022.3",
+  "description": "",
+  "keywords": [
+  ],
+  "author": "Needle",
+  "dependencies": {
+  },
+  "samples": [
+  ]
+}

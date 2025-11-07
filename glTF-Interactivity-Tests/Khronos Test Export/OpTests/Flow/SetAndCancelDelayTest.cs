@@ -51,8 +51,8 @@ namespace Khronos_Test_Export
 
             var startTimeVarId = context.interactivityExportContext.Context.AddVariableWithIdIfNeeded(
                 "startTime_" + System.Guid.NewGuid().ToString(), 0, GltfTypes.Float);
-            var setStartTimeVar = VariablesHelpers.SetVariable(nodeCreator, startTimeVarId);
-            setStartTimeVar.ValueIn(Variable_SetNode.IdInputValue).ConnectToSource(timeSinceStartValueRef);
+            var setStartTimeVar = VariablesHelpers.SetVariable(nodeCreator, startTimeVarId, out var setStartTimeVarSocket, out _, out _);
+            setStartTimeVarSocket.ConnectToSource(timeSinceStartValueRef);
             context.AddToCurrentEntrySequence(setStartTimeVar.FlowIn(Variable_SetNode.IdFlowIn));
             context.AddToCurrentEntrySequence(setDelayNode.FlowIn(Flow_SetDelayNode.IdFlowIn));
             

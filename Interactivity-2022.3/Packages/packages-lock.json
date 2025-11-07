@@ -1,17 +1,23 @@
 {
   "dependencies": {
-    "com.needle.compilation-visualizer": {
-      "version": "1.8.4",
+    "com.needle.gltf-interactivity-scenes": {
+      "version": "file:../../glTF-Interactivity-Scenes",
       "depth": 0,
-      "source": "registry",
-      "dependencies": {},
-      "url": "https://packages.needle.tools"
+      "source": "local",
+      "dependencies": {}
     },
     "com.needle.gltf-interactivity-tests": {
       "version": "file:../../glTF-Interactivity-Tests",
       "depth": 0,
       "source": "local",
       "dependencies": {}
+    },
+    "com.needle.shadergraph-markdown": {
+      "version": "1.5.3",
+      "depth": 0,
+      "source": "registry",
+      "dependencies": {},
+      "url": "https://packages.needle.tools"
     },
     "com.unity.2d.sprite": {
       "version": "1.0.0",

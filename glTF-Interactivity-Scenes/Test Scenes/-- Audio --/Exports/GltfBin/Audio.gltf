@@ -1,0 +1,101 @@
+{
+  "asset": {
+    "generator": "UnityGltf 2.16.0-pre.2, Unity 2022.3.46f1, Built-in RP",
+    "version": "2.0",
+    "extras": {
+      "plugins": {
+        "KHR_interactivity (VisualScripting)": {
+          "Spec.Version URL": "https://github.com/KhronosGroup/glTF/blob/d9bfdb08f0c09c125f588783921d9edceb7ee78c/extensions/2.0/Khronos/KHR_interactivity/Specification.adoc",
+          "Spec.Version Date": "2025-03-10"
+        }
+      }
+    }
+  },
+  "extensionsUsed": [
+    "KHR_audio_emitter"
+  ],
+  "scene": 0,
+  "scenes": [
+    {
+      "nodes": [
+        0
+      ],
+      "name": "Audio",
+      "extensions": {
+        "KHR_audio_emitter": {
+          "emitters": [
+            1
+          ]
+        }
+      }
+    }
+  ],
+  "nodes": [
+    {
+      "children": [
+        1,
+        2
+      ],
+      "name": "Audio"
+    },
+    {
+      "name": "LocalAudio",
+      "extensions": {
+        "KHR_audio_emitter": {
+          "emitter": 0
+        }
+      }
+    },
+    {
+      "name": "GlobalAudio"
+    }
+  ],
+  "extensions": {
+    "KHR_audio_emitter": {
+      "audio": [
+        {
+          "uri": "gorila-315977.mp3"
+        }
+      ],
+      "sources": [
+        {
+          "autoPlay": true,
+          "gain": 1.0,
+          "loop": true,
+          "audio": 0,
+          "name": "gorila-315977"
+        },
+        {
+          "autoPlay": true,
+          "gain": 1.0,
+          "loop": true,
+          "audio": 0,
+          "name": "gorila-315977"
+        }
+      ],
+      "emitters": [
+        {
+          "name": "positional emitter",
+          "type": "positional",
+          "gain": 1.0,
+          "sources": [
+            0
+          ],
+          "positional": {
+            "distanceModel": "linear",
+            "minDistance": 1.0,
+            "maxDistance": 500.0
+          }
+        },
+        {
+          "name": "global emitter",
+          "type": "global",
+          "gain": 1.0,
+          "sources": [
+            0
+          ]
+        }
+      ]
+    }
+  }
+}

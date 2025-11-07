@@ -31,13 +31,13 @@ namespace Khronos_Test_Export
         {
             var nodeCreator = context.interactivityExportContext;
             
-            var node = nodeCreator.CreateNode<Variable_SetMultipleNode>();
+            var node = nodeCreator.CreateNode<Variable_SetNode>();
 
             var var1 = nodeCreator.Context.AddVariableWithIdIfNeeded("var1_" + Guid.NewGuid().ToString(), typeof(int));
             var var2 = nodeCreator.Context.AddVariableWithIdIfNeeded("var2_" + Guid.NewGuid().ToString(), typeof(int));
             var var3 = nodeCreator.Context.AddVariableWithIdIfNeeded("var3_" + Guid.NewGuid().ToString(), typeof(int));
 
-            node.Configuration[Variable_SetMultipleNode.IdConfigVarIndices].Value = new int[] {var2, var1, var3};
+            node.Configuration[Variable_SetNode.IdConfigVarIndices].Value = new int[] {var2, var1, var3};
 
             node.ValueIn(var1.ToString()).SetValue(11);
             node.ValueIn(var2.ToString()).SetValue(22);

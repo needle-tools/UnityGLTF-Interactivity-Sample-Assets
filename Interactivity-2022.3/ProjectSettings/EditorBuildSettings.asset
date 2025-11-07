@@ -4,5 +4,14 @@
 EditorBuildSettings:
   m_ObjectHideFlags: 0
   serializedVersion: 2
-  m_Scenes: []
+  m_Scenes:
+  - enabled: 0
+    path: Packages/com.needle.gltf-interactivity-tests/Khronos Test Export/TestExporter.unity
+    guid: 22f79393feed22d45966bf146ff7301f
+  - enabled: 0
+    path: Packages/com.needle.gltf-interactivity-scenes/Test Scenes/--Non-Working-Tests--/20250114-AnimationCopy.unity
+    guid: 92788c955abb749f09838df6e5703fc8
+  - enabled: 1
+    path: Packages/com.needle.gltf-interactivity-scenes/Test Scenes/20251014-VisibilityAnimation.unity
+    guid: cfb405fd896271d4e9630fefa761b181
   m_configObjects: {}

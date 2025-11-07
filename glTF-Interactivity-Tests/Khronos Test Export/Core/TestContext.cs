@@ -327,8 +327,8 @@ namespace Khronos_Test_Export
             addLoopRangeCounter.ValueIn(Math_AddNode.IdValueA).ConnectToSource(loopRangeCounter);
             addLoopRangeCounter.ValueIn(Math_AddNode.IdValueB).SetValue(1);
             
-            var setVar = VariablesHelpers.SetVariable(nodeCreator, newVarId);
-            setVar.ValueIn(Variable_SetNode.IdInputValue).ConnectToSource(addLoopRangeCounter.FirstValueOut());
+            var setVar = VariablesHelpers.SetVariable(nodeCreator, newVarId, out var setVarSocket, out _, out _);
+            setVarSocket.ConnectToSource(addLoopRangeCounter.FirstValueOut());
             flowInToIncrease = setVar.FlowIn(Variable_SetNode.IdFlowIn);
         }
     

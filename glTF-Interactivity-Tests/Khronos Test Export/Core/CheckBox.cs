@@ -142,10 +142,7 @@ namespace Khronos_Test_Export
             if (ResultPassValueVarId == -1)
                 ResultPassValueVarId = context.interactivityExportContext.Context.AddVariableWithIdIfNeeded(GetResultPassVariableName(), false, GltfTypes.Bool);
             
-            var setVar = VariablesHelpers.SetVariable(context.interactivityExportContext, ResultPassValueVarId);
-            boolValue = setVar.ValueIn(Variable_SetNode.IdInputValue);
-            flowIn = setVar.FlowIn();
-            flowOut = setVar.FlowOut();
+            var setVar = VariablesHelpers.SetVariable(context.interactivityExportContext, ResultPassValueVarId, out boolValue, out flowIn, out flowOut);
         }
         
         private void SaveResult(FlowOutRef flow)
@@ -197,8 +194,7 @@ namespace Khronos_Test_Export
                 ResultValueVarId = context.interactivityExportContext.Context.AddVariableWithIdIfNeeded(resultVarName, initValue, gltfType);
             }
 
-            var setVar = VariablesHelpers.SetVariable(context.interactivityExportContext, ResultValueVarId);
-            value = setVar.ValueIn(Variable_SetNode.IdInputValue);
+            var setVar = VariablesHelpers.SetVariable(context.interactivityExportContext, ResultValueVarId, out value, out _, out _);
             flow.ConnectToFlowDestination(setVar.FlowIn(Variable_SetNode.IdFlowIn));
         }
         
@@ -395,8 +391,8 @@ namespace Khronos_Test_Export
                     .ConnectToFlowDestination(invalidLogFlowIn);
                 
                 
-                var setInvalidVar = VariablesHelpers.SetVariable(nodeCreator, countVar);
-                setInvalidVar.ValueIn(Variable_SetNode.IdInputValue).SetValue(-1000);
+                var setInvalidVar = VariablesHelpers.SetVariable(nodeCreator, countVar, out var setInvalidVarValue, out _, out _);
+                setInvalidVarValue.SetValue(-1000);
                 invalidLogFlowOut.ConnectToFlowDestination(setInvalidVar.FlowIn(Variable_SetNode.IdFlowIn));
                 
                 
