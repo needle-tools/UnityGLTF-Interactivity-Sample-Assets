@@ -34,7 +34,7 @@ namespace Khronos_Test_Export
                     if (nodeWithWeights == null)
                         throw new Exception("No node with weights found");
                     var nodeWithWeightsIndex = root.Nodes.IndexOf(nodeWithWeights);
-                    return (nodeWithWeights.Weights.Count, $"/nodes/{nodeWithWeightsIndex}/weights");
+                    return (nodeWithWeights.Weights.Count, $"/nodes/{nodeWithWeightsIndex}/weights.length");
                     
                 }), 
             ("/meshes/[]/weights.length", (TestContext c) => 
