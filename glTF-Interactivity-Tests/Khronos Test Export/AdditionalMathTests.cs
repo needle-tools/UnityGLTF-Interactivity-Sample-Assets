@@ -482,7 +482,7 @@ namespace Khronos_Test_Export
                 
                 checkBox.proximityCheckDistance = proxRange;
                 checkBox.SetupCheck(multiplyNode2.FirstValueOut(), out var flowMonteCarlo, Math.PI, true);
-                context.AddLog(checkBox.GetText() + " Inside Circle: {0} / {1}  AvgPos: {2}", out var logFlow, out var logout, 2,
+                context.AddLog(checkBox.GetText() + " Inside Circle: {0} / {1}", out var logFlow, out var logout, 2,
                     out var values);
                 values[0].ConnectToSource(insideCounter);
                 values[1].SetValue(iterations);
