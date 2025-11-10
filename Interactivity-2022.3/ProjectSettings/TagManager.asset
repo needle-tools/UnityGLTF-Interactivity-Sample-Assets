@@ -5,6 +5,7 @@ TagManager:
   serializedVersion: 2
   tags:
   - BATCH_EXPORT
+  - InteractiveContent
   layers:
   - Default
   - TransparentFX
