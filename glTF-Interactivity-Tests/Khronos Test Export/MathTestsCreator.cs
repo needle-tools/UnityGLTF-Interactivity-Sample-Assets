@@ -163,6 +163,11 @@ namespace Khronos_Test_Export
                 a = 0,
                 operation = (a) => Mathf.Abs(a),
             },
+            new OneArg<Math_AbsNode, int, int>()
+            {
+                a = -10,
+                operation = (a) => Mathf.Abs(a),
+            },
             new OneArg<Math_SignNode, float, float>()
             {
                 a = -9,
@@ -172,6 +177,16 @@ namespace Khronos_Test_Export
             {
                 a = 9,
                 operation = (a) => Mathf.Sign(a),
+            },
+            new OneArg<Math_SignNode, int, int>()
+            {
+                a = 9,
+                operation = (a) => Math.Sign(a),
+            },
+            new OneArg<Math_SignNode, int, int>()
+            {
+                a = -9,
+                operation = (a) => Math.Sign(a),
             },
             new OneArg<Math_TruncNode, float, float>()
             {
@@ -206,16 +221,35 @@ namespace Khronos_Test_Export
                 b = 3f,
                 operation = (a, b) => a + b,
             },
+            new TwoArg<Math_AddNode, int, int>()
+            {
+                a = 5,
+                b = 3,
+                operation = (a, b) => a + b,
+            },
             new TwoArg<Math_SubNode, float, float>()
             {
                 a = 7f,
                 b = 9f,
                 operation = (a, b) => a - b,
             },
+            new TwoArg<Math_SubNode, int, int>()
+            {
+                a = 10,
+                b = 4,
+                operation = (a, b) => a - b,
+            },
             new TwoArg<Math_MulNode, float, float>()
             {
                 a = 345.234432f,
                 b = 1 / 345.234432f,
+                approximate = true,
+                operation = (a, b) => a * b,
+            },
+            new TwoArg<Math_MulNode, int, int>()
+            {
+                a = 2,
+                b = 3,
                 approximate = true,
                 operation = (a, b) => a * b,
             },
@@ -226,10 +260,24 @@ namespace Khronos_Test_Export
                 approximate = true,
                 operation = (a, b) => a / b,
             },
+            new TwoArg<Math_DivNode, int, int>()
+            {
+                a = 10,
+                b = 2,
+                approximate = true,
+                operation = (a, b) => a / b,
+            },
             new TwoArg<Math_RemNode, float, float>()
             {
                 a = 19.423534f,
                 b = 2.234f,
+                approximate = true,
+                operation = (a, b) => a % b,
+            },
+            new TwoArg<Math_RemNode, int, int>()
+            {
+                a = 13,
+                b = 2,
                 approximate = true,
                 operation = (a, b) => a % b,
             },
@@ -239,13 +287,32 @@ namespace Khronos_Test_Export
                 b = -324.234f,
                 operation = (a, b) => Mathf.Min(a, b),
             },
+            new TwoArg<Math_MinNode, int, int>()
+            {
+                a = 3,
+                b = 9,
+                operation = (a, b) => Mathf.Min(a, b),
+            },
             new TwoArg<Math_MaxNode, float, float>()
             {
                 a = 4653.234f,
                 b = 91293923.234f,
                 operation = (a, b) => Mathf.Max(a, b),
             },
+            new TwoArg<Math_MaxNode, int, int>()
+            {
+                a = 5,
+                b = 10,
+                operation = (a, b) => Mathf.Max(a, b),
+            },
             new ThreeArg<Math_ClampNode, float, float>()
+            {
+                a = 9f,
+                b = 2f,
+                c = 3f,
+                operation = (a, b, c) => Mathf.Clamp(a, b, c),
+            },
+            new ThreeArg<Math_ClampNode, int, int>()
             {
                 a = 9,
                 b = 2,
@@ -286,6 +353,20 @@ namespace Khronos_Test_Export
                 b = new Vector2(4,5),
                 operation = (a, b) => a == b,
             },
+            new TwoArg<Math_EqNode, int, bool>()
+            {
+                autoCreateTestsForAllSupportedInputs = false,
+                a = 2,
+                b = 1,
+                operation = (a, b) => false,
+            },
+            new TwoArg<Math_EqNode, int, bool>()
+            {
+                autoCreateTestsForAllSupportedInputs = false,
+                a = 2,
+                b = 2,
+                operation = (a, b) => true,
+            },
             new TwoArg<Math_EqNode, float, bool>()
             {
                 autoCreateTestsForAllSupportedInputs = false,
@@ -323,7 +404,19 @@ namespace Khronos_Test_Export
             },
             new TwoArg<Math_LtNode, float, bool>()
             {
+                a = 1f,
+                b = 2f,
+                operation = (a, b) => a < b,
+            },
+            new TwoArg<Math_LtNode, int, bool>()
+            {
                 a = 1,
+                b = 2,
+                operation = (a, b) => a < b,
+            },
+            new TwoArg<Math_LtNode, int, bool>()
+            {
+                a = 7,
                 b = 2,
                 operation = (a, b) => a < b,
             },
@@ -333,9 +426,39 @@ namespace Khronos_Test_Export
                 b = 1.3465f,
                 operation = (a, b) => a <= b,
             },
+            new TwoArg<Math_LeNode, int, bool>()
+            {
+                a = 4,
+                b = 4,
+                operation = (a, b) => a <= b,
+            },
+            new TwoArg<Math_LeNode, int, bool>()
+            {
+                a = 2,
+                b = 4,
+                operation = (a, b) => a <= b,
+            },
+            new TwoArg<Math_LeNode, int, bool>()
+            {
+                a = 5,
+                b = 4,
+                operation = (a, b) => a <= b,
+            },
             new TwoArg<Math_GtNode, float, bool>()
             {
                 a = 1,
+                b = 2,
+                operation = (a, b) => a > b,
+            },
+            new TwoArg<Math_GtNode, int, bool>()
+            {
+                a = 1,
+                b = 2,
+                operation = (a, b) => a > b,
+            },
+            new TwoArg<Math_GtNode, int, bool>()
+            {
+                a = 3,
                 b = 2,
                 operation = (a, b) => a > b,
             },
@@ -343,6 +466,24 @@ namespace Khronos_Test_Export
             {
                 a = 1.3465f,
                 b = 1.3465f,
+                operation = (a, b) => a >= b,
+            },
+            new TwoArg<Math_GeNode, int, bool>()
+            {
+                a = 2,
+                b = 2,
+                operation = (a, b) => a >= b,
+            },
+            new TwoArg<Math_GeNode, int, bool>()
+            {
+                a = 4,
+                b = 2,
+                operation = (a, b) => a >= b,
+            },
+            new TwoArg<Math_GeNode, int, bool>()
+            {
+                a = 1,
+                b = 2,
                 operation = (a, b) => a >= b,
             },
             // Special nodes
@@ -783,6 +924,20 @@ namespace Khronos_Test_Export
                 approximate = true,
                 operation = (a, b) => a * b,
             },
+            new TwoArg<Math_QuatFromUpForwardNode, Vector3, Quaternion>()
+            {
+                a = Vector3.forward,
+                b = Vector3.up,
+                approximate = true,
+                operation = Quaternion.LookRotation,
+            },
+            new TwoArg<Math_QuatFromUpForwardNode, Vector3, Quaternion>()
+            {
+                a = Vector3.back,
+                b = Vector3.down,
+                approximate = true,
+                operation = Quaternion.LookRotation,
+            },
             new TwoArg<Math_QuatAngleBetweenNode, Quaternion, float>()
             {
                 a = Quaternion.Euler(0, 180f, 0),
@@ -795,7 +950,7 @@ namespace Khronos_Test_Export
                 a = new Vector3(1f, 0f, 0f),
                 b = new Vector3(0f, 1f, 0f),
                 approximate = true,
-                operation = (a, b) => Quaternion.FromToRotation(a, b),
+                operation = Quaternion.FromToRotation,
             },
             new TwoArg<Math_Combine2Node, float, Vector2>()
             {
@@ -953,6 +1108,9 @@ namespace Khronos_Test_Export
                         {
                             if (!testCase.autoCreateTestsForAllSupportedInputs)
                                 continue;
+                            if (suppType == GltfTypes.Int)
+                                continue;
+                            
                             var newA = CreateValueByGltfType(testCase.A, suppType);
                             object newB = testCase.B;
                             object newC = testCase.C;
