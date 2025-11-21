@@ -38,7 +38,7 @@ public class AffineTransform : MonoBehaviour
         UpdateTransformation();
     }
 
-    void Update()
+    void LateUpdate()
     {
         // Update transformation if control points have changed
         if (HasTransformationChanged())
