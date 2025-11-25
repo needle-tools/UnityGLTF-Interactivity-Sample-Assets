@@ -5,7 +5,6 @@ using UnityEngine;
 using UnityGLTF.Interactivity;
 using UnityGLTF.Interactivity.Export;
 using UnityGLTF.Interactivity.Schema;
-using UnityGLTF.Interactivity.VisualScripting;
 
 public class InterfaceSample : MonoBehaviour ,IInteractivityExport
 {
