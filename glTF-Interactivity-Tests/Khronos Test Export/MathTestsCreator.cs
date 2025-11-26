@@ -930,6 +930,15 @@ namespace Khronos_Test_Export
                 b = Vector3.up,
                 approximate = true,
                 operation = Quaternion.LookRotation,
+                socketNames = new []{"forward", "up","c","d"}
+            },
+            new TwoArg<Math_QuatFromUpForwardNode, Vector3, Quaternion>()
+            {
+                a = new Vector3(3,3,3).normalized,
+                b = new Vector3(0.7f,1f,0.7f).normalized,
+                approximate = true,
+                operation = Quaternion.LookRotation,
+                socketNames = new []{"forward", "up","c","d"}
             },
             new TwoArg<Math_QuatFromUpForwardNode, Vector3, Quaternion>()
             {
@@ -937,6 +946,7 @@ namespace Khronos_Test_Export
                 b = Vector3.down,
                 approximate = true,
                 operation = Quaternion.LookRotation,
+                socketNames = new []{"forward", "up","c","d"}
             },
             new TwoArg<Math_QuatAngleBetweenNode, Quaternion, float>()
             {
