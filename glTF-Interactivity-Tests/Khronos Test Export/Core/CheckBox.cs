@@ -546,7 +546,7 @@ namespace Khronos_Test_Export
             this.proximityCheck = proximityCheck;
             var compareValueType = GltfTypes.TypeIndex(valueToCompare.GetType());
         
-            GltfInteractivityExportNode eqNode;
+            GltfInteractivityExportNode eqNode = null;
             if (proximityCheck)
             {
                 if (valueToCompare is Matrix4x4 vtcMat)
@@ -555,28 +555,37 @@ namespace Khronos_Test_Export
                     inputValue = resultDec.ValueIn(Math_Extract4x4Node.IdValueIn);
                     
                     ValueOutRef lastAddResult = null;
+                    
                     //var compareDec = context.interactivityExportContext.CreateNode<Math_Extract4x4Node>();
                     for (int i = 0; i < 16; i++)
                     {
-                        var mul = context.interactivityExportContext.CreateNode<Math_MulNode>();
-                        mul.ValueIn(Math_MulNode.IdValueA).SetValue(vtcMat[i]);
-                        mul.ValueIn(Math_MulNode.IdValueB).ConnectToSource(resultDec.ValueOut(i.ToString()));
+                        var subtractNode = context.interactivityExportContext.CreateNode<Math_SubNode>();
+                        subtractNode.ValueIn("a").ConnectToSource(resultDec.ValueOut(i.ToString()));
+                        subtractNode.ValueIn("b").SetValue(MatrixHelpers.GltfGetElement(vtcMat,i));
+                
+                        var absNode = context.interactivityExportContext.CreateNode<Math_AbsNode>();
+                        absNode.ValueIn("a").ConnectToSource(subtractNode.FirstValueOut());
+
+                        var lessThanNode = context.interactivityExportContext.CreateNode<Math_LtNode>();
+                        lessThanNode.ValueIn("a").ConnectToSource(absNode.FirstValueOut());
+                        lessThanNode.SetValueInSocket("b", proximityCheckDistance);
 
                         if (lastAddResult == null)
-                            lastAddResult = mul.FirstValueOut();
+                        {
+                            lastAddResult = lessThanNode.FirstValueOut();
+                            eqNode = lessThanNode;
+                        }
                         else
                         {
-                            var addNode = context.interactivityExportContext.CreateNode<Math_AddNode>();
-                            addNode.ValueIn(Math_AddNode.IdValueA).ConnectToSource(lastAddResult);
-                            addNode.ValueIn(Math_AddNode.IdValueB).ConnectToSource(mul.FirstValueOut());
-                            lastAddResult = addNode.FirstValueOut();
+                            var andNode = context.interactivityExportContext.CreateNode<Math_AndNode>();
+                            andNode.ValueIn("a").ConnectToSource(lastAddResult);
+                            andNode.ValueIn("b").ConnectToSource(lessThanNode.FirstValueOut());
+                            lastAddResult = andNode.FirstValueOut();
+                            eqNode = andNode;
                         }
+       
                     }
-                    var gtNode = context.interactivityExportContext.CreateNode<Math_GtNode>();
-                    gtNode.ValueIn(Math_GtNode.IdValueA).ConnectToSource(lastAddResult);
-                    gtNode.SetValueInSocket("b", 1f-proximityCheckDistance);
                     
-                    eqNode = gtNode;
                 }
                 else
                 if (RequiresDotForApproximationCheck(valueToCompare))

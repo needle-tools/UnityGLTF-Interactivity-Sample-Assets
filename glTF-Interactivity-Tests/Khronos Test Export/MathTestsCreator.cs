@@ -24,6 +24,7 @@ namespace Khronos_Test_Export
             public bool isValid = false;
             
             public bool approximate = false;
+            public float approxDelta = 0.0001f;
             
             // MUST be always a length of 4!
             public string[] socketNames = new []{"a", "b", "c", "d"};
@@ -654,6 +655,7 @@ namespace Khronos_Test_Export
             {
                 a = Matrix4x4.TRS(new Vector3(3f,1f,2f), Quaternion.Euler(45f,90f,0), new Vector3(3f,3f,1f)),
                 approximate = true,
+                approxDelta = 0.0001f,
                 operation = (a) => Matrix4x4.Inverse(a),
             },
             new OneArg<Math_InverseNode, Matrix4x4, Matrix4x4>()
@@ -1102,6 +1104,7 @@ namespace Khronos_Test_Export
                     newTestCase.d = testCase.D;
                     newTestCase.expected = testCase.Expected;
                     newTestCase.approximateEquality = testCase.approximate;
+                    newTestCase.approximateDelta = testCase.approxDelta;
 
                     typeA = testCase.A.GetType();
                     sockeNameA = testCase.socketNames[0];
@@ -1151,6 +1154,7 @@ namespace Khronos_Test_Export
                             extraCase.d = newD;
                             extraCase.expected = newExpected;
                             extraCase.approximateEquality = testCase.approximate;
+                            extraCase.approximateDelta = testCase.approxDelta;
                             //first = false;
                         }
                     }

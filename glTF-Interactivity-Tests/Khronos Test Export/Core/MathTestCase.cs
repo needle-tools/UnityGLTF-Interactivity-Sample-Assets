@@ -22,6 +22,7 @@ namespace Khronos_Test_Export
             public bool approximateEquality = false;
             public object expected;
             public bool newRow = false;
+            public float approximateDelta = 0.0001f;
         }
 
         public class IsValidSubTest : SubMathTest
@@ -155,6 +156,7 @@ namespace Khronos_Test_Export
                 }
                 else
                 {
+                    _checkBoxes[index].proximityCheckDistance = subTest.approximateDelta;
                     _checkBoxes[index].SetupCheck(testNode.FirstValueOut(), out var checkFlowIn, subTest.expected,
                         subTest.approximateEquality);
                     context.AddToCurrentEntrySequence(checkFlowIn);
