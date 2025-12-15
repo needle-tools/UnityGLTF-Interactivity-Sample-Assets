@@ -1174,6 +1174,7 @@ namespace Khronos_Test_Export
             additionalCases.Add(new Math_Extract4x4Test());
             additionalCases.Add(new Math_Combine4x4Test());
             additionalCases.Add(new Math_MatCompDecCompTest());
+            additionalCases.Add(new Math_MatDecompShearTest());
             
             return newTestCases.Concat(additionalCases).OrderBy(c => c.GetTestName()).ToArray();
         }

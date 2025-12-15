@@ -3,6 +3,7 @@ using UnityEngine;
 using UnityGLTF.Interactivity;
 using UnityGLTF.Interactivity.Export;
 using UnityGLTF.Interactivity.Schema;
+using Object = UnityEngine.Object;
 
 namespace Khronos_Test_Export
 {
@@ -635,7 +636,142 @@ namespace Khronos_Test_Export
             context.AddToCurrentEntrySequence(invalidFlowValid);
         }
     }
+
+    [TestCreator.IgnoreTestCase]
+    public class Math_MatDecompShearTest : ITestCase, IDisposable
+    {
+        private CheckBox _checkBoxStable;
+        private CheckBox _checkBoxDecompIsValid;
+        private CheckBox _checkBoxDecomp2IsValid;
+        
+        private GameObject _tempObject;
+        private Transform _shearedObj;
+        
+        public string GetTestName()
+        {
+            return "math/matDecomp-Shear";
+        }
+
+        public string GetTestDescription()
+        {
+            return "";
+        }
+
+        public void PrepareObjects(TestContext context)
+        {
+            _tempObject = new GameObject("TempObject");
+            _tempObject.transform.SetParent(context.Root);
+            
+            var parent = new GameObject("Parent");
+            parent.transform.SetParent(_tempObject.transform);
+            parent.transform.localRotation = Quaternion.Euler(0, 0, 45);
+            parent.transform.localScale = new Vector3(1, 2, 1);
+
+            var child = new GameObject("Child");
+            child.transform.SetParent(parent.transform);
+            child.transform.localRotation = Quaternion.Euler(0, 0, -45);
+
+            _shearedObj = child.transform;
+            //var cube = GameObject.CreatePrimitive(PrimitiveType.Cube);
+            //cube.transform.SetParent(child.transform);
+            
+            _checkBoxDecompIsValid = context.AddCheckBox("decomp.isValid");
+            _checkBoxDecomp2IsValid = context.AddCheckBox("comp>decomp.isValid");
+            _checkBoxStable = context.AddCheckBox("Stable (>Decomp>Comp[A]>Decom>Comp[B]= A==B");
+        }
+
+        public void CreateNodes(TestContext context)
+        {
+            context.NewEntryPoint("matDecompose - shear");
+            var nodeCreator = context.interactivityExportContext;
+            
+            var worldMatrix = nodeCreator.CreateNode<Pointer_GetNode>();
+            worldMatrix.FirstValueOut().ExpectedType(ExpectedType.Float4x4);
+            PointersHelper.SetupPointerTemplateAndTargetInput(worldMatrix, PointersHelper.IdPointerNodeIndex,
+                "/nodes/{" + PointersHelper.IdPointerNodeIndex + "}/globalMatrix", GltfTypes.Float4x4);
+            
+            var trId = context.interactivityExportContext.Context.exporter.GetTransformIndex(_shearedObj);
+            worldMatrix.ValueIn(PointersHelper.IdPointerNodeIndex).SetValue(trId);
+        
+            var decomposeNode = nodeCreator.CreateNode<Math_MatDecomposeNode>();
+            decomposeNode.ValueIn(Math_MatDecomposeNode.IdInput).ConnectToSource(worldMatrix.FirstValueOut());
+            
+            _checkBoxDecompIsValid.SetupCheck(decomposeNode.ValueOut(Math_MatDecomposeNode.IdOutputIsValid), out var flowIsValid, true, false);
+            context.AddToCurrentEntrySequence(flowIsValid);
+
+            var composeNode = nodeCreator.CreateNode<Math_MatComposeNode>();
+            composeNode.ValueIn(Math_MatComposeNode.IdInputTranslation).ConnectToSource(decomposeNode.ValueOut(Math_MatDecomposeNode.IdOutputTranslation));
+            composeNode.ValueIn(Math_MatComposeNode.IdInputRotation).ConnectToSource(decomposeNode.ValueOut(Math_MatDecomposeNode.IdOutputRotation));
+            composeNode.ValueIn(Math_MatComposeNode.IdInputScale).ConnectToSource(decomposeNode.ValueOut(Math_MatDecomposeNode.IdOutputScale));
+            
+            var decomposeNode2 = nodeCreator.CreateNode<Math_MatDecomposeNode>();
+            decomposeNode2.ValueIn(Math_MatDecomposeNode.IdInput).ConnectToSource(composeNode.FirstValueOut());
+            
+            var andFirstIsValid = nodeCreator.CreateNode<Math_AndNode>();
+            andFirstIsValid.ValueIn(Math_AndNode.IdValueA).ConnectToSource(decomposeNode.ValueOut(Math_MatDecomposeNode.IdOutputIsValid));
+            andFirstIsValid.ValueIn(Math_AndNode.IdValueB).ConnectToSource(decomposeNode2.ValueOut(Math_MatDecomposeNode.IdOutputIsValid));
+            
+            _checkBoxDecomp2IsValid.SetupCheck(andFirstIsValid.FirstValueOut(), out var flowIsValid2, true, false);
+            context.AddToCurrentEntrySequence(flowIsValid2);
+
+            
+            var composeNode2 = nodeCreator.CreateNode<Math_MatComposeNode>();
+            composeNode2.ValueIn(Math_MatComposeNode.IdInputTranslation).ConnectToSource(decomposeNode.ValueOut(Math_MatDecomposeNode.IdOutputTranslation));
+            composeNode2.ValueIn(Math_MatComposeNode.IdInputRotation).ConnectToSource(decomposeNode.ValueOut(Math_MatDecomposeNode.IdOutputRotation));
+            composeNode2.ValueIn(Math_MatComposeNode.IdInputScale).ConnectToSource(decomposeNode.ValueOut(Math_MatDecomposeNode.IdOutputScale));
+            
+            ValueOutRef lastAddResult = null;
+
+            var matExtractNode = nodeCreator.CreateNode<Math_Extract4x4Node>();
+            matExtractNode.ValueIn(Math_Extract4x4Node.IdValueIn).ConnectToSource(composeNode.FirstValueOut());
+            var matExtractNode2 = nodeCreator.CreateNode<Math_Extract4x4Node>();
+            matExtractNode2.ValueIn(Math_Extract4x4Node.IdValueIn).ConnectToSource(composeNode2.FirstValueOut());
+
+            for (int i = 0; i < 16; i++)
+            {
+                var subtractNode = nodeCreator.CreateNode<Math_SubNode>();
+                subtractNode.ValueIn("a").ConnectToSource(matExtractNode.ValueOut(i.ToString()));
+                subtractNode.ValueIn("b").ConnectToSource(matExtractNode2.ValueOut(i.ToString()));
+                
+                var absNode = nodeCreator.CreateNode<Math_AbsNode>();
+                absNode.ValueIn("a").ConnectToSource(subtractNode.FirstValueOut());
+
+                var lessThanNode = nodeCreator.CreateNode<Math_LtNode>();
+                lessThanNode.ValueIn("a").ConnectToSource(absNode.FirstValueOut());
+                lessThanNode.SetValueInSocket("b", 0.001f);
+
+                if (lastAddResult == null)
+                {
+                    lastAddResult = lessThanNode.FirstValueOut();
+                }
+                else
+                {
+                    var andNode = nodeCreator.CreateNode<Math_AndNode>();
+                    andNode.ValueIn("a").ConnectToSource(lastAddResult);
+                    andNode.ValueIn("b").ConnectToSource(lessThanNode.FirstValueOut());
+                    lastAddResult = andNode.FirstValueOut();
+                }
+            }
+            
+            var and1 = nodeCreator.CreateNode<Math_AndNode>();
+            and1.ValueIn("a").ConnectToSource(lastAddResult);
+            and1.ValueIn("b").ConnectToSource(decomposeNode.ValueOut(Math_MatDecomposeNode.IdOutputIsValid));
+            var and2 = nodeCreator.CreateNode<Math_AndNode>();
+            and2.ValueIn("a").ConnectToSource(and1.FirstValueOut());
+            and2.ValueIn("b").ConnectToSource(decomposeNode2.ValueOut(Math_MatDecomposeNode.IdOutputIsValid));
+            
+            _checkBoxStable.SetupCheck(and2.FirstValueOut(), out var flow, true, false);
+            context.AddToCurrentEntrySequence(flow);
+            
+        }
+
+        public void Dispose()
+        {
+          Object.DestroyImmediate(_tempObject);   
+        }
+    }
     
+
     [TestCreator.IgnoreTestCase]
     public class Math_MatCompDecCompTest : ITestCase
     {
