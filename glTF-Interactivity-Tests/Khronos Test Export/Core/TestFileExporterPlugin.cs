@@ -32,6 +32,35 @@ namespace Khronos_Test_Export
 
         public class TestFileExportContext : InteractivityExportContext
         {
+            private Texture2D _convertedTestSymbols;
+            private Texture2D _fontTex;
+            
+            public override void BeforeTextureExport(GLTFSceneExporter exporter, ref GLTFSceneExporter.UniqueTexture texture, string textureSlot)
+            {
+                if (texture.Texture.name == "testsymbols")
+                {
+                    if (_convertedTestSymbols == null)
+                    {
+                        // Reduce resolution
+                        var newTex = new Texture2D(1024 / 2, 128 / 2, TextureFormat.RGBA32, false);
+                        Graphics.ConvertTexture(texture.Texture,  newTex);
+                        _convertedTestSymbols = newTex;
+                    }
+                    texture.Texture = _convertedTestSymbols;
+                }
+                else if (texture.Texture.width == 2048 && texture.Texture.height == 2048)
+                {
+                    if (_fontTex == null)
+                    {
+                        // Reduce resolution
+                        var newTex = new Texture2D(512, 512, TextureFormat.RGBA32, false);
+                        Graphics.ConvertTexture(texture.Texture,  newTex);
+                        _fontTex = newTex;
+                    }
+                    texture.Texture = _fontTex;
+                    
+                }
+            }
 
             public override void AfterSceneExport(GLTFSceneExporter exporter, GLTFRoot gltfRoot)
             {
