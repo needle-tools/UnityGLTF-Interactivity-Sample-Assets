@@ -635,4 +635,96 @@ namespace Khronos_Test_Export
             context.AddToCurrentEntrySequence(invalidFlowValid);
         }
     }
+    
+    [TestCreator.IgnoreTestCase]
+    public class Math_MatCompDecCompTest : ITestCase
+    {
+        private CheckBox _checkBox;
+        private CheckBox _checkBox2;
+
+        public string GetTestName()
+        {
+            return "math/matComp-Dec-Comp";
+        }
+
+        public string GetTestDescription()
+        {
+            return "Matrix Composing [A] > Decomposing > Composing [B] = A==B";
+        }
+
+        public void PrepareObjects(TestContext context)
+        {
+            _checkBox = context.AddCheckBox("Test 1");
+            _checkBox2 = context.AddCheckBox("Test 2");
+        }
+
+        private void AddTest(Vector3 pos, Quaternion rotation, Vector3 scale, CheckBox checkbox, TestContext context)
+        {
+            var nodeCreator = context.interactivityExportContext;
+
+            var matComposeNode = nodeCreator.CreateNode<Math_MatComposeNode>();
+            matComposeNode.ValueIn(Math_MatComposeNode.IdInputTranslation).SetValue(pos);
+            matComposeNode.ValueIn(Math_MatComposeNode.IdInputRotation).SetValue(rotation);
+            matComposeNode.ValueIn(Math_MatComposeNode.IdInputScale).SetValue(scale);
+            
+            var matDecomposeNode = nodeCreator.CreateNode<Math_MatDecomposeNode>();
+            matDecomposeNode.ValueIn(Math_MatDecomposeNode.IdInput).ConnectToSource(matComposeNode.FirstValueOut());
+            
+            var matComposeNode2 = nodeCreator.CreateNode<Math_MatComposeNode>();
+            matComposeNode2.ValueIn(Math_MatComposeNode.IdInputTranslation).ConnectToSource(matDecomposeNode.ValueOut(Math_MatDecomposeNode.IdOutputTranslation));
+            matComposeNode2.ValueIn(Math_MatComposeNode.IdInputRotation).ConnectToSource(matDecomposeNode.ValueOut(Math_MatDecomposeNode.IdOutputRotation));
+            matComposeNode2.ValueIn(Math_MatComposeNode.IdInputScale).ConnectToSource(matDecomposeNode.ValueOut(Math_MatDecomposeNode.IdOutputScale));
+
+
+            var matExtractNode = nodeCreator.CreateNode<Math_Extract4x4Node>();
+            matExtractNode.ValueIn(Math_Extract4x4Node.IdValueIn).ConnectToSource(matComposeNode.FirstValueOut());
+            var matExtractNode2 = nodeCreator.CreateNode<Math_Extract4x4Node>();
+            matExtractNode2.ValueIn(Math_Extract4x4Node.IdValueIn).ConnectToSource(matComposeNode2.FirstValueOut());
+
+            ValueOutRef lastAddResult = null;
+
+            GltfInteractivityExportNode eqNode = null;
+            
+            for (int i = 0; i < 16; i++)
+            {
+                var subtractNode = nodeCreator.CreateNode<Math_SubNode>();
+                subtractNode.ValueIn("a").ConnectToSource(matExtractNode.ValueOut(i.ToString()));
+                subtractNode.ValueIn("b").ConnectToSource(matExtractNode2.ValueOut(i.ToString()));
+                
+                var absNode = nodeCreator.CreateNode<Math_AbsNode>();
+                absNode.ValueIn("a").ConnectToSource(subtractNode.FirstValueOut());
+
+                var lessThanNode = nodeCreator.CreateNode<Math_LtNode>();
+                lessThanNode.ValueIn("a").ConnectToSource(absNode.FirstValueOut());
+                lessThanNode.SetValueInSocket("b", 0.001f);
+
+                if (lastAddResult == null)
+                {
+                    lastAddResult = lessThanNode.FirstValueOut();
+                    eqNode = lessThanNode;
+                }
+                else
+                {
+                    var andNode = nodeCreator.CreateNode<Math_AndNode>();
+                    andNode.ValueIn("a").ConnectToSource(lastAddResult);
+                    andNode.ValueIn("b").ConnectToSource(lessThanNode.FirstValueOut());
+                    lastAddResult = andNode.FirstValueOut();
+                    eqNode = andNode;
+                }
+            }
+            
+            checkbox.SetupCheck(eqNode.FirstValueOut(), out var flow, true, false);
+            context.AddToCurrentEntrySequence(flow);
+            
+            
+        }
+
+        public void CreateNodes(TestContext context)
+        {
+            context.NewEntryPoint("comp-dec-comp");
+            AddTest(new Vector3(12,15,1), Quaternion.Euler(45, 90, 30), Vector3.one, _checkBox, context);
+            AddTest(new Vector3(-2,5,-66), Quaternion.Euler(120,77, 33), new Vector3(10,5,10), _checkBox2, context);
+
+        }
+    }
 }
