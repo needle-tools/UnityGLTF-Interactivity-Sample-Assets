@@ -56,6 +56,9 @@ namespace Khronos_Test_Export
             isWaiting = true;
         }
         
+        /// <summary>
+        /// Setup the checkbox to show the Check-Symbol by default, and the Failed-Symbol when the flow is triggered
+        /// </summary>
         public void Negate()
         {
             var vPos = valid.localPosition;
@@ -142,7 +145,7 @@ namespace Khronos_Test_Export
             if (ResultPassValueVarId == -1)
                 ResultPassValueVarId = context.interactivityExportContext.Context.AddVariableWithIdIfNeeded(GetResultPassVariableName(), false, GltfTypes.Bool);
             
-            var setVar = VariablesHelpers.SetVariable(context.interactivityExportContext, ResultPassValueVarId, out boolValue, out flowIn, out flowOut);
+            VariablesHelpers.SetVariable(context.interactivityExportContext, ResultPassValueVarId, out boolValue, out flowIn, out flowOut);
         }
         
         private void SaveResult(FlowOutRef flow)
@@ -154,7 +157,6 @@ namespace Khronos_Test_Export
             flow.ConnectToFlowDestination(setFlow);
             ResultPassValueVarId = ResultValueVarId;
         }
-
         
         private object GetDefaultValue(Type type)
         {
@@ -432,16 +434,22 @@ namespace Khronos_Test_Export
                 branchNode.ValueIn(Flow_BranchNode.IdCondition).ConnectToSource(eq.FirstValueOut());
                 
                 branchNode.FlowOut(Flow_BranchNode.IdFlowOutTrue).ConnectToFlowDestination(flowSetValid);
+                
+                SavePassResult(out var passValue, out var flowInPass, out var flowOutPass);
+                flowOutPass.ConnectToFlowDestination(branchNode.FlowIn());
+                
+                passValue.ConnectToSource(eq.FirstValueOut());
+                
                 context.AddLog(logText+ ": Flow got triggered correct amount", out var logFlowIn, out var logFlowOut);
                 flowOutSetValid.ConnectToFlowDestination(logFlowIn);
-                SaveResult( counter, logFlowOut, typeof(int));
                 
+                SaveResult( counter, logFlowOut, typeof(int));
                 
                 context.AddLog("ERROR! "+logText+ ": Flow got triggered {0} times from "+callTimes.ToString()+ ". This should not happened!", out var logFlowInFallback, out var _, counter);
                 branchNode.FlowOut(Flow_BranchNode.IdFlowOutFalse)
                     .ConnectToFlowDestination(logFlowInFallback);
-                
-                return branchNode.FlowIn();
+
+                return flowInPass;;
             }, false);
         }
         
