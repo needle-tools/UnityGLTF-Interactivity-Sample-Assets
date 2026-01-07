@@ -68,7 +68,7 @@ namespace Khronos_Test_Export
         public override float ValueComponent(int index)
         {
             var v = (Matrix4x4)Value;
-            return MatrixHelpers.GltfGetElement(v, index);
+            return v[index];
         }
     }
     

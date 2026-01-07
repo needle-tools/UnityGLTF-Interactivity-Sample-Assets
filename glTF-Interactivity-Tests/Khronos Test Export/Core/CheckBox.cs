@@ -561,7 +561,7 @@ namespace Khronos_Test_Export
                     {
                         var subtractNode = context.interactivityExportContext.CreateNode<Math_SubNode>();
                         subtractNode.ValueIn("a").ConnectToSource(resultDec.ValueOut(i.ToString()));
-                        subtractNode.ValueIn("b").SetValue(MatrixHelpers.GltfGetElement(vtcMat,i));
+                        subtractNode.ValueIn("b").SetValue(vtcMat[i]);
                 
                         var absNode = context.interactivityExportContext.CreateNode<Math_AbsNode>();
                         absNode.ValueIn("a").ConnectToSource(subtractNode.FirstValueOut());
