@@ -91,8 +91,8 @@ namespace Khronos_Test_Export
             _cancelCheckBox.SetupNegateCheck(delayNode.FlowOut(Flow_SetDelayNode.IdFlowDone));
             
             var cancelDelayNode = nodeCreator.CreateNode<Flow_CancelDelayNode>();
-            cancelDelayNode.ValueIn(Flow_CancelDelayNode.IdDelayIndex)
-                .ConnectToSource(delayNode.ValueOut(Flow_SetDelayNode.IdOutLastDelayIndex));
+            cancelDelayNode.ValueIn(Flow_CancelDelayNode.IdDelay)
+                .ConnectToSource(delayNode.ValueOut(Flow_SetDelayNode.IdOutLastDelay));
             
             context.AddToCurrentEntrySequence(delayNode.FlowIn(), cancelDelayNode.FlowIn());
             _cancelOutFlowCheckBox.SetupCheck(cancelDelayNode.FlowOut());
