@@ -688,7 +688,7 @@ namespace Khronos_Test_Export
             var worldMatrix = nodeCreator.CreateNode<Pointer_GetNode>();
             worldMatrix.FirstValueOut().ExpectedType(ExpectedType.Float4x4);
             PointersHelper.SetupPointerTemplateAndTargetInput(worldMatrix, PointersHelper.IdPointerNodeIndex,
-                "/nodes/{" + PointersHelper.IdPointerNodeIndex + "}/globalMatrix", GltfTypes.Float4x4);
+                "/nodes/[" + PointersHelper.IdPointerNodeIndex + "]/globalMatrix", GltfTypes.Float4x4);
             
             var trId = context.interactivityExportContext.Context.exporter.GetTransformIndex(_shearedObj);
             worldMatrix.ValueIn(PointersHelper.IdPointerNodeIndex).SetValue(trId);

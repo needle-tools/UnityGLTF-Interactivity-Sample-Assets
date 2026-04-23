@@ -68,11 +68,11 @@ namespace Khronos_Test_Export.ExtraTests
 
             context.interactivityExportContext.Context.addUnityGltfSpaceConversion = false;
             TransformHelpers.SetWorldPosition(nodeCreator, out var targetRef, out var posRef, out var flowInRef, out var flowOutRef);
-            targetRef.SetValue(transformIndex);
+            targetRef.SetValue(_gameObject);
             posRef.SetValue(new Vector3(10f, 20f, 30f));
 
             TransformHelpers.SetWorldPosition(nodeCreator, out var targetRef2, out var posRef2, out var flowInRef2, out var flowOutRef2);
-            targetRef2.SetValue(transformIndex);
+            targetRef2.SetValue(_gameObject);
             var newPos = new Vector3(1f, 2f, 3f);
             posRef2.SetValue(newPos);
             flowOutRef.ConnectToFlowDestination(flowInRef2);
@@ -101,7 +101,7 @@ namespace Khronos_Test_Export.ExtraTests
             sub.ValueIn("a").ConnectToSource(childGlobalDecompose.ValueOut(Math_MatDecomposeNode.IdOutputTranslation));
             sub.ValueIn("b").SetValue(new Vector3(1, 1, 1));
             TransformHelpers.SetWorldPosition(nodeCreator, out var targetChild2Ref, out var pos2Ref, out var flowIn2Ref, out var flowOut2Ref);
-            targetChild2Ref.SetValue(child2TransformIndex);
+            targetChild2Ref.SetValue(_child2GameObject);
             pos2Ref.ConnectToSource(sub.FirstValueOut());
       
             var child2GlobalMatrix = nodeCreator.CreateNode<Pointer_GetNode>();
@@ -113,12 +113,12 @@ namespace Khronos_Test_Export.ExtraTests
             flowOut2Ref.ConnectToFlowDestination(child2GlobalCheckFlowIn);
             
             TransformHelpers.GetWorldPosition(nodeCreator, out var child2Target, out var child2WorldPos);
-            child2Target.SetValue(child2TransformIndex);
+            child2Target.SetValue(_child2GameObject);
             TransformHelpers.SetWorldPosition(nodeCreator, out var child3Target, out var child3pos, out var child3flowInRef, out var child3flowOutRef);
             child3pos.ConnectToSource(child2WorldPos);
-            child3Target.SetValue(child3TransformIndex);
+            child3Target.SetValue(_child3GameObject);
             TransformHelpers.GetWorldPosition(nodeCreator, out var child3Target2, out var child3WorldPos);
-            child3Target2.SetValue(child3TransformIndex);
+            child3Target2.SetValue(_child3GameObject);
             
             _child3GlobalMatrixCheckBox.SetupCheck(child3WorldPos, child3flowOutRef,  new Vector3(0f, 1f, 2f), true);
             

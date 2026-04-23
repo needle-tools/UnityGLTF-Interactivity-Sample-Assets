@@ -116,7 +116,7 @@ namespace Khronos_Test_Export
             var waitingIndex = context.interactivityExportContext.Context.exporter.GetTransformIndex(waiting);
             
             var setPosition = context.interactivityExportContext.CreateNode<Pointer_SetNode>();
-            PointersHelper.SetupPointerTemplateAndTargetInput(setPosition, PointersHelper.IdPointerNodeIndex, "/nodes/{" + PointersHelper.IdPointerNodeIndex + "}/translation", GltfTypes.Float3);
+            PointersHelper.SetupPointerTemplateAndTargetInput(setPosition, PointersHelper.IdPointerNodeIndex, "/nodes/[" + PointersHelper.IdPointerNodeIndex + "]/translation", GltfTypes.Float3);
             setPosition.ValueIn(Pointer_SetNode.IdValue).SetValue(Vector3.zero);
             setPosition.ValueIn(PointersHelper.IdPointerNodeIndex).SetValue(waitingIndex);  
             
@@ -219,7 +219,7 @@ namespace Khronos_Test_Export
         private void SetToForeground(int nodeIndex, out FlowInRef flowIn, out FlowOutRef flowOut)
         {
             var setPosition = context.interactivityExportContext.CreateNode<Pointer_SetNode>();
-            PointersHelper.SetupPointerTemplateAndTargetInput(setPosition, PointersHelper.IdPointerNodeIndex, "/nodes/{" + PointersHelper.IdPointerNodeIndex + "}/translation", GltfTypes.Float3);
+            PointersHelper.SetupPointerTemplateAndTargetInput(setPosition, PointersHelper.IdPointerNodeIndex, "/nodes/[" + PointersHelper.IdPointerNodeIndex + "]/translation", GltfTypes.Float3);
             setPosition.ValueIn(Pointer_SetNode.IdValue).SetValue(positionWhenValid);
             setPosition.ValueIn(PointersHelper.IdPointerNodeIndex).SetValue(nodeIndex);  
             
