@@ -126,7 +126,7 @@ namespace Khronos_Test_Export
                             {
                                 gltfType = GltfTypes.TypeIndex(typeof(float)),
                                 template = materialTemplate + t + "/extensions/KHR_texture_transform/rotation",
-                                value = 45f,
+                                value = Mathf.Deg2Rad * 45f,
                                 label = Extension + "/" + t + " texture rotation"
                             };
                             yield return new()
@@ -228,7 +228,7 @@ namespace Khronos_Test_Export
                 materialProperties = new[]
                     {
                         new MaterialProperty("anisotropyStrength", 2f),
-                        new MaterialProperty("anisotropyRotation", 30f),
+                        new MaterialProperty("anisotropyRotation", Mathf.Deg2Rad * 30f),
                     },
                 textures = new[]{"anisotropyTexture"}
             },
@@ -550,7 +550,9 @@ namespace Khronos_Test_Export
                     
                     pSet.FlowOut(Pointer_SetNode.IdFlowOutError).ConnectToFlowDestination(logErrFlowIn);
                     
-                    check.checkBoxes[subIndex].SetupCheck(pGet.FirstValueOut(), pSet.FlowOut(), sub.value);
+                    // only do proximity check for float values with more than 2 decimals
+                    var proximityCheck = sub.value is float f && Mathf.Abs(f - Mathf.Round(f * 100f) / 100f) > 0.001f;
+                    check.checkBoxes[subIndex].SetupCheck(pGet.FirstValueOut(), pSet.FlowOut(), sub.value, proximityCheck);
 
                     subIndex++;
                 }
