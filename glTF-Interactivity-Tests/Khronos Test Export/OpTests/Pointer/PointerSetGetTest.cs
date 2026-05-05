@@ -84,13 +84,13 @@ namespace Khronos_Test_Export
 
         public class PbrMaterialPointerTest : MaterialPointerTest
         {
-            public override string materialTemplate => "/materials/{"+PointersHelper.IdPointerMaterialIndex+"}/pbrMetallicRoughness/";
+            public override string materialTemplate => "/materials/["+PointersHelper.IdPointerMaterialIndex+"]/pbrMetallicRoughness/";
         }   
         
         public class MaterialPointerTest : PointerTest
         {
             public virtual string materialTemplate =>
-                "/materials/{"+PointersHelper.IdPointerMaterialIndex+"}/" 
+                "/materials/["+PointersHelper.IdPointerMaterialIndex+"]/" 
                 + (string.IsNullOrEmpty(Extension)
                     ? ""
                     : $"extensions/{Extension}/");
@@ -169,31 +169,61 @@ namespace Khronos_Test_Export
 
         private PointerTest[] tests = new PointerTest[]
         {
+            // By Index
             new LightPointerTest()
             {
-                template = "/extensions/KHR_lights_punctual/lights/{"+PointersHelper.IdPointerLightIndex+"}/color",
+                template = PointersHelper.IdPointerTemplLightByIndex + "color",
                 value = ColorRGB(Color.red),
                 LightType = LightType.Spot
             },
             new LightPointerTest()
             {
-                template = "/extensions/KHR_lights_punctual/lights/{"+PointersHelper.IdPointerLightIndex+"}/intensity",
+                template = PointersHelper.IdPointerTemplLightByIndex + "intensity",
                 value = 4f
             },
             new LightPointerTest()
             {
-                template = "/extensions/KHR_lights_punctual/lights/{"+PointersHelper.IdPointerLightIndex+"}/range",
+                template = PointersHelper.IdPointerTemplLightByIndex + "range",
                 value = 9f
             },
             new LightPointerTest()
             {
-                template = "/extensions/KHR_lights_punctual/lights/{"+PointersHelper.IdPointerLightIndex+"}/spot/innerConeAngle",
+                template = PointersHelper.IdPointerTemplLightByIndex + "spot/innerConeAngle",
                 value = 2f,
                 LightType = LightType.Spot
             },
             new LightPointerTest()
             {
-                template = "/extensions/KHR_lights_punctual/lights/{"+PointersHelper.IdPointerLightIndex+"}/spot/outerConeAngle",
+                template = PointersHelper.IdPointerTemplLightByIndex + "spot/outerConeAngle",
+                value = 5f,
+                LightType = LightType.Spot
+            },
+            // By Ref
+            new LightPointerTest()
+            {
+                template = PointersHelper.IdPointerTemplLightByRef + "color",
+                value = ColorRGB(Color.red),
+                LightType = LightType.Spot
+            },
+            new LightPointerTest()
+            {
+                template = PointersHelper.IdPointerTemplLightByRef + "intensity",
+                value = 4f
+            },
+            new LightPointerTest()
+            {
+                template = PointersHelper.IdPointerTemplLightByRef + "range",
+                value = 9f
+            },
+            new LightPointerTest()
+            {
+                template = PointersHelper.IdPointerTemplLightByRef + "spot/innerConeAngle",
+                value = 2f,
+                LightType = LightType.Spot
+            },
+            new LightPointerTest()
+            {
+                template = PointersHelper.IdPointerTemplLightByRef + "spot/outerConeAngle",
                 value = 5f,
                 LightType = LightType.Spot
             },
@@ -529,21 +559,36 @@ namespace Khronos_Test_Export
                     PointersHelper.AddPointerConfig(pGet, sub.template, sub.gltfType);
 
                     var pointerString = sub.template;
-                    if (sub.template.Contains(PointersHelper.IdPointerMaterialIndex))
+                    if (sub.template.Contains(PointersHelper.IdPointerMaterialIndex)) // By Index
                     {
                         pSet.ValueIn(PointersHelper.IdPointerMaterialIndex).SetValue(materialIndex);
                         pGet.ValueIn(PointersHelper.IdPointerMaterialIndex).SetValue(materialIndex);
                         var gltfMaterial = context.interactivityExportContext.Context.exporter.GetRoot().Materials[materialIndex];
                         gltfMaterial.AlphaMode = AlphaMode.MASK;
                         gltfMaterial.AlphaCutoff = 1f;
-                        pointerString = pointerString.Replace("{"+PointersHelper.IdPointerMaterialIndex+"}", materialIndex.ToString());
+                        pointerString = pointerString.Replace("["+PointersHelper.IdPointerMaterialIndex+"]", materialIndex.ToString());
+                    }
+                    if (sub.template.Contains(PointersHelper.IdPointerMaterialRef)) // By Ref
+                    {
+                        pSet.ValueIn(PointersHelper.IdPointerMaterialRef).SetValue(new StaticRefPointer($"/materials/{materialIndex}/"));
+                        pGet.ValueIn(PointersHelper.IdPointerMaterialRef).SetValue(new StaticRefPointer($"/materials/{materialIndex}/"));
+                        var gltfMaterial = context.interactivityExportContext.Context.exporter.GetRoot().Materials[materialIndex];
+                        gltfMaterial.AlphaMode = AlphaMode.MASK;
+                        gltfMaterial.AlphaCutoff = 1f;
+                        pointerString = pointerString.Replace("{"+PointersHelper.IdPointerMaterialRef+"}", materialIndex.ToString());
                     }
                     
-                    if (sub.template.Contains(PointersHelper.IdPointerLightIndex))
+                    if (sub.template.Contains(PointersHelper.IdPointerLightIndex)) // By Index
                     {
                         pSet.ValueIn(PointersHelper.IdPointerLightIndex).SetValue(lightIndex);
                         pGet.ValueIn(PointersHelper.IdPointerLightIndex).SetValue(lightIndex);
-                        pointerString = pointerString.Replace("{"+PointersHelper.IdPointerLightIndex+"}", lightIndex.ToString());
+                        pointerString = pointerString.Replace("["+PointersHelper.IdPointerLightIndex+"]", lightIndex.ToString());
+                    }
+                    if (sub.template.Contains(PointersHelper.IdPointerLightRef)) // By ref
+                    {
+                        pSet.ValueIn(PointersHelper.IdPointerLightRef).SetValue(new StaticRefPointer($"/extensions/KHR_lights_punctual/lights/{lightIndex}/"));
+                        pGet.ValueIn(PointersHelper.IdPointerLightRef).SetValue(new StaticRefPointer($"/extensions/KHR_lights_punctual/lights/{lightIndex}/"));
+                        pointerString = pointerString.Replace("{"+PointersHelper.IdPointerLightRef+"}", lightIndex.ToString());
                     }
                     
                     context.AddLog("ERROR! Flow-[err] on Set pointer: " + pointerString + " with " + sub.value+ " can't be set.", out var logErrFlowIn, out _);
