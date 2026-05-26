@@ -13,7 +13,7 @@ OcclusionCullingSettings:
 --- !u!104 &2
 RenderSettings:
   m_ObjectHideFlags: 0
-  serializedVersion: 9
+  serializedVersion: 10
   m_Fog: 0
   m_FogColor: {r: 0.5, g: 0.5, b: 0.5, a: 1}
   m_FogMode: 3
@@ -42,8 +42,8 @@ RenderSettings:
 --- !u!157 &3
 LightmapSettings:
   m_ObjectHideFlags: 0
-  serializedVersion: 12
-  m_GIWorkflowMode: 1
+  serializedVersion: 13
+  m_BakeOnSceneLoad: 0
   m_GISettings:
     serializedVersion: 2
     m_BounceScale: 1
@@ -66,9 +66,6 @@ LightmapSettings:
     m_LightmapParameters: {fileID: 0}
     m_LightmapsBakeMode: 1
     m_TextureCompression: 1
-    m_FinalGather: 0
-    m_FinalGatherFiltering: 1
-    m_FinalGatherRayCount: 256
     m_ReflectionCompression: 2
     m_MixedBakeMode: 2
     m_BakeBackend: 1
@@ -172,6 +169,9 @@ MeshRenderer:
   m_ReflectionProbeUsage: 1
   m_RayTracingMode: 2
   m_RayTraceProcedural: 0
+  m_RayTracingAccelStructBuildFlagsOverride: 0
+  m_RayTracingAccelStructBuildFlags: 1
+  m_SmallMeshCulling: 1
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
@@ -281,20 +281,23 @@ MonoBehaviour:
   m_VerticalAlignment: 512
   m_textAlignment: 65535
   m_characterSpacing: 0
+  m_characterHorizontalScale: 1
   m_wordSpacing: 0
   m_lineSpacing: -30.41
   m_lineSpacingMax: 0
   m_paragraphSpacing: 0
   m_charWidthMaxAdj: 0
-  m_enableWordWrapping: 1
+  m_TextWrappingMode: 1
   m_wordWrappingRatios: 0.4
   m_overflowMode: 0
   m_linkedTextComponent: {fileID: 0}
   parentLinkedComponent: {fileID: 0}
   m_enableKerning: 1
+  m_ActiveFontFeatures: 6e72656b
   m_enableExtraPadding: 0
   checkPaddingRequired: 0
   m_isRichText: 1
+  m_EmojiFallbackSupport: 1
   m_parseCtrlCharacters: 1
   m_isOrthographic: 0
   m_isCullingEnabled: 0
@@ -332,6 +335,9 @@ MeshRenderer:
   m_ReflectionProbeUsage: 1
   m_RayTracingMode: 2
   m_RayTraceProcedural: 0
+  m_RayTracingAccelStructBuildFlagsOverride: 0
+  m_RayTracingAccelStructBuildFlags: 1
+  m_SmallMeshCulling: 1
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
@@ -549,6 +555,9 @@ MeshRenderer:
   m_ReflectionProbeUsage: 1
   m_RayTracingMode: 2
   m_RayTraceProcedural: 0
+  m_RayTracingAccelStructBuildFlagsOverride: 0
+  m_RayTracingAccelStructBuildFlags: 1
+  m_SmallMeshCulling: 1
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
@@ -627,6 +636,7 @@ GameObject:
   - component: {fileID: 1481517796}
   - component: {fileID: 1481517798}
   - component: {fileID: 1481517795}
+  - component: {fileID: 1481517799}
   m_Layer: 0
   m_Name: Exporter
   m_TagString: Untagged
@@ -671,6 +681,16 @@ MonoBehaviour:
     Description: Testing if globalMatrix and matrix will be updated in current frame/flow
       processing
     typeFullName: Khronos_Test_Export.ExtraTests.MatrixUpdatesTests
+  - Enabled: 0
+    Name: InterGlb/RefEcho_FileA
+    Description: Sends a mesh Ref to File B via a custom event. File B echoes it
+      back. File A checks with ref/eq that the ref is unchanged.
+    typeFullName: Khronos_Test_Export.InterGlbCommunication.InterGlbCommunication
+  - Enabled: 0
+    Name: InterGlb/RefEcho_FileB
+    Description: Receives a mesh Ref from File A via a custom event and echoes it
+      back via another event.
+    typeFullName: Khronos_Test_Export.InterGlbCommunication.InterGlbCommunicationFileB
   - Enabled: 1
     Name: event/send and receive
     Description: 
@@ -720,6 +740,10 @@ MonoBehaviour:
     Description: 
     typeFullName: Khronos_Test_Export.ReadOnlyPointersGetTests
   - Enabled: 1
+    Name: pointer/get_set_morphtargets
+    Description: 
+    typeFullName: Khronos_Test_Export.PointerMorphTargetsTest
+  - Enabled: 1
     Name: pointer/set and get
     Description: 
     typeFullName: Khronos_Test_Export.PointerSetGetTest
@@ -728,6 +752,10 @@ MonoBehaviour:
     Description: Testing required operations for proper test execution. This tests
       should be passed before testing all other tests.
     typeFullName: Khronos_Test_Export.TestsRelatedOps
+  - Enabled: 1
+    Name: ref/eq
+    Description: Tests the ref/eq node with different inputs.
+    typeFullName: Khronos_Test_Export.RefEqTest
   - Enabled: 1
     Name: variable/interpolate
     Description: 
@@ -773,6 +801,118 @@ MonoBehaviour:
   testCases: []
   testName: mathtests
   indexFilename: mathtests-index
+--- !u!114 &1481517799
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1481517794}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: fbdbb8f8bd65c9246a72c4cbd70e6d70, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  testExporter: {fileID: 1481517795}
+  testCases:
+  - Enabled: 0
+    Name: Extras/Loop in Loop Tests
+    Description: 
+    typeFullName: Khronos_Test_Export.ExtraTests.LoopInLoopTests
+  - Enabled: 0
+    Name: Extras/Matrix Updates
+    Description: Testing if globalMatrix and matrix will be updated in current frame/flow
+      processing
+    typeFullName: Khronos_Test_Export.ExtraTests.MatrixUpdatesTests
+  - Enabled: 1
+    Name: InterGlb/RefEcho_FileA
+    Description: Sends a mesh Ref to File B via a custom event. File B echoes it
+      back. File A checks with ref/eq that the ref is unchanged.
+    typeFullName: Khronos_Test_Export.InterGlbCommunication.InterGlbCommunication
+  - Enabled: 1
+    Name: InterGlb/RefEcho_FileB
+    Description: Receives a mesh Ref from File A via a custom event and echoes it
+      back via another event.
+    typeFullName: Khronos_Test_Export.InterGlbCommunication.InterGlbCommunicationFileB
+  - Enabled: 0
+    Name: event/send and receive
+    Description: 
+    typeFullName: Khronos_Test_Export.EventTests
+  - Enabled: 0
+    Name: flow/branch
+    Description: 
+    typeFullName: Khronos_Test_Export.BranchTest
+  - Enabled: 0
+    Name: flow/doN
+    Description: 
+    typeFullName: Khronos_Test_Export.DoNTest
+  - Enabled: 0
+    Name: flow/for
+    Description: 
+    typeFullName: Khronos_Test_Export.ForLoopTest
+  - Enabled: 0
+    Name: flow/multiGate
+    Description: 
+    typeFullName: Khronos_Test_Export.MultiGateTest
+  - Enabled: 0
+    Name: flow/sequence
+    Description: Tests the sequence order of the flow outputs.
+    typeFullName: Khronos_Test_Export.SequenceTest
+  - Enabled: 0
+    Name: flow/setDelay and cancelDelay
+    Description: 
+    typeFullName: Khronos_Test_Export.SetAndCancelDelayTest
+  - Enabled: 0
+    Name: flow/switch
+    Description: 
+    typeFullName: Khronos_Test_Export.SwitchTest
+  - Enabled: 0
+    Name: flow/throttle
+    Description: 
+    typeFullName: Khronos_Test_Export.ThrottleTest
+  - Enabled: 0
+    Name: flow/waitAll
+    Description: 
+    typeFullName: Khronos_Test_Export.WaitAllTest
+  - Enabled: 0
+    Name: flow/while
+    Description: 
+    typeFullName: Khronos_Test_Export.WhileLoopTest
+  - Enabled: 0
+    Name: pointer/CoreReadOnlyPointers_GetTests
+    Description: 
+    typeFullName: Khronos_Test_Export.ReadOnlyPointersGetTests
+  - Enabled: 0
+    Name: pointer/get_set_morphtargets
+    Description: 
+    typeFullName: Khronos_Test_Export.PointerMorphTargetsTest
+  - Enabled: 0
+    Name: pointer/set and get
+    Description: 
+    typeFullName: Khronos_Test_Export.PointerSetGetTest
+  - Enabled: 0
+    Name: prerequisites/Tests required operations
+    Description: Testing required operations for proper test execution. This tests
+      should be passed before testing all other tests.
+    typeFullName: Khronos_Test_Export.TestsRelatedOps
+  - Enabled: 0
+    Name: ref/eq
+    Description: Tests the ref/eq node with different inputs.
+    typeFullName: Khronos_Test_Export.RefEqTest
+  - Enabled: 0
+    Name: variable/interpolate
+    Description: 
+    typeFullName: Khronos_Test_Export.VariableInterpolateTest
+  - Enabled: 0
+    Name: variable/set and get
+    Description: Set and Get variable test
+    typeFullName: Khronos_Test_Export.VariableSetGetTest
+  - Enabled: 0
+    Name: variable/setMultiple
+    Description: 
+    typeFullName: Khronos_Test_Export.VariableSetMultipleTest
+  testName: TestName
+  indexFilename: interglb-index
 --- !u!4 &135977184900898654
 Transform:
   m_ObjectHideFlags: 0
@@ -842,6 +982,9 @@ MeshRenderer:
   m_ReflectionProbeUsage: 1
   m_RayTracingMode: 2
   m_RayTraceProcedural: 0
+  m_RayTracingAccelStructBuildFlagsOverride: 0
+  m_RayTracingAccelStructBuildFlags: 1
+  m_SmallMeshCulling: 1
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
@@ -989,6 +1132,9 @@ MeshRenderer:
   m_ReflectionProbeUsage: 1
   m_RayTracingMode: 2
   m_RayTraceProcedural: 0
+  m_RayTracingAccelStructBuildFlagsOverride: 0
+  m_RayTracingAccelStructBuildFlags: 1
+  m_SmallMeshCulling: 1
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
@@ -1075,6 +1221,9 @@ MeshRenderer:
   m_ReflectionProbeUsage: 1
   m_RayTracingMode: 2
   m_RayTraceProcedural: 0
+  m_RayTracingAccelStructBuildFlagsOverride: 0
+  m_RayTracingAccelStructBuildFlags: 1
+  m_SmallMeshCulling: 1
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
@@ -1160,20 +1309,23 @@ MonoBehaviour:
   m_VerticalAlignment: 512
   m_textAlignment: 65535
   m_characterSpacing: 0
+  m_characterHorizontalScale: 1
   m_wordSpacing: 0
   m_lineSpacing: -29.2
   m_lineSpacingMax: 0
   m_paragraphSpacing: 0
   m_charWidthMaxAdj: 0
-  m_enableWordWrapping: 1
+  m_TextWrappingMode: 1
   m_wordWrappingRatios: 0.4
   m_overflowMode: 0
   m_linkedTextComponent: {fileID: 0}
   parentLinkedComponent: {fileID: 0}
   m_enableKerning: 1
+  m_ActiveFontFeatures: 6e72656b
   m_enableExtraPadding: 0
   checkPaddingRequired: 0
   m_isRichText: 1
+  m_EmojiFallbackSupport: 1
   m_parseCtrlCharacters: 1
   m_isOrthographic: 0
   m_isCullingEnabled: 0
@@ -1211,6 +1363,9 @@ MeshRenderer:
   m_ReflectionProbeUsage: 1
   m_RayTracingMode: 2
   m_RayTraceProcedural: 0
+  m_RayTracingAccelStructBuildFlagsOverride: 0
+  m_RayTracingAccelStructBuildFlags: 1
+  m_SmallMeshCulling: 1
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
