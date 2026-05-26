@@ -139,6 +139,11 @@ namespace Khronos_Test_Export
                 approximate = true,
                 operation = () => Mathf.PI,
             },
+            new ZeroArg<Math_TauNode, float>()
+            {
+                approximate = true,
+                operation = () => Mathf.PI * 2f,
+            },
             new ZeroArg<Math_InfNode, float>()
             {
                 operation = () => Mathf.Infinity,
