@@ -1029,7 +1029,39 @@ namespace Khronos_Test_Export
                 isValidTest = true,
                 isValid = false
             },      
-            
+            new ThreeArg<Math_SmoothStep, float, float, float, float>()
+            {
+                a = 0.5f,
+                b = 0.2f,
+                c = 0.7f,
+                approximate = true,
+                operation = (a, b, c) => Mathf.SmoothStep(a, b, c),
+            },
+            new ThreeArg<Math_SmoothStep, Vector2, Vector2, Vector2, Vector2>()
+            {
+                a = new Vector2(0.5f, 0.6f),
+                b = new Vector2(0.2f, 0.3f),
+                c = new Vector2(0.7f, 0.8f),
+                approximate = true,
+                operation = (a, b, c) => new Vector2(Mathf.SmoothStep(a.x, b.x, c.x), Mathf.SmoothStep(a.y, b.y, c.y)), 
+            },
+            new ThreeArg<Math_SmoothStep, Vector3, Vector3, Vector3, Vector3>()
+            {
+                a = new Vector3(0.5f, 0.6f, 0.7f),
+                b = new Vector3(0.2f, 0.3f, 0.4f),
+                c = new Vector3(0.7f, 0.8f, 0.9f),
+                approximate = true,
+                operation = (a, b, c) => new Vector3(Mathf.SmoothStep(a.x, b.x, c.x), Mathf.SmoothStep(a.y, b.y, c.y), Mathf.SmoothStep(a.z, b.z, c.z)), 
+            },
+            new ThreeArg<Math_SmoothStep, Vector4, Vector4, Vector4, Vector4>()
+            {
+                a = new Vector4(0.5f, 0.6f, 0.7f, 0.8f),
+                b = new Vector4(0.2f, 0.3f, 0.4f, 0.5f),
+                c = new Vector4(0.7f, 0.8f, 0.9f, 1f),
+                approximate = true,
+                operation = (a, b, c) => new Vector4(Mathf.SmoothStep(a.x, b.x, c.x), Mathf.SmoothStep(a.y, b.y, c.y), Mathf.SmoothStep(a.z, b.z, c.z), Mathf.SmoothStep(a.w, b.w, c.w)),
+            }
+
         };
         
         protected override void GenerateTestList()
