@@ -863,4 +863,187 @@ namespace Khronos_Test_Export
 
         }
     }
+
+    [TestCreator.IgnoreTestCase]
+    public class Math_RgbToOkLChTest : ITestCase
+    {
+        private CheckBox _blackLCheckBox;
+        private CheckBox _blackCCheckBox;
+        private CheckBox _whiteLCheckBox;
+        private CheckBox _whiteCCheckBox;
+        private CheckBox _redLCheckBox;
+        private CheckBox _redCCheckBox;
+        private CheckBox _redHCheckBox;
+
+        public string GetTestName() => "math/rgbToOkLCh";
+        public string GetTestDescription() => "";
+
+        public void PrepareObjects(TestContext context)
+        {
+            _blackLCheckBox = context.AddCheckBox("Black L=0");
+            _blackCCheckBox = context.AddCheckBox("Black C=0");
+            context.NewRow();
+            _whiteLCheckBox = context.AddCheckBox("White L≈1");
+            _whiteCCheckBox = context.AddCheckBox("White C≈0");
+            context.NewRow();
+            _redLCheckBox = context.AddCheckBox("Red L≈0.628");
+            _redCCheckBox = context.AddCheckBox("Red C≈0.258");
+            _redHCheckBox = context.AddCheckBox("Red H≈0.508");
+        }
+
+        public void CreateNodes(TestContext context)
+        {
+            var nc = context.interactivityExportContext;
+
+            // Black (0, 0, 0) → L=0, C=0, H=0  (exact)
+            var blackNode = nc.CreateNode<Math_RgbToOkLChNode>();
+            blackNode.ValueIn(Math_RgbToOkLChNode.IdInputR).SetValue(0f);
+            blackNode.ValueIn(Math_RgbToOkLChNode.IdInputG).SetValue(0f);
+            blackNode.ValueIn(Math_RgbToOkLChNode.IdInputB).SetValue(0f);
+
+            context.NewEntryPoint("Black");
+            _blackLCheckBox.SetupCheck(blackNode.ValueOut(Math_RgbToOkLChNode.IdOutputL), out var flowBL, 0f, false);
+            context.AddToCurrentEntrySequence(flowBL);
+            _blackCCheckBox.SetupCheck(blackNode.ValueOut(Math_RgbToOkLChNode.IdOutputC), out var flowBC, 0f, false);
+            context.AddToCurrentEntrySequence(flowBC);
+
+            // White (1, 1, 1) → L≈1, C≈0  (achromatic, H undefined when C=0)
+            var whiteNode = nc.CreateNode<Math_RgbToOkLChNode>();
+            whiteNode.ValueIn(Math_RgbToOkLChNode.IdInputR).SetValue(1f);
+            whiteNode.ValueIn(Math_RgbToOkLChNode.IdInputG).SetValue(1f);
+            whiteNode.ValueIn(Math_RgbToOkLChNode.IdInputB).SetValue(1f);
+
+            context.NewEntryPoint("White");
+            _whiteLCheckBox.proximityCheckDistance = 0.001f;
+            _whiteLCheckBox.SetupCheck(whiteNode.ValueOut(Math_RgbToOkLChNode.IdOutputL), out var flowWL, 1f, true);
+            context.AddToCurrentEntrySequence(flowWL);
+            _whiteCCheckBox.proximityCheckDistance = 0.001f;
+            _whiteCCheckBox.SetupCheck(whiteNode.ValueOut(Math_RgbToOkLChNode.IdOutputC), out var flowWC, 0f, true);
+            context.AddToCurrentEntrySequence(flowWC);
+
+            // Red (1, 0, 0) → L≈0.6280, C≈0.2577, H≈0.5082 rad
+            // Reference: Björn Ottosson's Oklab implementation for linear sRGB red
+            var redNode = nc.CreateNode<Math_RgbToOkLChNode>();
+            redNode.ValueIn(Math_RgbToOkLChNode.IdInputR).SetValue(1f);
+            redNode.ValueIn(Math_RgbToOkLChNode.IdInputG).SetValue(0f);
+            redNode.ValueIn(Math_RgbToOkLChNode.IdInputB).SetValue(0f);
+
+            context.NewEntryPoint("Red");
+            _redLCheckBox.proximityCheckDistance = 0.005f;
+            _redLCheckBox.SetupCheck(redNode.ValueOut(Math_RgbToOkLChNode.IdOutputL), out var flowRL, 0.6280f, true);
+            context.AddToCurrentEntrySequence(flowRL);
+            _redCCheckBox.proximityCheckDistance = 0.005f;
+            _redCCheckBox.SetupCheck(redNode.ValueOut(Math_RgbToOkLChNode.IdOutputC), out var flowRC, 0.2577f, true);
+            context.AddToCurrentEntrySequence(flowRC);
+            _redHCheckBox.proximityCheckDistance = 0.005f;
+            _redHCheckBox.SetupCheck(redNode.ValueOut(Math_RgbToOkLChNode.IdOutputH), out var flowRH, 0.5082f, true);
+            context.AddToCurrentEntrySequence(flowRH);
+        }
+    }
+
+    [TestCreator.IgnoreTestCase]
+    public class Math_RgbFromOkLChTest : ITestCase
+    {
+        private CheckBox _redRCheckBox;
+        private CheckBox _redGCheckBox;
+        private CheckBox _redBCheckBox;
+        private CheckBox _blueRCheckBox;
+        private CheckBox _blueGCheckBox;
+        private CheckBox _blueBCheckBox;
+        private CheckBox _roundtripRCheckBox;
+        private CheckBox _roundtripGCheckBox;
+        private CheckBox _roundtripBCheckBox;
+
+        public string GetTestName() => "math/rgbFromOkLCh";
+        public string GetTestDescription() => "";
+
+        public void PrepareObjects(TestContext context)
+        {
+            // Direct test: known OkLCh values for red → expect (R≈1, G≈0, B≈0)
+            _redRCheckBox = context.AddCheckBox("Red R≈1");
+            _redGCheckBox = context.AddCheckBox("Red G≈0");
+            _redBCheckBox = context.AddCheckBox("Red B≈0");
+            context.NewRow();
+            // Direct test: achromatic (L=0.5, C=0, H=0) → expect equal R, G, B
+            _blueRCheckBox = context.AddCheckBox("Achromatic R≈G");
+            _blueGCheckBox = context.AddCheckBox("Achromatic G≈B");
+            _blueBCheckBox = context.AddCheckBox("Achromatic R≈B");
+            context.NewRow();
+            // Roundtrip: RGB → OkLCh → RGB ≈ original RGB
+            _roundtripRCheckBox = context.AddCheckBox("Roundtrip R");
+            _roundtripGCheckBox = context.AddCheckBox("Roundtrip G");
+            _roundtripBCheckBox = context.AddCheckBox("Roundtrip B");
+        }
+
+        public void CreateNodes(TestContext context)
+        {
+            var nc = context.interactivityExportContext;
+
+            // Direct: OkLCh of red → (R≈1, G≈0, B≈0)
+            var fromRedNode = nc.CreateNode<Math_RgbFromOkLChNode>();
+            fromRedNode.ValueIn(Math_RgbFromOkLChNode.IdInputL).SetValue(0.6280f);
+            fromRedNode.ValueIn(Math_RgbFromOkLChNode.IdInputC).SetValue(0.2577f);
+            fromRedNode.ValueIn(Math_RgbFromOkLChNode.IdInputH).SetValue(0.5082f);
+
+            context.NewEntryPoint("Red inverse");
+            _redRCheckBox.proximityCheckDistance = 0.005f;
+            _redRCheckBox.SetupCheck(fromRedNode.ValueOut(Math_RgbFromOkLChNode.IdOutputR), out var flowRR, 1f, true);
+            context.AddToCurrentEntrySequence(flowRR);
+            _redGCheckBox.proximityCheckDistance = 0.005f;
+            _redGCheckBox.SetupCheck(fromRedNode.ValueOut(Math_RgbFromOkLChNode.IdOutputG), out var flowRG, 0f, true);
+            context.AddToCurrentEntrySequence(flowRG);
+            _redBCheckBox.proximityCheckDistance = 0.005f;
+            _redBCheckBox.SetupCheck(fromRedNode.ValueOut(Math_RgbFromOkLChNode.IdOutputB), out var flowRB, 0f, true);
+            context.AddToCurrentEntrySequence(flowRB);
+
+            // Achromatic (L=0.5, C=0, H=0) → R, G, B should all be equal
+            var achNode = nc.CreateNode<Math_RgbFromOkLChNode>();
+            achNode.ValueIn(Math_RgbFromOkLChNode.IdInputL).SetValue(0.5f);
+            achNode.ValueIn(Math_RgbFromOkLChNode.IdInputC).SetValue(0f);
+            achNode.ValueIn(Math_RgbFromOkLChNode.IdInputH).SetValue(0f);
+
+            var diffRG = nc.CreateNode<Math_SubNode>();
+            diffRG.ValueIn(Math_SubNode.IdValueA).ConnectToSource(achNode.ValueOut(Math_RgbFromOkLChNode.IdOutputR));
+            diffRG.ValueIn(Math_SubNode.IdValueB).ConnectToSource(achNode.ValueOut(Math_RgbFromOkLChNode.IdOutputG));
+            var diffGB = nc.CreateNode<Math_SubNode>();
+            diffGB.ValueIn(Math_SubNode.IdValueA).ConnectToSource(achNode.ValueOut(Math_RgbFromOkLChNode.IdOutputG));
+            diffGB.ValueIn(Math_SubNode.IdValueB).ConnectToSource(achNode.ValueOut(Math_RgbFromOkLChNode.IdOutputB));
+            var diffRB = nc.CreateNode<Math_SubNode>();
+            diffRB.ValueIn(Math_SubNode.IdValueA).ConnectToSource(achNode.ValueOut(Math_RgbFromOkLChNode.IdOutputR));
+            diffRB.ValueIn(Math_SubNode.IdValueB).ConnectToSource(achNode.ValueOut(Math_RgbFromOkLChNode.IdOutputB));
+
+            context.NewEntryPoint("Achromatic");
+            _blueRCheckBox.proximityCheckDistance = 0.001f;
+            _blueRCheckBox.SetupCheck(diffRG.FirstValueOut(), out var flowAchRG, 0f, true);
+            context.AddToCurrentEntrySequence(flowAchRG);
+            _blueGCheckBox.proximityCheckDistance = 0.001f;
+            _blueGCheckBox.SetupCheck(diffGB.FirstValueOut(), out var flowAchGB, 0f, true);
+            context.AddToCurrentEntrySequence(flowAchGB);
+            _blueBCheckBox.proximityCheckDistance = 0.001f;
+            _blueBCheckBox.SetupCheck(diffRB.FirstValueOut(), out var flowAchRB, 0f, true);
+            context.AddToCurrentEntrySequence(flowAchRB);
+
+            // Roundtrip: (0.8, 0.3, 0.5) → OkLCh → RGB ≈ original
+            var toOkLCh = nc.CreateNode<Math_RgbToOkLChNode>();
+            toOkLCh.ValueIn(Math_RgbToOkLChNode.IdInputR).SetValue(0.8f);
+            toOkLCh.ValueIn(Math_RgbToOkLChNode.IdInputG).SetValue(0.3f);
+            toOkLCh.ValueIn(Math_RgbToOkLChNode.IdInputB).SetValue(0.5f);
+
+            var fromOkLCh = nc.CreateNode<Math_RgbFromOkLChNode>();
+            fromOkLCh.ValueIn(Math_RgbFromOkLChNode.IdInputL).ConnectToSource(toOkLCh.ValueOut(Math_RgbToOkLChNode.IdOutputL));
+            fromOkLCh.ValueIn(Math_RgbFromOkLChNode.IdInputC).ConnectToSource(toOkLCh.ValueOut(Math_RgbToOkLChNode.IdOutputC));
+            fromOkLCh.ValueIn(Math_RgbFromOkLChNode.IdInputH).ConnectToSource(toOkLCh.ValueOut(Math_RgbToOkLChNode.IdOutputH));
+
+            context.NewEntryPoint("Roundtrip (0.8, 0.3, 0.5)");
+            _roundtripRCheckBox.proximityCheckDistance = 0.001f;
+            _roundtripRCheckBox.SetupCheck(fromOkLCh.ValueOut(Math_RgbFromOkLChNode.IdOutputR), out var flowTR, 0.8f, true);
+            context.AddToCurrentEntrySequence(flowTR);
+            _roundtripGCheckBox.proximityCheckDistance = 0.001f;
+            _roundtripGCheckBox.SetupCheck(fromOkLCh.ValueOut(Math_RgbFromOkLChNode.IdOutputG), out var flowTG, 0.3f, true);
+            context.AddToCurrentEntrySequence(flowTG);
+            _roundtripBCheckBox.proximityCheckDistance = 0.001f;
+            _roundtripBCheckBox.SetupCheck(fromOkLCh.ValueOut(Math_RgbFromOkLChNode.IdOutputB), out var flowTB, 0.5f, true);
+            context.AddToCurrentEntrySequence(flowTB);
+        }
+    }
 }
