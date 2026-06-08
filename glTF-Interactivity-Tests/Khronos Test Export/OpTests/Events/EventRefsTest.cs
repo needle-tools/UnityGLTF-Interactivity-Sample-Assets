@@ -17,7 +17,7 @@ namespace Khronos_Test_Export
 
         public string GetTestName()
         {
-            return "event refs";
+            return "event/refs";
         }
 
         public string GetTestDescription()
