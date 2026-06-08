@@ -271,6 +271,7 @@ namespace Khronos_Test_Export
         public void ExportTest(ITestCase[] cases, bool batchExport, string allInOneName, string indexFileName)
         {
             var settings = GLTFSettings.GetDefaultSettings();
+            settings.UseCaching = false;
             var testFileExporterPLugin = settings.ExportPlugins.FirstOrDefault(ep => ep is TestFileExporterPlugin);
             if (testFileExporterPLugin == null)
             {
