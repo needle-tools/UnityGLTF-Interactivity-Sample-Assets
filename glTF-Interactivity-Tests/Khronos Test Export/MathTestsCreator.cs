@@ -337,6 +337,28 @@ namespace Khronos_Test_Export
                 c = 2f,
                 operation = (a, b, c) => Mathf.LerpUnclamped(a, b, c),
             },
+            new ThreeArg<Math_SlerpNode, Vector2, Vector2, float, Vector2>()
+            {
+                autoCreateTestsForAllSupportedInputs = false,
+                a = new Vector2(2,5),
+                b = new Vector2(4,6),
+                c = 0.5f,
+                approximate = true, 
+                operation = (a, b, c) =>
+                {
+                    var r = Vector3.Slerp(new Vector3(a.x, a.y, 0), new Vector3(b.x, b.y, 0), c);
+                    return new Vector2(r.x, r.y);
+                }
+            },
+            new ThreeArg<Math_SlerpNode, Vector3, Vector3, float, Vector3>()
+            {
+                autoCreateTestsForAllSupportedInputs = false,
+                a = new Vector3(2,5,7),
+                b = new Vector3(4,6,8),
+                c = 0.5f,
+                approximate = true, 
+                operation = (a, b, c) => Vector3.Slerp(a, b, c)
+            },
             // Comparison Nodes
             new TwoArg<Math_EqNode, float, bool>()
             {
