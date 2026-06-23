@@ -551,7 +551,15 @@ namespace Khronos_Test_Export
         private CheckBox _invalidRotateCheckBox;
         private CheckBox _invalidScaleCheckBox;
         private CheckBox _invalidIsValidCheckBox;
-        
+
+        private CheckBox _ignoredRowTranslateCheckBox;
+        private CheckBox _ignoredRowRotateCheckBox;
+        private CheckBox _ignoredRowScaleCheckBox;
+        private CheckBox _ignoredRowIsValidCheckBox;
+
+        private CheckBox _zeroScaleTranslateCheckBox;
+        private CheckBox _zeroScaleScaleCheckBox;
+
 
         public string GetTestName()
         {
@@ -575,6 +583,17 @@ namespace Khronos_Test_Export
             _invalidRotateCheckBox = context.AddCheckBox("invalid, Rotate");
             _invalidScaleCheckBox = context.AddCheckBox("invalid, Scale");
             _invalidIsValidCheckBox = context.AddCheckBox("invalid. isValid");
+            context.NewRow();
+
+            _ignoredRowTranslateCheckBox = context.AddCheckBox("ignored row, Translate");
+            _ignoredRowRotateCheckBox = context.AddCheckBox("ignored row, Rotate");
+            _ignoredRowScaleCheckBox = context.AddCheckBox("ignored row, Scale");
+            _ignoredRowIsValidCheckBox = context.AddCheckBox("ignored row, isValid");
+            context.NewRow();
+
+            _zeroScaleTranslateCheckBox = context.AddCheckBox("0 scale, Translate");
+            _zeroScaleScaleCheckBox = context.AddCheckBox("0 scale, Scale");
+
         }
 
         public void CreateNodes(TestContext context)
@@ -634,6 +653,60 @@ namespace Khronos_Test_Export
             context.AddToCurrentEntrySequence(invalidFlowScale);
             _invalidIsValidCheckBox.SetupCheck(invalidMatDecomposeNode.ValueOut(Math_MatDecomposeNode.IdOutputIsValid), out var invalidFlowValid, false, false);
             context.AddToCurrentEntrySequence(invalidFlowValid);
+
+            //Ignored last row test
+            //The spec explicitly states that the last row of the input matrix is ignored completely.
+            //A valid TRS matrix with arbitrary garbage in the last row must still decompose correctly.
+
+            translate = new Vector3(1f, 2f, 3f);
+            rotate = Quaternion.Euler(30f, 45f, 60f);
+            scale = new Vector3(2f, 2f, 2f);
+
+            var ignoredRowMatrix = Matrix4x4.TRS(translate, rotate, scale);
+            ignoredRowMatrix.m30 = 5f;
+            ignoredRowMatrix.m31 = 6f;
+            ignoredRowMatrix.m32 = 7f;
+            ignoredRowMatrix.m33 = 8f;
+
+            var ignoredRowMatDecomposeNode = nodeCreator.CreateNode<Math_MatDecomposeNode>();
+            ignoredRowMatDecomposeNode.ValueIn(Math_MatDecomposeNode.IdInput).SetValue(ignoredRowMatrix);
+
+            context.NewEntryPoint("matDecompose - ignored last row");
+
+            _ignoredRowTranslateCheckBox.proximityCheckDistance = 0.001f;
+            _ignoredRowRotateCheckBox.proximityCheckDistance = 0.001f;
+            _ignoredRowScaleCheckBox.proximityCheckDistance = 0.001f;
+
+            _ignoredRowTranslateCheckBox.SetupCheck(ignoredRowMatDecomposeNode.ValueOut(Math_MatDecomposeNode.IdOutputTranslation), out var ignoredRowFlowTranslate, translate, true);
+            context.AddToCurrentEntrySequence(ignoredRowFlowTranslate);
+            _ignoredRowRotateCheckBox.SetupCheck(ignoredRowMatDecomposeNode.ValueOut(Math_MatDecomposeNode.IdOutputRotation), out var ignoredRowFlowRotate, rotate, true);
+            context.AddToCurrentEntrySequence(ignoredRowFlowRotate);
+            _ignoredRowScaleCheckBox.SetupCheck(ignoredRowMatDecomposeNode.ValueOut(Math_MatDecomposeNode.IdOutputScale), out var ignoredRowFlowScale, scale, true);
+            context.AddToCurrentEntrySequence(ignoredRowFlowScale);
+            _ignoredRowIsValidCheckBox.SetupCheck(ignoredRowMatDecomposeNode.ValueOut(Math_MatDecomposeNode.IdOutputIsValid), out var ignoredRowFlowValid, true, false);
+            context.AddToCurrentEntrySequence(ignoredRowFlowValid);
+
+            //Zero scale test
+            //The spec states that a 0 scale must still preserve the translation of the matrix.
+
+            translate = new Vector3(1f, 2f, 3f);
+            rotate = Quaternion.Euler(30f, 45f, 60f);
+            scale = Vector3.zero;
+
+            var zeroScaleMatrix = Matrix4x4.TRS(translate, rotate, scale);
+
+            var zeroScaleMatDecomposeNode = nodeCreator.CreateNode<Math_MatDecomposeNode>();
+            zeroScaleMatDecomposeNode.ValueIn(Math_MatDecomposeNode.IdInput).SetValue(zeroScaleMatrix);
+
+            context.NewEntryPoint("matDecompose - 0 scale preserves translation");
+
+            _zeroScaleTranslateCheckBox.proximityCheckDistance = 0.001f;
+            _zeroScaleScaleCheckBox.proximityCheckDistance = 0.001f;
+
+            _zeroScaleTranslateCheckBox.SetupCheck(zeroScaleMatDecomposeNode.ValueOut(Math_MatDecomposeNode.IdOutputTranslation), out var zeroScaleFlowTranslate, translate, true);
+            context.AddToCurrentEntrySequence(zeroScaleFlowTranslate);
+            _zeroScaleScaleCheckBox.SetupCheck(zeroScaleMatDecomposeNode.ValueOut(Math_MatDecomposeNode.IdOutputScale), out var zeroScaleFlowScale, Vector3.zero, true);
+            context.AddToCurrentEntrySequence(zeroScaleFlowScale);
         }
     }
 
