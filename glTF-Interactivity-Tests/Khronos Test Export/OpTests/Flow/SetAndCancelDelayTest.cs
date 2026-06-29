@@ -13,6 +13,7 @@ namespace Khronos_Test_Export
         private CheckBox _setDelayCancelCheckBox;
         private CheckBox _cancelCheckBox;
         private CheckBox _cancelOutFlowCheckBox;
+        private CheckBox _delayRefCheckBox;
         
         public string GetTestName()
         {
@@ -36,6 +37,7 @@ namespace Khronos_Test_Export
             _cancelCheckBox = context.AddCheckBox("cancelDelay triggered", true);
             _cancelCheckBox.Negate();
             _cancelOutFlowCheckBox = context.AddCheckBox("cancelDelay \nFlow [out]");
+            _delayRefCheckBox      = context.AddCheckBox("lastDelay\nref isValid", true);
         }
 
         public void CreateNodes(TestContext context)
@@ -103,8 +105,20 @@ namespace Khronos_Test_Export
             delayNode2.ValueIn(Flow_SetDelayNode.IdDuration).SetValue(-1f);
             context.AddToCurrentEntrySequence(delayNode2.FlowIn());
             _flowErrCheckBox.SetupCheck(delayNode2.FlowOut(Flow_SetDelayNode.IdFlowOutError));
-            
 
+            // Delay Ref valid check via pointer/get (IdPointerTemplDelayByRef, spec §4.2.4)
+            context.NewEntryPoint("Delay Ref", 0.5f);
+            var setDelayRef = nodeCreator.CreateNode<Flow_SetDelayNode>();
+            setDelayRef.ValueIn(Flow_SetDelayNode.IdDuration).SetValue(2f);
+            context.AddToCurrentEntrySequence(setDelayRef.FlowIn(Flow_SetDelayNode.IdFlowIn));
+
+            var pGetDelay = nodeCreator.CreateNode<Pointer_GetNode>();
+            PointersHelper.AddPointerConfig(pGetDelay, PointersHelper.IdPointerTemplDelayByRef, GltfTypes.Ref);
+            pGetDelay.ValueIn(PointersHelper.IdPointerDelayRef).ConnectToSource(setDelayRef.ValueOut(Flow_SetDelayNode.IdOutLastDelay));
+
+            // isValid is true while the delay is still scheduled (checked immediately after setDelay.out)
+            _delayRefCheckBox.SetupCheck(pGetDelay.ValueOut(Pointer_GetNode.IdIsValid), out var delayRefCheckFlow, true);
+            setDelayRef.FlowOut(Flow_SetDelayNode.IdFlowOut).ConnectToFlowDestination(delayRefCheckFlow);
         }
     }
 }

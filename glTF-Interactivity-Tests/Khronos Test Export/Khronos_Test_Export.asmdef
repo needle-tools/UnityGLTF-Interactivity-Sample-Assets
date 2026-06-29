@@ -9,7 +9,9 @@
         "GUID:d58a4b8a1f92baa4f8100941944470f7",
         "GUID:40f39bff7bc9be34182ebe488fcf8228",
         "GUID:ea715009a4efd4c6cbc85be3ae097dd3",
-        "GUID:9e01efaa56ea4c94db37ab745cb8dae8"
+        "GUID:9e01efaa56ea4c94db37ab745cb8dae8",
+        "UnityGLTF.Interactivity.VisualScripting.Runtime",
+        "UnityGLTFEditor"
     ],
     "includePlatforms": [],
     "excludePlatforms": [

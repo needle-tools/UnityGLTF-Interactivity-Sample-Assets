@@ -1,4 +1,6 @@
 ﻿using System;
+using UnityGLTF.Interactivity;
+using UnityGLTF.Interactivity.Export;
 using UnityGLTF.Interactivity.Schema;
 
 namespace Khronos_Test_Export
@@ -14,10 +16,13 @@ namespace Khronos_Test_Export
         private CheckBox _receiveRefCheckBox;
         private CheckBox _onStartSameRefCheckBox;
         private CheckBox _onTickSameRefCheckBox;
+        private CheckBox _eventPointerRefCheckBox;
+        private CheckBox _onTickPointerRefCheckBox;
+        private CheckBox _receivePointerRefCheckBox;
 
         public string GetTestName()
         {
-            return "event/refs";
+            return "event/Event Refs";
         }
 
         public string GetTestDescription()
@@ -32,6 +37,9 @@ namespace Khronos_Test_Export
             _receiveRefCheckBox = context.AddCheckBox("event/receive\nref not null", true);
             _onStartSameRefCheckBox = context.AddCheckBox("event/onStart\ntwo nodes same ref", true);
             _onTickSameRefCheckBox  = context.AddCheckBox("event/onTick\ntwo nodes same ref", true, flowOnce: true);
+            _eventPointerRefCheckBox  = context.AddCheckBox("event/onStart\npointer/get isValid", true);
+            _onTickPointerRefCheckBox  = context.AddCheckBox("event/onTick\npointer/get isValid", true, flowOnce: true);
+            _receivePointerRefCheckBox = context.AddCheckBox("event/receive\npointer/get isValid", true);
         }
 
         public void CreateNodes(TestContext context)
@@ -113,6 +121,52 @@ namespace Khronos_Test_Export
             // Both onTick nodes must share the same event ref per tick → expect true
             _onTickSameRefCheckBox.SetupCheck(refEqOnTickSame.ValueOut(Ref_EqNode.IdOutValue), out var onTickSameCheckFlow, true);
             onTickNodeA.FlowOut(Event_OnTickNode.IdFlowOut).ConnectToFlowDestination(onTickSameCheckFlow);
+
+            // ── Test 6: event ref validated via pointer/get (IdPointerTemplEventByRef) ──
+            // Per spec §4.2.5: pointer/get with the event ref pointer sets isValid=true for any ref produced by an event operation.
+            context.NewEntryPoint("event ref pointer/get", 0.5f);
+
+            var onStartForRef = nodeCreator.CreateNode<Event_OnStartNode>();
+
+            var pGetEvent = nodeCreator.CreateNode<Pointer_GetNode>();
+            PointersHelper.AddPointerConfig(pGetEvent, PointersHelper.IdPointerTemplEventByRef, GltfTypes.Ref);
+            pGetEvent.ValueIn(PointersHelper.IdPointerEventRef).ConnectToSource(onStartForRef.ValueOut(Event_OnStartNode.IdEvent));
+
+            // isValid must be true: the ref came from an event/onStart node, so it is an event reference
+            _eventPointerRefCheckBox.SetupCheck(pGetEvent.ValueOut(Pointer_GetNode.IdIsValid), out var eventPointerCheckFlow, true);
+            onStartForRef.FlowOut(Event_OnStartNode.IdFlowOut).ConnectToFlowDestination(eventPointerCheckFlow);
+
+            // ── Test 7: event/onTick ref validated via pointer/get ─────────────────
+            context.NewEntryPoint("onTick ref pointer/get", 1f);
+
+            var onTickForRef = nodeCreator.CreateNode<Event_OnTickNode>();
+
+            var pGetOnTick = nodeCreator.CreateNode<Pointer_GetNode>();
+            PointersHelper.AddPointerConfig(pGetOnTick, PointersHelper.IdPointerTemplEventByRef, GltfTypes.Ref);
+            pGetOnTick.ValueIn(PointersHelper.IdPointerEventRef).ConnectToSource(onTickForRef.ValueOut(Event_OnTickNode.IdEvent));
+
+            _onTickPointerRefCheckBox.SetupCheck(pGetOnTick.ValueOut(Pointer_GetNode.IdIsValid), out var onTickPointerCheckFlow, true);
+            onTickForRef.FlowOut(Event_OnTickNode.IdFlowOut).ConnectToFlowDestination(onTickPointerCheckFlow);
+
+            // ── Test 8: event/receive ref validated via pointer/get ────────────────
+            var receivePointerEventId = nodeCreator.Context.AddEventWithIdIfNeeded(
+                "_eventRefsTest_receive_" + Guid.NewGuid());
+
+            var sendForReceivePointer = nodeCreator.CreateNode<Event_SendNode>();
+            sendForReceivePointer.Configuration[Event_SendNode.IdEvent].Value = receivePointerEventId;
+
+            context.NewEntryPoint("receive ref pointer/get", 1f);
+            context.AddToCurrentEntrySequence(sendForReceivePointer.FlowIn());
+
+            var receiveForPointer = nodeCreator.CreateNode<Event_ReceiveNode>();
+            receiveForPointer.Configuration[Event_ReceiveNode.IdEventConfig].Value = receivePointerEventId;
+
+            var pGetReceive = nodeCreator.CreateNode<Pointer_GetNode>();
+            PointersHelper.AddPointerConfig(pGetReceive, PointersHelper.IdPointerTemplEventByRef, GltfTypes.Ref);
+            pGetReceive.ValueIn(PointersHelper.IdPointerEventRef).ConnectToSource(receiveForPointer.ValueOut(Event_ReceiveNode.IdEventOut));
+
+            _receivePointerRefCheckBox.SetupCheck(pGetReceive.ValueOut(Pointer_GetNode.IdIsValid), out var receivePointerCheckFlow, true);
+            receiveForPointer.FlowOut(Event_ReceiveNode.IdFlowOut).ConnectToFlowDestination(receivePointerCheckFlow);
         }
     }
 }
