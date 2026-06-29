@@ -28,10 +28,10 @@ namespace Khronos_Test_Export
         public void PrepareObjects(TestContext context)
         {
             _onStartRefCheckBox = context.AddCheckBox("event/onStart\nref not null", true);
-            _onTickRefCheckBox  = context.AddCheckBox("event/onTick\nref not null", true);
+            _onTickRefCheckBox  = context.AddCheckBox("event/onTick\nref not null", true, flowOnce: true);
             _receiveRefCheckBox = context.AddCheckBox("event/receive\nref not null", true);
             _onStartSameRefCheckBox = context.AddCheckBox("event/onStart\ntwo nodes same ref", true);
-            _onTickSameRefCheckBox  = context.AddCheckBox("event/onTick\ntwo nodes same ref", true);
+            _onTickSameRefCheckBox  = context.AddCheckBox("event/onTick\ntwo nodes same ref", true, flowOnce: true);
         }
 
         public void CreateNodes(TestContext context)

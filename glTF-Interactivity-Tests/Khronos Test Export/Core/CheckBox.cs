@@ -33,6 +33,7 @@ namespace Khronos_Test_Export
         private bool isWaiting = false;
         public TestContext context;
         private bool proximityCheck = false;
+        public bool flowOnce = false;
 
         private string resultVarName = null;
         private string resultPassVarName = null;
@@ -303,6 +304,24 @@ namespace Khronos_Test_Export
             }
         }
         
+        private void CreateFlowOnceGate(out FlowInRef gateIn, out FlowOutRef gateOut)
+        {
+            var varId = context.interactivityExportContext.Context.AddVariableWithIdIfNeeded(
+                "FlowOnce_" + System.Guid.NewGuid(), false, typeof(bool));
+
+            VariablesHelpers.GetVariable(context.interactivityExportContext, varId, out var varRef);
+
+            var branchNode = context.interactivityExportContext.CreateNode<Flow_BranchNode>();
+            branchNode.ValueIn(Flow_BranchNode.IdCondition).ConnectToSource(varRef);
+
+            // false branch: not yet triggered → mark done, then continue
+            VariablesHelpers.SetVariableStaticValue(context.interactivityExportContext, varId, true, out var setFlowIn, out var setFlowOut);
+            branchNode.FlowOut(Flow_BranchNode.IdFlowOutFalse).ConnectToFlowDestination(setFlowIn);
+
+            gateIn = branchNode.FlowIn(Flow_BranchNode.IdFlowIn);
+            gateOut = setFlowOut;
+        }
+
         public void SetupMultiFlowCheck(int count, out FlowInRef[] flows, string[] flowNames = null)
         {
             flows = new FlowInRef[count];
@@ -468,6 +487,13 @@ namespace Khronos_Test_Export
                 context.AddLog("ERROR! "+logText+ ": Flow not triggered! This should not happened!", out var logFlowInFallback, out var _);
                 return logFlowInFallback;
             });
+
+            if (flowOnce)
+            {
+                CreateFlowOnceGate(out var gateIn, out var gateOut);
+                gateOut.ConnectToFlowDestination(flow);
+                flow = gateIn;
+            }
         }
 
         public void SetupCheck(FlowOutRef flow)
@@ -485,12 +511,19 @@ namespace Khronos_Test_Export
             context.AddLog("ERROR! "+logText+ ": Flow triggered! This should not happened!", out var logFlowIn, out var logFlowOut);
             flowOutSetValid.ConnectToFlowDestination(logFlowIn);
             SaveResult(logFlowOut);
-            
+
             PostCheck(() =>
             {
                 context.AddLog(logText+ ": Test Successful", out var logSuccessFlowIn, out _);
                 return logSuccessFlowIn;
             });
+
+            if (flowOnce)
+            {
+                CreateFlowOnceGate(out var gateIn, out var gateOut);
+                gateOut.ConnectToFlowDestination(flow);
+                flow = gateIn;
+            }
         }
 
         public void SetupNegateCheck(FlowOutRef flow)
@@ -722,6 +755,13 @@ namespace Khronos_Test_Export
                 context.AddLog("ERROR! "+logText+ ": Test Failed", out var logFailedFlowIn, out _);
                 return logFailedFlowIn;
             });
+
+            if (flowOnce)
+            {
+                CreateFlowOnceGate(out var gateIn, out var gateOut);
+                gateOut.ConnectToFlowDestination(flow);
+                flow = gateIn;
+            }
         }
 
         public void SetupCheck(ValueOutRef inputValue, out FlowInRef flow, object valueToCompare,

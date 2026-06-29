@@ -354,7 +354,7 @@ namespace Khronos_Test_Export
             return newCase;
         }
 
-        public CheckBox AddCheckBox(string name, bool asWaiting = false)
+        public CheckBox AddCheckBox(string name, bool asWaiting = false, bool flowOnce = false)
         {
             var newCheckBox = GameObject.Instantiate(_checkBoxPrefab, _root);
             newCheckBox.transform.localPosition = _layout.ReserveSpace(newCheckBox.CheckBoxSize);
@@ -363,6 +363,7 @@ namespace Khronos_Test_Export
             newCheckBox.SetText(name);
             newCheckBox.SetCase(currentCase);
             newCheckBox.context = this;
+            newCheckBox.flowOnce = flowOnce;
             currentCase.checkBoxes.Add(newCheckBox);
             if (asWaiting)
                 newCheckBox.Waiting();
