@@ -284,6 +284,9 @@ namespace Khronos_Test_Export
             settings.ExportPlugins.FirstOrDefault(ep => ep is VisualScriptingExportPlugin).Enabled = false;
 
 
+            int totalTestCount = cases.Length;
+            int totalSubTestCount = 0;
+            
             var exportContext = new ExportContext(settings);
 
             var path = EditorPrefs.GetString("GLTFTestExportPath", "");
@@ -309,6 +312,9 @@ namespace Khronos_Test_Export
                         var newCase = currentTestContext.NewTestCase(testCase.GetTestName());
                         testCase.PrepareObjects(currentTestContext);
                         _testCase.Add(testCase, newCase);
+
+                        totalSubTestCount += _testCase[testCase].checkBoxes.Count;
+                        
                         System.IO.Directory.CreateDirectory(
                             System.IO.Path.GetDirectoryName(System.IO.Path.Combine(path, testCase.GetTestName())));
 
@@ -350,6 +356,9 @@ namespace Khronos_Test_Export
                 }
                 string fullIndexFilePath = Path.Combine(path, indexFileName + ".json");
                 CreateIndexJsonFile(fullIndexFilePath, tests);
+                
+                Debug.Log("Batch exported " + totalTestCount + " test cases with a total of " + totalSubTestCount + " sub-tests to: " + path);
+
             }
             else
             {
@@ -361,11 +370,14 @@ namespace Khronos_Test_Export
                     currentTestCases = cases;
                     foreach (var testCase in cases)
                     {
+
                         var newCase = currentTestContext.NewTestCase(testCase.GetTestName());
                         testCase.PrepareObjects(currentTestContext);
                         _testCase.Add(testCase, newCase);
 
                         currentTestContext.NewRow();
+                        
+                        totalSubTestCount += _testCase[testCase].checkBoxes.Count;
                     }
 
                     string glbFileName = allInOneName + ".glb";
@@ -376,6 +388,7 @@ namespace Khronos_Test_Export
                     // }
 
                     CreateTestCaseJsonFile(allInOneName, cases, System.IO.Path.Combine(path, allInOneName+".json"), glbFileName);
+
                 }
                 finally
                 {
@@ -383,6 +396,7 @@ namespace Khronos_Test_Export
                         testCase.Dispose();
                     currentTestContext.Dispose();
                 }
+                Debug.Log("Single File exported " + totalTestCount + " test cases with a total of " + totalSubTestCount + " sub-tests to: " + path);
             }
         }
 
