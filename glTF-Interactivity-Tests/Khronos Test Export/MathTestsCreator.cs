@@ -220,6 +220,17 @@ namespace Khronos_Test_Export
                 a = -8923448.234f,
                 operation = (a) => -a,
             },
+            // math/round - non-half values chosen so the tie-breaking rule is irrelevant
+            new OneArg<Math_RoundNode, float, float>()
+            {
+                a = 2.7f,
+                operation = (a) => Mathf.Round(a),
+            },
+            new OneArg<Math_RoundNode, float, float>()
+            {
+                a = -3.4f,
+                operation = (a) => Mathf.Round(a),
+            },
             // Arithmetic with two inputs
             new TwoArg<Math_AddNode, float, float>()
             {
@@ -356,8 +367,61 @@ namespace Khronos_Test_Export
                 a = new Vector3(2,5,7),
                 b = new Vector3(4,6,8),
                 c = 0.5f,
-                approximate = true, 
+                approximate = true,
                 operation = (a, b, c) => Vector3.Slerp(a, b, c)
+            },
+            // math/cross (float3 only)
+            new TwoArg<Math_CrossNode, Vector3, Vector3>()
+            {
+                autoCreateTestsForAllSupportedInputs = false,
+                a = new Vector3(1, 0, 0),
+                b = new Vector3(0, 1, 0),
+                approximate = true,
+                operation = (a, b) => Vector3.Cross(a, b),
+            },
+            new TwoArg<Math_CrossNode, Vector3, Vector3>()
+            {
+                autoCreateTestsForAllSupportedInputs = false,
+                a = new Vector3(2, 3, 4),
+                b = new Vector3(5, 6, 7),
+                approximate = true,
+                operation = (a, b) => Vector3.Cross(a, b),
+            },
+            // parallel vectors -> zero
+            new TwoArg<Math_CrossNode, Vector3, Vector3>()
+            {
+                autoCreateTestsForAllSupportedInputs = false,
+                a = new Vector3(2, 4, 6),
+                b = new Vector3(1, 2, 3),
+                operation = (a, b) => Vector3.Cross(a, b),
+            },
+            // math/quatSlerp (shortest-path spherical interpolation between two quaternions)
+            new ThreeArg<Math_QuatSlerpNode, Quaternion, Quaternion, float, Quaternion>()
+            {
+                autoCreateTestsForAllSupportedInputs = false,
+                a = Quaternion.identity,
+                b = Quaternion.Euler(0, 90f, 0),
+                c = 0.5f,
+                approximate = true,
+                operation = (a, b, c) => Quaternion.Slerp(a, b, c),
+            },
+            new ThreeArg<Math_QuatSlerpNode, Quaternion, Quaternion, float, Quaternion>()
+            {
+                autoCreateTestsForAllSupportedInputs = false,
+                a = Quaternion.identity,
+                b = Quaternion.Euler(0, 90f, 0),
+                c = 0f,
+                approximate = true,
+                operation = (a, b, c) => Quaternion.Slerp(a, b, c),
+            },
+            new ThreeArg<Math_QuatSlerpNode, Quaternion, Quaternion, float, Quaternion>()
+            {
+                autoCreateTestsForAllSupportedInputs = false,
+                a = Quaternion.identity,
+                b = Quaternion.Euler(0, 90f, 0),
+                c = 1f,
+                approximate = true,
+                operation = (a, b, c) => Quaternion.Slerp(a, b, c),
             },
             // Comparison Nodes
             new TwoArg<Math_EqNode, float, bool>()
