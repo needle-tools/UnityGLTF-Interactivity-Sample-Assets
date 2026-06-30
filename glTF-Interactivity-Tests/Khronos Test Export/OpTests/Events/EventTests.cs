@@ -57,7 +57,7 @@ namespace Khronos_Test_Export
             paremeters.Add("intParameter", new GltfInteractivityNode.EventValues
             {
                 Type = GltfTypes.TypeIndexByGltfSignature(GltfTypes.Int),
-                Value = 1f
+                Value = 1
             });
             
             var eventWithParameters =
