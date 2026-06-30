@@ -70,6 +70,7 @@ namespace Khronos_Test_Export
             _createdObjects.Add(meshWithMorph);
             meshWithMorph.transform.parent = context.Root;
             meshWithMorph.transform.localScale = Vector3.one * 0.00001f;
+            meshWithMorph = meshWithMorph.GetComponentInChildren<SkinnedMeshRenderer>().gameObject;
 
             
             meshWithMorphNonStatic = GameObject.Instantiate(AssetDatabase.LoadAssetAtPath<GameObject>(AssetDatabase.GUIDToAssetPath(MeshWithMorphGUID)));
@@ -81,6 +82,7 @@ namespace Khronos_Test_Export
             smr.SetBlendShapeWeight(0, 0.5f);
             meshWithMorphNonStatic.transform.parent = context.Root;
             meshWithMorphNonStatic.transform.localScale = Vector3.one * 0.00001f;
+            meshWithMorphNonStatic = smr.gameObject;
 
             
             meshWithMorph_MeshAndNodeWeights = GameObject.Instantiate(AssetDatabase.LoadAssetAtPath<GameObject>(AssetDatabase.GUIDToAssetPath(MeshWithMorphGUID)));
@@ -89,8 +91,8 @@ namespace Khronos_Test_Export
             meshWithMorph_MeshAndNodeWeights.transform.parent = context.Root;
             meshWithMorph_MeshAndNodeWeights.transform.localScale = Vector3.one * 0.00001f;
             meshWithMorph_MeshAndNodeWeights.GetComponentInChildren<SkinnedMeshRenderer>().SetBlendShapeWeight(0, 0.6f);
+            meshWithMorph_MeshAndNodeWeights = meshWithMorph_MeshAndNodeWeights.GetComponentInChildren<SkinnedMeshRenderer>().gameObject;
 
-            
             
             nodeWithoutMesh = new GameObject("Node without a Mesh");
             nodeWithoutMesh.transform.parent = context.Root;
@@ -130,8 +132,13 @@ namespace Khronos_Test_Export
 
         public void CreateNodes(TestContext context)
         {
+            // Removing Weights from the Mesh itself, and forcing the Weights to the Node 
             var withOutStaticMeshID = context.interactivityExportContext.Context.exporter.GetMeshId(withoutStaticWeightsMesh);
+            var nonStaticMeshNodeIndex = context.interactivityExportContext.Context.exporter.GetTransformIndex(meshWithMorphNonStatic.transform);
+            var nonStaticMeshNode = context.interactivityExportContext.Context.exporter.GetRoot().Nodes[nonStaticMeshNodeIndex];
+            nonStaticMeshNode.Weights = withOutStaticMeshID.Value.Weights; 
             withOutStaticMeshID.Value.Weights = null;
+            
             
             var nodeCreator = context.interactivityExportContext;
 
