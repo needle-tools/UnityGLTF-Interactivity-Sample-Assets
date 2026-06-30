@@ -32,14 +32,14 @@ namespace Khronos_Test_Export
 
         public void PrepareObjects(TestContext context)
         {
-            _onStartRefCheckBox = context.AddCheckBox("event/onStart\nref not null", true);
-            _onTickRefCheckBox  = context.AddCheckBox("event/onTick\nref not null", true, flowOnce: true);
-            _receiveRefCheckBox = context.AddCheckBox("event/receive\nref not null", true);
-            _onStartSameRefCheckBox = context.AddCheckBox("event/onStart\ntwo nodes same ref", true);
-            _onTickSameRefCheckBox  = context.AddCheckBox("event/onTick\ntwo nodes same ref", true, flowOnce: true);
-            _eventPointerRefCheckBox  = context.AddCheckBox("event/onStart\npointer/get isValid", true);
-            _onTickPointerRefCheckBox  = context.AddCheckBox("event/onTick\npointer/get isValid", true, flowOnce: true);
-            _receivePointerRefCheckBox = context.AddCheckBox("event/receive\npointer/get isValid", true);
+            _onStartRefCheckBox = context.AddCheckBox("event/onStart\n ref not null", true);
+            _onTickRefCheckBox  = context.AddCheckBox("event/onTick\n ref not null", true, flowOnce: true);
+            _receiveRefCheckBox = context.AddCheckBox("event/receive\n ref not null", true);
+            _onStartSameRefCheckBox = context.AddCheckBox("event/onStart\n two nodes same ref", true);
+            _onTickSameRefCheckBox  = context.AddCheckBox("event/onTick\nt wo nodes same ref", true, flowOnce: true);
+            _eventPointerRefCheckBox  = context.AddCheckBox("event/onStart\n pointer/get isValid", true);
+            _onTickPointerRefCheckBox  = context.AddCheckBox("event/onTick\n pointer/get isValid", true, flowOnce: true);
+            _receivePointerRefCheckBox = context.AddCheckBox("event/receive\n pointer/get isValid", true);
         }
 
         public void CreateNodes(TestContext context)
