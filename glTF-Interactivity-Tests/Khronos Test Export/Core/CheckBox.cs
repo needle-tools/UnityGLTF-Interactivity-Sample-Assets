@@ -715,6 +715,12 @@ namespace Khronos_Test_Export
                     inputValue = isNaNNode.ValueIn(Math_IsNaNNode.IdValueA);
                     eqNode = isNaNNode;
                 }
+                else if (GltfTypes.GetTypeMapping(valueToCompare.GetType())?.GltfSignature == GltfTypes.Ref )
+                {
+                    eqNode = context.interactivityExportContext.CreateNode<Ref_EqNode>();
+                    inputValue = eqNode.ValueIn(Ref_EqNode.IdValueA);
+                    eqNode.ValueIn(Ref_EqNode.IdValueB).SetType(TypeRestriction.LimitToType(compareValueType)).SetValue(valueToCompare);
+                }
                 else
                 {
                     eqNode = context.interactivityExportContext.CreateNode<Math_EqNode>();
