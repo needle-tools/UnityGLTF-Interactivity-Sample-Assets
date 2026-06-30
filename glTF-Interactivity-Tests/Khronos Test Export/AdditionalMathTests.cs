@@ -705,7 +705,7 @@ namespace Khronos_Test_Export
 
             _zeroScaleTranslateCheckBox.SetupCheck(zeroScaleMatDecomposeNode.ValueOut(Math_MatDecomposeNode.IdOutputTranslation), out var zeroScaleFlowTranslate, translate, true);
             context.AddToCurrentEntrySequence(zeroScaleFlowTranslate);
-            _zeroScaleScaleCheckBox.SetupCheck(zeroScaleMatDecomposeNode.ValueOut(Math_MatDecomposeNode.IdOutputScale), out var zeroScaleFlowScale, Vector3.zero, true);
+            _zeroScaleScaleCheckBox.SetupCheck(zeroScaleMatDecomposeNode.ValueOut(Math_MatDecomposeNode.IdOutputScale), out var zeroScaleFlowScale, Vector3.zero, false);
             context.AddToCurrentEntrySequence(zeroScaleFlowScale);
         }
     }
