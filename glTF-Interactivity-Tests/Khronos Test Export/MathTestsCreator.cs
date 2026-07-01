@@ -1270,41 +1270,53 @@ namespace Khronos_Test_Export
                 isValidTest = true,
                 isValid = false
             },      
+            // math/smoothStep(a, b, c): a and b are the two edges, c is the sample point.
+            // Spec: t = saturate((c - min(a, b)) / |b - a|); result = t * t * (3 - 2t)  (GLSL smoothstep).
+            // NOTE: this is NOT Unity's Mathf.SmoothStep (which interpolates between a and b using c as
+            // the 0..1 blend factor). Inputs below place c between the edges so the curve is exercised.
             new ThreeArg<Math_SmoothStep, float, float, float, float>()
             {
-                a = 0.5f,
-                b = 0.2f,
-                c = 0.7f,
+                a = 0f,
+                b = 1f,
+                c = 0.25f,
                 approximate = true,
-                operation = (a, b, c) => Mathf.SmoothStep(a, b, c),
+                operation = (a, b, c) => SpecSmoothStep(a, b, c), // 0.15625
             },
             new ThreeArg<Math_SmoothStep, Vector2, Vector2, Vector2, Vector2>()
             {
-                a = new Vector2(0.5f, 0.6f),
-                b = new Vector2(0.2f, 0.3f),
-                c = new Vector2(0.7f, 0.8f),
+                a = new Vector2(0f, 0.2f),
+                b = new Vector2(1f, 0.8f),
+                c = new Vector2(0.5f, 0.5f),
                 approximate = true,
-                operation = (a, b, c) => new Vector2(Mathf.SmoothStep(a.x, b.x, c.x), Mathf.SmoothStep(a.y, b.y, c.y)), 
+                operation = (a, b, c) => new Vector2(SpecSmoothStep(a.x, b.x, c.x), SpecSmoothStep(a.y, b.y, c.y)),
             },
             new ThreeArg<Math_SmoothStep, Vector3, Vector3, Vector3, Vector3>()
             {
-                a = new Vector3(0.5f, 0.6f, 0.7f),
-                b = new Vector3(0.2f, 0.3f, 0.4f),
-                c = new Vector3(0.7f, 0.8f, 0.9f),
+                a = new Vector3(0f, 0f, 0f),
+                b = new Vector3(1f, 2f, 4f),
+                c = new Vector3(0.5f, 1f, 3f),
                 approximate = true,
-                operation = (a, b, c) => new Vector3(Mathf.SmoothStep(a.x, b.x, c.x), Mathf.SmoothStep(a.y, b.y, c.y), Mathf.SmoothStep(a.z, b.z, c.z)), 
+                operation = (a, b, c) => new Vector3(SpecSmoothStep(a.x, b.x, c.x), SpecSmoothStep(a.y, b.y, c.y), SpecSmoothStep(a.z, b.z, c.z)),
             },
             new ThreeArg<Math_SmoothStep, Vector4, Vector4, Vector4, Vector4>()
             {
-                a = new Vector4(0.5f, 0.6f, 0.7f, 0.8f),
-                b = new Vector4(0.2f, 0.3f, 0.4f, 0.5f),
-                c = new Vector4(0.7f, 0.8f, 0.9f, 1f),
+                a = new Vector4(0f, 0f, 0f, 0f),
+                b = new Vector4(1f, 1f, 1f, 1f),
+                c = new Vector4(0.1f, 0.4f, 0.6f, 0.9f),
                 approximate = true,
-                operation = (a, b, c) => new Vector4(Mathf.SmoothStep(a.x, b.x, c.x), Mathf.SmoothStep(a.y, b.y, c.y), Mathf.SmoothStep(a.z, b.z, c.z), Mathf.SmoothStep(a.w, b.w, c.w)),
+                operation = (a, b, c) => new Vector4(SpecSmoothStep(a.x, b.x, c.x), SpecSmoothStep(a.y, b.y, c.y), SpecSmoothStep(a.z, b.z, c.z), SpecSmoothStep(a.w, b.w, c.w)),
             }
 
         };
-        
+
+        // Spec-accurate math/smoothStep for a single component:
+        // t = saturate((c - min(a, b)) / |b - a|); result = t * t * (3 - 2t).
+        private static float SpecSmoothStep(float a, float b, float c)
+        {
+            float t = Mathf.Clamp01((c - Mathf.Min(a, b)) / Mathf.Abs(b - a));
+            return t * t * (3f - 2f * t);
+        }
+
         protected override void GenerateTestList()
         {
         }
