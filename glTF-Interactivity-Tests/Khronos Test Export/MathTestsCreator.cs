@@ -423,6 +423,161 @@ namespace Khronos_Test_Export
                 approximate = true,
                 operation = (a, b, c) => Quaternion.Slerp(a, b, c),
             },
+            // ── Arithmetic & special-float edge cases (per KHR_interactivity spec) ──
+            // math/div by zero (float, IEEE-754): x/0 -> ±Inf, 0/0 -> NaN
+            new TwoArg<Math_DivNode, float, float>()
+            {
+                autoCreateTestsForAllSupportedInputs = false,
+                a = 1f,
+                b = 0f,
+                operation = (a, b) => a / b, // +Inf
+            },
+            new TwoArg<Math_DivNode, float, float>()
+            {
+                autoCreateTestsForAllSupportedInputs = false,
+                a = -1f,
+                b = 0f,
+                operation = (a, b) => a / b, // -Inf
+            },
+            new TwoArg<Math_DivNode, float, float>()
+            {
+                autoCreateTestsForAllSupportedInputs = false,
+                a = 0f,
+                b = 0f,
+                operation = (a, b) => a / b, // NaN
+            },
+            // math/div integer: b == 0 -> 0; MinInt / -1 wraps back to MinInt
+            new TwoArg<Math_DivNode, int, int>()
+            {
+                autoCreateTestsForAllSupportedInputs = false,
+                a = 10,
+                b = 0,
+                operation = (a, b) => 0,
+            },
+            new TwoArg<Math_DivNode, int, int>()
+            {
+                autoCreateTestsForAllSupportedInputs = false,
+                a = int.MinValue,
+                b = -1,
+                operation = (a, b) => int.MinValue,
+            },
+            // math/rem: float b == ±0 -> NaN; negative dividend keeps its sign
+            new TwoArg<Math_RemNode, float, float>()
+            {
+                autoCreateTestsForAllSupportedInputs = false,
+                a = 5f,
+                b = 0f,
+                operation = (a, b) => a % b, // NaN
+            },
+            new TwoArg<Math_RemNode, float, float>()
+            {
+                autoCreateTestsForAllSupportedInputs = false,
+                a = -7f,
+                b = 3f,
+                operation = (a, b) => a % b, // -1
+            },
+            // math/rem integer: b == 0 -> 0
+            new TwoArg<Math_RemNode, int, int>()
+            {
+                autoCreateTestsForAllSupportedInputs = false,
+                a = 10,
+                b = 0,
+                operation = (a, b) => 0,
+            },
+            // math/sign special values: sign(±0) == input, sign(±Inf) == ±1, sign(NaN) == NaN
+            new OneArg<Math_SignNode, float, float>()
+            {
+                autoCreateTestsForAllSupportedInputs = false,
+                a = 0f,
+                operation = (a) => 0f,
+            },
+            new OneArg<Math_SignNode, float, float>()
+            {
+                autoCreateTestsForAllSupportedInputs = false,
+                a = float.PositiveInfinity,
+                operation = (a) => 1f,
+            },
+            new OneArg<Math_SignNode, float, float>()
+            {
+                autoCreateTestsForAllSupportedInputs = false,
+                a = float.NegativeInfinity,
+                operation = (a) => -1f,
+            },
+            new OneArg<Math_SignNode, float, float>()
+            {
+                autoCreateTestsForAllSupportedInputs = false,
+                a = float.NaN,
+                operation = (a) => float.NaN,
+            },
+            new OneArg<Math_SignNode, int, int>()
+            {
+                autoCreateTestsForAllSupportedInputs = false,
+                a = 0,
+                operation = (a) => 0,
+            },
+            // math/add|sub|mul integer overflow MUST wrap around (two's complement)
+            new TwoArg<Math_AddNode, int, int>()
+            {
+                autoCreateTestsForAllSupportedInputs = false,
+                a = int.MaxValue,
+                b = 1,
+                operation = (a, b) => unchecked(a + b), // MinValue
+            },
+            new TwoArg<Math_SubNode, int, int>()
+            {
+                autoCreateTestsForAllSupportedInputs = false,
+                a = int.MinValue,
+                b = 1,
+                operation = (a, b) => unchecked(a - b), // MaxValue
+            },
+            new TwoArg<Math_MulNode, int, int>()
+            {
+                autoCreateTestsForAllSupportedInputs = false,
+                a = 46341,
+                b = 46341,
+                operation = (a, b) => unchecked(a * b), // wraps past int.MaxValue
+            },
+            // math/clamp with inverted bounds (min > max): min(max(a, min(b,c)), max(b,c))
+            new ThreeArg<Math_ClampNode, float, float>()
+            {
+                autoCreateTestsForAllSupportedInputs = false,
+                a = 9f,
+                b = 3f,
+                c = 2f,
+                operation = (a, b, c) => Mathf.Min(Mathf.Max(a, Mathf.Min(b, c)), Mathf.Max(b, c)), // 3
+            },
+            new ThreeArg<Math_ClampNode, int, int>()
+            {
+                autoCreateTestsForAllSupportedInputs = false,
+                a = 9,
+                b = 3,
+                c = 2,
+                operation = (a, b, c) => Math.Min(Math.Max(a, Math.Min(b, c)), Math.Max(b, c)), // 3
+            },
+            // math/saturate above 1 -> 1
+            new OneArg<Math_SaturateNode, float, float>()
+            {
+                autoCreateTestsForAllSupportedInputs = false,
+                a = 2.5f,
+                operation = (a) => Mathf.Clamp01(a), // 1
+            },
+            // math/mix extrapolation (t < 0) and NaN t
+            new ThreeArg<Math_MixNode, float, float>()
+            {
+                autoCreateTestsForAllSupportedInputs = false,
+                a = 1f,
+                b = 2f,
+                c = -0.5f,
+                operation = (a, b, c) => Mathf.LerpUnclamped(a, b, c), // 0.5
+            },
+            new ThreeArg<Math_MixNode, float, float>()
+            {
+                autoCreateTestsForAllSupportedInputs = false,
+                a = 1f,
+                b = 2f,
+                c = float.NaN,
+                operation = (a, b, c) => float.NaN,
+            },
             // Comparison Nodes
             new TwoArg<Math_EqNode, float, bool>()
             {
