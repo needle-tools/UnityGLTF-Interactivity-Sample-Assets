@@ -50,6 +50,120 @@ namespace Khronos_Test_Export
     }
     
     [TestCreator.IgnoreTestCase]
+    public class Math_Extract3x3Test : AbstractMath_ExtractTest<Math_Extract3x3Node>
+    {
+        public override object Value => new GltfFloat3x3(0, 1, 2, 3, 4, 5, 6, 7, 8);
+
+        public override float ValueComponent(int index)
+        {
+            return ((GltfFloat3x3)Value)[index];
+        }
+    }
+
+    [TestCreator.IgnoreTestCase]
+    public class Math_Extract2x2Test : AbstractMath_ExtractTest<Math_Extract2x2Node>
+    {
+        public override object Value => new GltfFloat2x2(2f, 4f, 6f, 8f);
+
+        public override float ValueComponent(int index)
+        {
+            return ((GltfFloat2x2)Value)[index];
+        }
+    }
+
+    /// <summary>
+    /// Round-trip test for math/combine2x2: feed 4 floats into combine2x2, pipe the resulting
+    /// float2x2 into extract2x2, and assert every extracted component equals the original input.
+    /// Uses only float comparisons (no float2x2 equality), so it relies solely on combine + extract.
+    /// </summary>
+    [TestCreator.IgnoreTestCase]
+    public class Math_Combine2x2Test : ITestCase
+    {
+        private static readonly float[] Values = { 1f, 2f, 3f, 4f };
+        private CheckBox[] _checkBoxes;
+
+        public string GetTestName() => "math/combine2x2";
+        public string GetTestDescription() => "Round-trip combine2x2 -> extract2x2; each component must match the input.";
+
+        public void PrepareObjects(TestContext context)
+        {
+            _checkBoxes = new CheckBox[Values.Length];
+            for (int i = 0; i < Values.Length; i++)
+                _checkBoxes[i] = context.AddCheckBox($"combine2x2[{i}] == {Values[i]}");
+        }
+
+        public void CreateNodes(TestContext context)
+        {
+            var nodeCreator = context.interactivityExportContext;
+
+            var combineNode = nodeCreator.CreateNode<Math_Combine2x2Node>();
+            var index = 0;
+            foreach (var v in combineNode.ValueInConnection)
+            {
+                combineNode.SetValueInSocket(v.Key, Values[index]);
+                index++;
+            }
+
+            var extractNode = nodeCreator.CreateNode<Math_Extract2x2Node>();
+            extractNode.ValueIn(Math_Extract2x2Node.IdValueIn).ConnectToSource(combineNode.FirstValueOut());
+
+            context.NewEntryPoint(GetTestName());
+            for (int i = 0; i < Values.Length; i++)
+            {
+                _checkBoxes[i].SetupCheck(extractNode.ValueOut(i.ToString()), out var flow, Values[i], false);
+                context.AddToCurrentEntrySequence(flow);
+            }
+        }
+    }
+
+    /// <summary>
+    /// Round-trip test for math/combine3x3: combine3x3(9 floats) -> extract3x3 -> components equal inputs.
+    /// </summary>
+    [TestCreator.IgnoreTestCase]
+    public class Math_Combine3x3Test : ITestCase
+    {
+        private static readonly float[] Values = { 1f, 2f, 3f, 4f, 5f, 6f, 7f, 8f, 9f };
+        private CheckBox[] _checkBoxes;
+
+        public string GetTestName() => "math/combine3x3";
+        public string GetTestDescription() => "Round-trip combine3x3 -> extract3x3; each component must match the input.";
+
+        public void PrepareObjects(TestContext context)
+        {
+            _checkBoxes = new CheckBox[Values.Length];
+            for (int i = 0; i < Values.Length; i++)
+            {
+                _checkBoxes[i] = context.AddCheckBox($"combine3x3[{i}] == {Values[i]}");
+                if (i == 4)
+                    context.NewRow();
+            }
+        }
+
+        public void CreateNodes(TestContext context)
+        {
+            var nodeCreator = context.interactivityExportContext;
+
+            var combineNode = nodeCreator.CreateNode<Math_Combine3x3Node>();
+            var index = 0;
+            foreach (var v in combineNode.ValueInConnection)
+            {
+                combineNode.SetValueInSocket(v.Key, Values[index]);
+                index++;
+            }
+
+            var extractNode = nodeCreator.CreateNode<Math_Extract3x3Node>();
+            extractNode.ValueIn(Math_Extract3x3Node.IdValueIn).ConnectToSource(combineNode.FirstValueOut());
+
+            context.NewEntryPoint(GetTestName());
+            for (int i = 0; i < Values.Length; i++)
+            {
+                _checkBoxes[i].SetupCheck(extractNode.ValueOut(i.ToString()), out var flow, Values[i], false);
+                context.AddToCurrentEntrySequence(flow);
+            }
+        }
+    }
+
+    [TestCreator.IgnoreTestCase]
     public class Math_Extract4x4Test : AbstractMath_ExtractTest<Math_Extract4x4Node>
     {
         public override object Value

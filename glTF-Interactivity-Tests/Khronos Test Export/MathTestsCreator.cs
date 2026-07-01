@@ -1294,7 +1294,11 @@ namespace Khronos_Test_Export
             additionalCases.Add(new Math_Extract2Test());
             additionalCases.Add(new Math_Extract3Test());
             additionalCases.Add(new Math_Extract4Test());
+            additionalCases.Add(new Math_Extract2x2Test());
+            additionalCases.Add(new Math_Extract3x3Test());
             additionalCases.Add(new Math_Extract4x4Test());
+            additionalCases.Add(new Math_Combine2x2Test());
+            additionalCases.Add(new Math_Combine3x3Test());
             additionalCases.Add(new Math_Combine4x4Test());
             additionalCases.Add(new Math_MatCompDecCompTest());
             additionalCases.Add(new Math_MatDecompShearTest());
