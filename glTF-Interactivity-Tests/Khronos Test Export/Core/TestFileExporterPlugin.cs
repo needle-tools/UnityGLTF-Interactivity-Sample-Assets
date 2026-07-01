@@ -79,6 +79,7 @@ namespace Khronos_Test_Export
                 // Final Topological Sort
                 TopologicalSort();
                 ResolveRefToStaticPointer();
+                ReplaceSpecialValuesWithNodes();
 
                 CollectOpDeclarations();
 
