@@ -774,6 +774,29 @@ MonoBehaviour:
     Description: Receives a mesh Ref from File A via a custom event and echoes it
       back via another event.
     typeFullName: Khronos_Test_Export.InterGlbCommunication.InterGlbCommunicationFileB
+  - Enabled: 0
+    Name: UserInteractions/eventOnHover
+    Description: hoverability extension
+    typeFullName: Khronos_Test_Export.OnHoverTests
+  - Enabled: 0
+    Name: UserInteractions/eventOnSelect
+    Description: selectability extension
+    typeFullName: Khronos_Test_Export.OnSelectTests
+  - Enabled: 1
+    Name: animation/start
+    Description: Plays a custom AnimationClip moving an object and checks the object
+      position at 50%/100% plus the error flows.
+    typeFullName: Khronos_Test_Export.AnimationStartTest
+  - Enabled: 1
+    Name: animation/stop
+    Description: Plays a custom AnimationClip, stops it half-way and checks the object
+      position stays frozen.
+    typeFullName: Khronos_Test_Export.AnimationStopTest
+  - Enabled: 1
+    Name: animation/stopAt
+    Description: Plays a custom AnimationClip and schedules a stop half-way, checking
+      the object position on [done].
+    typeFullName: Khronos_Test_Export.AnimationStopAtTest
   - Enabled: 1
     Name: event/Event Refs
     Description: Verifies that event/onStart, event/onTick, and event/receive each
@@ -837,6 +860,11 @@ MonoBehaviour:
     Description: 
     typeFullName: Khronos_Test_Export.PointerMorphTargetsTest
   - Enabled: 1
+    Name: pointer/interpolate
+    Description: Interpolates a node's translation and checks the value at 50%/100%
+      plus the error flows.
+    typeFullName: Khronos_Test_Export.PointerInterpolateTest
+  - Enabled: 1
     Name: pointer/set and get
     Description: 
     typeFullName: Khronos_Test_Export.PointerSetGetTest
@@ -849,6 +877,11 @@ MonoBehaviour:
     Name: ref/eq
     Description: Tests the ref/eq node with different inputs.
     typeFullName: Khronos_Test_Export.RefEqTest
+  - Enabled: 1
+    Name: type/conversions
+    Description: Tests all type/* conversion nodes incl. truncation and NaN/Inf edge
+      cases.
+    typeFullName: Khronos_Test_Export.TypeConversionTests
   - Enabled: 1
     Name: variable/interpolate
     Description: 
@@ -927,6 +960,29 @@ MonoBehaviour:
     Description: Receives a mesh Ref from File A via a custom event and echoes it
       back via another event.
     typeFullName: Khronos_Test_Export.InterGlbCommunication.InterGlbCommunicationFileB
+  - Enabled: 1
+    Name: UserInteractions/eventOnHover
+    Description: hoverability extension
+    typeFullName: Khronos_Test_Export.OnHoverTests
+  - Enabled: 0
+    Name: UserInteractions/eventOnSelect
+    Description: selectability extension
+    typeFullName: Khronos_Test_Export.OnSelectTests
+  - Enabled: 0
+    Name: animation/start
+    Description: Plays a custom AnimationClip moving an object and checks the object
+      position at 50%/100% plus the error flows.
+    typeFullName: Khronos_Test_Export.AnimationStartTest
+  - Enabled: 0
+    Name: animation/stop
+    Description: Plays a custom AnimationClip, stops it half-way and checks the object
+      position stays frozen.
+    typeFullName: Khronos_Test_Export.AnimationStopTest
+  - Enabled: 0
+    Name: animation/stopAt
+    Description: Plays a custom AnimationClip and schedules a stop half-way, checking
+      the object position on [done].
+    typeFullName: Khronos_Test_Export.AnimationStopAtTest
   - Enabled: 0
     Name: event/Event Refs
     Description: Verifies that event/onStart, event/onTick, and event/receive each
@@ -990,6 +1046,11 @@ MonoBehaviour:
     Description: 
     typeFullName: Khronos_Test_Export.PointerMorphTargetsTest
   - Enabled: 0
+    Name: pointer/interpolate
+    Description: Interpolates a node's translation and checks the value at 50%/100%
+      plus the error flows.
+    typeFullName: Khronos_Test_Export.PointerInterpolateTest
+  - Enabled: 0
     Name: pointer/set and get
     Description: 
     typeFullName: Khronos_Test_Export.PointerSetGetTest
@@ -1002,6 +1063,11 @@ MonoBehaviour:
     Name: ref/eq
     Description: Tests the ref/eq node with different inputs.
     typeFullName: Khronos_Test_Export.RefEqTest
+  - Enabled: 0
+    Name: type/conversions
+    Description: Tests all type/* conversion nodes incl. truncation and NaN/Inf edge
+      cases.
+    typeFullName: Khronos_Test_Export.TypeConversionTests
   - Enabled: 0
     Name: variable/interpolate
     Description: 
@@ -1409,7 +1475,7 @@ MonoBehaviour:
   m_lineSpacingMax: 0
   m_paragraphSpacing: 0
   m_charWidthMaxAdj: 0
-  m_enableWordWrapping: 0
+  m_enableWordWrapping: 1
   m_wordWrappingRatios: 0.4
   m_overflowMode: 0
   m_linkedTextComponent: {fileID: 0}
