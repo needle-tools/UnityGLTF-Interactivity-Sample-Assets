@@ -76,10 +76,10 @@ namespace Khronos_Test_Export
 
                 CheckForCircularFlows();
 
+                ReplaceSpecialValuesWithNodes();
                 // Final Topological Sort
                 TopologicalSort();
                 ResolveRefToStaticPointer();
-                ReplaceSpecialValuesWithNodes();
 
                 CollectOpDeclarations();
 
