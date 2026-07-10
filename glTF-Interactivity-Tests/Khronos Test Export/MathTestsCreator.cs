@@ -891,6 +891,264 @@ namespace Khronos_Test_Export
                 approximate = true,
                 operation = (a, b) => Mathf.Pow(a, b),
             },
+            // ── Trig / inverse-trig / hyperbolic / exponential domain & special-value
+            //    edge cases (per KHR_interactivity spec math function definitions).
+            //    All scalar-only (autoCreateTestsForAllSupportedInputs = false).
+            //    NaN / ±Inf expected results MUST use exact equality (approximate = false):
+            //    the harness routes NaN-expected through math/isNaN and ±Inf-expected through
+            //    math/eq, both of which need an exact match rather than a proximity delta.
+            // math/asin: NaN outside [-1,1]; endpoints -> ±pi/2
+            new OneArg<Math_AsinNode, float, float>()
+            {
+                autoCreateTestsForAllSupportedInputs = false,
+                a = 1.5f,
+                operation = (a) => float.NaN,
+            },
+            new OneArg<Math_AsinNode, float, float>()
+            {
+                autoCreateTestsForAllSupportedInputs = false,
+                a = -1.5f,
+                operation = (a) => float.NaN,
+            },
+            new OneArg<Math_AsinNode, float, float>()
+            {
+                autoCreateTestsForAllSupportedInputs = false,
+                a = 1f,
+                approximate = true,
+                operation = (a) => Mathf.Asin(a), // +pi/2
+            },
+            new OneArg<Math_AsinNode, float, float>()
+            {
+                autoCreateTestsForAllSupportedInputs = false,
+                a = -1f,
+                approximate = true,
+                operation = (a) => Mathf.Asin(a), // -pi/2
+            },
+            // math/acos: NaN outside [-1,1]; acos(1) -> +0, acos(-1) -> pi
+            new OneArg<Math_AcosNode, float, float>()
+            {
+                autoCreateTestsForAllSupportedInputs = false,
+                a = 1.5f,
+                operation = (a) => float.NaN,
+            },
+            new OneArg<Math_AcosNode, float, float>()
+            {
+                autoCreateTestsForAllSupportedInputs = false,
+                a = -1.5f,
+                operation = (a) => float.NaN,
+            },
+            new OneArg<Math_AcosNode, float, float>()
+            {
+                autoCreateTestsForAllSupportedInputs = false,
+                a = 1f,
+                approximate = true,
+                operation = (a) => Mathf.Acos(a), // +0
+            },
+            new OneArg<Math_AcosNode, float, float>()
+            {
+                autoCreateTestsForAllSupportedInputs = false,
+                a = -1f,
+                approximate = true,
+                operation = (a) => Mathf.Acos(a), // pi
+            },
+            // math/atan: ±Inf -> ±pi/2
+            new OneArg<Math_AtanNode, float, float>()
+            {
+                autoCreateTestsForAllSupportedInputs = false,
+                a = float.PositiveInfinity,
+                approximate = true,
+                operation = (a) => Mathf.PI / 2f,
+            },
+            new OneArg<Math_AtanNode, float, float>()
+            {
+                autoCreateTestsForAllSupportedInputs = false,
+                a = float.NegativeInfinity,
+                approximate = true,
+                operation = (a) => -Mathf.PI / 2f,
+            },
+            // math/atan2 (a = y, b = x): four quadrants, atan2(0,0)=0, ±Inf combinations
+            new TwoArg<Math_Atan2Node, float, float>()
+            {
+                autoCreateTestsForAllSupportedInputs = false,
+                a = 1f,
+                b = 1f,
+                approximate = true,
+                operation = (a, b) => Mathf.Atan2(a, b), // +pi/4  (Q1)
+            },
+            new TwoArg<Math_Atan2Node, float, float>()
+            {
+                autoCreateTestsForAllSupportedInputs = false,
+                a = 1f,
+                b = -1f,
+                approximate = true,
+                operation = (a, b) => Mathf.Atan2(a, b), // +3pi/4 (Q2)
+            },
+            new TwoArg<Math_Atan2Node, float, float>()
+            {
+                autoCreateTestsForAllSupportedInputs = false,
+                a = -1f,
+                b = -1f,
+                approximate = true,
+                operation = (a, b) => Mathf.Atan2(a, b), // -3pi/4 (Q3)
+            },
+            new TwoArg<Math_Atan2Node, float, float>()
+            {
+                autoCreateTestsForAllSupportedInputs = false,
+                a = -1f,
+                b = 1f,
+                approximate = true,
+                operation = (a, b) => Mathf.Atan2(a, b), // -pi/4  (Q4)
+            },
+            new TwoArg<Math_Atan2Node, float, float>()
+            {
+                autoCreateTestsForAllSupportedInputs = false,
+                a = 0f,
+                b = 0f,
+                approximate = true,
+                operation = (a, b) => Mathf.Atan2(a, b), // 0
+            },
+            new TwoArg<Math_Atan2Node, float, float>()
+            {
+                autoCreateTestsForAllSupportedInputs = false,
+                a = 1f,
+                b = float.PositiveInfinity,
+                approximate = true,
+                operation = (a, b) => Mathf.Atan2(a, b), // +0
+            },
+            new TwoArg<Math_Atan2Node, float, float>()
+            {
+                autoCreateTestsForAllSupportedInputs = false,
+                a = 1f,
+                b = float.NegativeInfinity,
+                approximate = true,
+                operation = (a, b) => Mathf.Atan2(a, b), // +pi
+            },
+            new TwoArg<Math_Atan2Node, float, float>()
+            {
+                autoCreateTestsForAllSupportedInputs = false,
+                a = float.PositiveInfinity,
+                b = 1f,
+                approximate = true,
+                operation = (a, b) => Mathf.Atan2(a, b), // +pi/2
+            },
+            // math/tan: ±Inf -> NaN
+            new OneArg<Math_TanNode, float, float>()
+            {
+                autoCreateTestsForAllSupportedInputs = false,
+                a = float.PositiveInfinity,
+                operation = (a) => float.NaN,
+            },
+            new OneArg<Math_TanNode, float, float>()
+            {
+                autoCreateTestsForAllSupportedInputs = false,
+                a = float.NegativeInfinity,
+                operation = (a) => float.NaN,
+            },
+            // math/acosh: NaN for x < 1; acosh(1) -> +0; acosh(+Inf) -> +Inf
+            new OneArg<Math_AcosHNode, float, float>()
+            {
+                autoCreateTestsForAllSupportedInputs = false,
+                a = 0.5f,
+                operation = (a) => float.NaN,
+            },
+            new OneArg<Math_AcosHNode, float, float>()
+            {
+                autoCreateTestsForAllSupportedInputs = false,
+                a = 1f,
+                approximate = true,
+                operation = (a) => (float)Math.Acosh(a), // +0
+            },
+            new OneArg<Math_AcosHNode, float, float>()
+            {
+                autoCreateTestsForAllSupportedInputs = false,
+                a = float.PositiveInfinity,
+                operation = (a) => float.PositiveInfinity,
+            },
+            // math/atanh: NaN for |x| > 1; atanh(+1) -> +Inf, atanh(-1) -> -Inf
+            new OneArg<Math_AtanHNode, float, float>()
+            {
+                autoCreateTestsForAllSupportedInputs = false,
+                a = 1.5f,
+                operation = (a) => float.NaN,
+            },
+            new OneArg<Math_AtanHNode, float, float>()
+            {
+                autoCreateTestsForAllSupportedInputs = false,
+                a = 1f,
+                operation = (a) => float.PositiveInfinity,
+            },
+            new OneArg<Math_AtanHNode, float, float>()
+            {
+                autoCreateTestsForAllSupportedInputs = false,
+                a = -1f,
+                operation = (a) => float.NegativeInfinity,
+            },
+            // math/log: log(±0) -> -Inf; log(negative) -> NaN; log(1) -> +0
+            new OneArg<Math_LogNode, float, float>()
+            {
+                autoCreateTestsForAllSupportedInputs = false,
+                a = 0f,
+                operation = (a) => float.NegativeInfinity,
+            },
+            new OneArg<Math_LogNode, float, float>()
+            {
+                autoCreateTestsForAllSupportedInputs = false,
+                a = -2f,
+                operation = (a) => float.NaN,
+            },
+            new OneArg<Math_LogNode, float, float>()
+            {
+                autoCreateTestsForAllSupportedInputs = false,
+                a = 1f,
+                approximate = true,
+                operation = (a) => Mathf.Log(a), // +0
+            },
+            // math/sqrt: sqrt(negative) -> NaN; sqrt(0) -> 0
+            new OneArg<Math_SqrtNode, float, float>()
+            {
+                autoCreateTestsForAllSupportedInputs = false,
+                a = -4f,
+                operation = (a) => float.NaN,
+            },
+            new OneArg<Math_SqrtNode, float, float>()
+            {
+                autoCreateTestsForAllSupportedInputs = false,
+                a = 0f,
+                approximate = true,
+                operation = (a) => Mathf.Sqrt(a), // 0
+            },
+            // math/cbrt: the cube root of a negative number is a valid real number
+            new OneArg<Math_CbrtNode, float, float>()
+            {
+                autoCreateTestsForAllSupportedInputs = false,
+                a = -27f,
+                approximate = true,
+                operation = (a) => -Mathf.Pow(-a, 1f / 3f), // -3
+            },
+            // math/pow: pow(0,0)=1, negative base with fractional exponent -> NaN, pow(x,0)=1
+            new TwoArg<Math_PowNode, float, float>()
+            {
+                autoCreateTestsForAllSupportedInputs = false,
+                a = 0f,
+                b = 0f,
+                approximate = true,
+                operation = (a, b) => 1f,
+            },
+            new TwoArg<Math_PowNode, float, float>()
+            {
+                autoCreateTestsForAllSupportedInputs = false,
+                a = -2f,
+                b = 0.5f,
+                operation = (a, b) => float.NaN,
+            },
+            new TwoArg<Math_PowNode, float, float>()
+            {
+                autoCreateTestsForAllSupportedInputs = false,
+                a = 5f,
+                b = 0f,
+                approximate = true,
+                operation = (a, b) => 1f,
+            },
             new OneArg<Math_TransposeNode, Matrix4x4, Matrix4x4>()
             {
                 a = Matrix4x4.TRS(Vector3.one, Quaternion.identity, new Vector3(1f,1f,1f)),
@@ -1210,6 +1468,79 @@ namespace Khronos_Test_Export
                 approximate = true,
                 operation = Quaternion.FromToRotation,
             },
+            // ─────────────────────────────────────────────────────────────────
+            // Math — vector / matrix / quaternion edge cases (P1 gap analysis).
+            // Spec: KHR_interactivity math function definitions. All typed-only
+            // (autoCreateTestsForAllSupportedInputs = false).
+            // ─────────────────────────────────────────────────────────────────
+            // math/length: if any component is ±Inf the length is +Inf; otherwise
+            // if any component is NaN the length is NaN (spec special-value rules).
+            new OneArg<Math_LengthNode, Vector3, float>()
+            {
+                autoCreateTestsForAllSupportedInputs = false,
+                a = new Vector3(float.PositiveInfinity, 2f, 3f),
+                operation = (a) => float.PositiveInfinity,
+            },
+            new OneArg<Math_LengthNode, Vector3, float>()
+            {
+                autoCreateTestsForAllSupportedInputs = false,
+                a = new Vector3(float.NaN, 2f, 3f),
+                operation = (a) => float.NaN,
+            },
+            // math/slerp endpoints (t=0 -> a, t=1 -> b) and identical directions
+            // (d ~ +1 -> linear interpolation, which equals a when a == b).
+            // Antiparallel directions are deliberately skipped: the spec falls back
+            // to an implementation-defined perpendicular axis, so the exact result
+            // is not portable across conformant implementations.
+            new ThreeArg<Math_SlerpNode, Vector3, Vector3, float, Vector3>()
+            {
+                autoCreateTestsForAllSupportedInputs = false,
+                a = new Vector3(2, 5, 7),
+                b = new Vector3(4, 6, 8),
+                c = 0f,
+                approximate = true,
+                operation = (a, b, c) => Vector3.Slerp(a, b, c), // == a
+            },
+            new ThreeArg<Math_SlerpNode, Vector3, Vector3, float, Vector3>()
+            {
+                autoCreateTestsForAllSupportedInputs = false,
+                a = new Vector3(2, 5, 7),
+                b = new Vector3(4, 6, 8),
+                c = 1f,
+                approximate = true,
+                operation = (a, b, c) => Vector3.Slerp(a, b, c), // == b
+            },
+            new ThreeArg<Math_SlerpNode, Vector3, Vector3, float, Vector3>()
+            {
+                autoCreateTestsForAllSupportedInputs = false,
+                a = new Vector3(1, 2, 2),
+                b = new Vector3(1, 2, 2),
+                c = 0.5f,
+                approximate = true,
+                operation = (a, b, c) => Vector3.Slerp(a, b, c), // identical -> a
+            },
+            // math/rotate3D with a NON-UNIT quaternion. The spec applies the formula
+            // a + 2*(r x (r x a) + r_w*(r x a)) WITHOUT normalizing r ("assumes unit"),
+            // which is exactly Unity's Quaternion*Vector3 operator, so a non-unit
+            // quaternion scales the result by |r|^2. Distinguishes a conformant
+            // (no implicit normalization) implementation.
+            new TwoArg<Math_Rotate3dNode, Vector3, Quaternion, Vector3>()
+            {
+                autoCreateTestsForAllSupportedInputs = false,
+                a = new Vector3(1f, 2f, 3f),
+                b = new Quaternion(0f, 1f, 0f, 1f), // |q|^2 = 2, not a unit quaternion
+                approximate = true,
+                operation = (a, b) => b * a,
+                socketNames = new []{"a", "rotation", "c", "d"}
+            },
+            // math/matMul identity: A * I == A (true matrix product, float4x4).
+            new TwoArg<Math_MatMulNode, Matrix4x4, Matrix4x4>()
+            {
+                a = Matrix4x4.TRS(new Vector3(2f, 3f, 4f), Quaternion.Euler(10f, 20f, 30f), new Vector3(1f, 2f, 3f)),
+                b = Matrix4x4.identity,
+                approximate = true,
+                operation = (a, b) => a * b,
+            },
             new TwoArg<Math_Combine2Node, float, Vector2>()
             {
                 a = 1f,
@@ -1271,9 +1602,20 @@ namespace Khronos_Test_Export
                 isValid = false
             },      
             // math/smoothStep(a, b, c): a and b are the two edges, c is the sample point.
-            // Spec: t = saturate((c - min(a, b)) / |b - a|); result = t * t * (3 - 2t)  (GLSL smoothstep).
-            // NOTE: this is NOT Unity's Mathf.SmoothStep (which interpolates between a and b using c as
-            // the 0..1 blend factor). Inputs below place c between the edges so the curve is exercised.
+            // Spec: t = saturate((c - min(a, b)) / |b - a|); result = t * t * (3 - 2t).
+            // This equals GLSL smoothstep(edge0, edge1, x) and returns the interpolation
+            // COEFFICIENT in [0, 1].
+            //
+            // Both the spec node AND Unity's Mathf.SmoothStep are "Hermite interpolation" -
+            // they share the same cubic polynomial 3t^2 - 2t^3 - but they are NOT the same
+            // operation:
+            //   * spec smoothStep(a, b, c): a,b are edges, c is a sample coordinate that gets
+            //     normalized against the edges; returns the [0,1] weight (this helper).
+            //   * Unity Mathf.SmoothStep(from, to, t): from,to are endpoints, t is already the
+            //     raw 0..1 parameter; returns lerp(from, to, 3t^2 - 2t^3), i.e. a blended VALUE.
+            // They coincide only when a=0, b=1 (normalization is identity and lerp(0,1,x)=x),
+            // which is why edge=0..1 cases alone don't distinguish them. The vec3 case below
+            // (a=0, b=2, c=1) diverges: spec -> 0.5, Unity-style -> 2.0.
             new ThreeArg<Math_SmoothStep, float, float, float, float>()
             {
                 a = 0f,
@@ -1306,7 +1648,6 @@ namespace Khronos_Test_Export
                 approximate = true,
                 operation = (a, b, c) => new Vector4(SpecSmoothStep(a.x, b.x, c.x), SpecSmoothStep(a.y, b.y, c.y), SpecSmoothStep(a.z, b.z, c.z), SpecSmoothStep(a.w, b.w, c.w)),
             }
-
         };
 
         // Spec-accurate math/smoothStep for a single component:
@@ -1471,6 +1812,20 @@ namespace Khronos_Test_Export
             additionalCases.Add(new Math_MatDecompShearTest());
             additionalCases.Add(new Math_RgbToOkLChTest());
             additionalCases.Add(new Math_RgbFromOkLChTest());
+            // Math — vector / matrix / quaternion edge cases (P1 gap): 2x2/3x3 matrix ops,
+            // matMul non-commutativity, quaternion degenerate directions/identity.
+            additionalCases.Add(new Math_Transpose2x2Test());
+            additionalCases.Add(new Math_Transpose3x3Test());
+            additionalCases.Add(new Math_Determinant2x2Test());
+            additionalCases.Add(new Math_Determinant3x3Test());
+            additionalCases.Add(new Math_Inverse2x2Test());
+            additionalCases.Add(new Math_Inverse3x3Test());
+            additionalCases.Add(new Math_MatMul2x2Test());
+            additionalCases.Add(new Math_MatMul3x3Test());
+            additionalCases.Add(new Math_MatMulNonCommutativeTest());
+            additionalCases.Add(new Math_QuatFromDirectionsEdgeTest());
+            additionalCases.Add(new Math_QuatFromUpForwardDegenerateTest());
+            additionalCases.Add(new Math_QuatToAxisAngleIdentityTest());
             
             return newTestCases.Concat(additionalCases).OrderBy(c => c.GetTestName()).ToArray();
         }
