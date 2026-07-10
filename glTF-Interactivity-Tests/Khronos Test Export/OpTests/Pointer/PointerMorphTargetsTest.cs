@@ -193,7 +193,7 @@ namespace Khronos_Test_Export
             PointersHelper.SetupPointerTemplateAndTargetInput(pWeight0_withMorph, PointersHelper.IdPointerNodeIndex, "/nodes/["+PointersHelper.IdPointerNodeIndex+"]/weights/0", GltfTypes.Float);
             pWeight0_withMorph.ValueIn(PointersHelper.IdPointerNodeIndex).SetValue(context.interactivityExportContext.Context.exporter.GetTransformIndex(meshWithMorph.transform));
             weight0WithMorphIsValid.SetupCheck(pWeight0_withMorph.ValueOut(Pointer_GetNode.IdIsValid), out var test7Flow, true);
-            weight0WithMorphValue.SetupCheck(pWeight0_withMorph.ValueOut(Pointer_GetNode.IdValue), out var test8Flow, meshWithMorph.GetComponentInChildren<SkinnedMeshRenderer>().GetBlendShapeWeight(0));
+            weight0WithMorphValue.SetupCheck(pWeight0_withMorph.ValueOut(Pointer_GetNode.IdValue), out var test8Flow, meshWithMorph.GetComponentInChildren<SkinnedMeshRenderer>().GetBlendShapeWeight(0), true);
             context.AddToCurrentEntrySequence(test7Flow, test8Flow);
 
             
@@ -202,14 +202,14 @@ namespace Khronos_Test_Export
             PointersHelper.SetupPointerTemplateAndTargetInput(pWeight0_withMorphNonStatic, PointersHelper.IdPointerNodeIndex, "/nodes/["+PointersHelper.IdPointerNodeIndex+"]/weights/0", GltfTypes.Float);
             pWeight0_withMorphNonStatic.ValueIn(PointersHelper.IdPointerNodeIndex).SetValue(context.interactivityExportContext.Context.exporter.GetTransformIndex(meshWithMorphNonStatic.transform));
             nonStaticWeight0WithMorphIsValid.SetupCheck(pWeight0_withMorphNonStatic.ValueOut(Pointer_GetNode.IdIsValid), out var test9Flow, true);
-            nonStaticWeight0WithMorphValue.SetupCheck(pWeight0_withMorphNonStatic.ValueOut(Pointer_GetNode.IdValue), out var test10Flow, meshWithMorphNonStatic.GetComponentInChildren<SkinnedMeshRenderer>().GetBlendShapeWeight(0));
+            nonStaticWeight0WithMorphValue.SetupCheck(pWeight0_withMorphNonStatic.ValueOut(Pointer_GetNode.IdValue), out var test10Flow, meshWithMorphNonStatic.GetComponentInChildren<SkinnedMeshRenderer>().GetBlendShapeWeight(0), true);
             context.AddToCurrentEntrySequence(test9Flow, test10Flow);
 
             context.NewEntryPoint("Get node/{}/weights/0 - With mesh and node weights");
             var pWeight0 = nodeCreator.CreateNode<Pointer_GetNode>();
             PointersHelper.SetupPointerTemplateAndTargetInput(pWeight0, PointersHelper.IdPointerNodeIndex, "/nodes/["+PointersHelper.IdPointerNodeIndex+"]/weights/0", GltfTypes.Float);
             pWeight0.ValueIn(PointersHelper.IdPointerNodeIndex).SetValue(context.interactivityExportContext.Context.exporter.GetTransformIndex(meshWithMorph_MeshAndNodeWeights.transform));
-            meshAndNodeWeight0Value.SetupCheck(pWeight0.ValueOut(Pointer_GetNode.IdValue), out var test11Flow, meshWithMorph_MeshAndNodeWeights.GetComponentInChildren<SkinnedMeshRenderer>().GetBlendShapeWeight(0));
+            meshAndNodeWeight0Value.SetupCheck(pWeight0.ValueOut(Pointer_GetNode.IdValue), out var test11Flow, meshWithMorph_MeshAndNodeWeights.GetComponentInChildren<SkinnedMeshRenderer>().GetBlendShapeWeight(0), true);
             context.AddToCurrentEntrySequence(test11Flow);
             
             
@@ -224,7 +224,7 @@ namespace Khronos_Test_Export
             pGetWeight.ValueIn(PointersHelper.IdPointerNodeIndex).SetValue(context.interactivityExportContext.Context.exporter.GetTransformIndex(meshWithMorph_MeshAndNodeWeights.transform));
 
            
-            setWeightAndReadBack.SetupCheck(pGetWeight.ValueOut(Pointer_GetNode.IdValue), out var test12Flow, 0.9f);
+            setWeightAndReadBack.SetupCheck(pGetWeight.ValueOut(Pointer_GetNode.IdValue), out var test12Flow, 0.9f, true);
             context.AddToCurrentEntrySequence(pSetWeight.FlowIn(), test12Flow);
         }
 
