@@ -152,11 +152,23 @@ namespace Khronos_Test_Export
         private void SaveResult(FlowOutRef flow)
         {
             if (ResultValueVarId == -1)
-                ResultValueVarId = context.interactivityExportContext.Context.AddVariableWithIdIfNeeded(GetResultVariableName(), isNegated, GltfTypes.Bool);
-            
-            VariablesHelpers.SetVariableStaticValue(context.interactivityExportContext, ResultValueVarId, true, out var setFlow, out _);
-            flow.ConnectToFlowDestination(setFlow);
-            ResultPassValueVarId = ResultValueVarId;
+                ResultValueVarId = context.interactivityExportContext.Context.AddVariableWithIdIfNeeded(GetResultVariableName(), false, GltfTypes.Bool);
+             
+            VariablesHelpers.SetVariableStaticValue(context.interactivityExportContext, ResultValueVarId, true, out var setResultFlow, out var setResultFlowOut);
+            flow.ConnectToFlowDestination(setResultFlow);
+
+            if (isNegated)
+            {
+                if (ResultPassValueVarId == -1)
+                    ResultPassValueVarId = context.interactivityExportContext.Context.AddVariableWithIdIfNeeded(GetResultPassVariableName(), true, GltfTypes.Bool);
+
+                VariablesHelpers.SetVariableStaticValue(context.interactivityExportContext, ResultPassValueVarId, false, out var setPassFlow, out _);
+                setResultFlowOut.ConnectToFlowDestination(setPassFlow);
+            }
+            else
+            {
+                ResultPassValueVarId = ResultValueVarId;
+            }
         }
         
         private object GetDefaultValue(Type type)
