@@ -27,7 +27,7 @@ namespace Khronos_Test_Export
 
         public string GetTestDescription()
         {
-            return "Verifies that event/onStart, event/onTick, and event/receive each output a valid (non-null) event ref.";
+            return "Verifies that event/onStart, event/onTick, and event/receive each output a valid event ref that resolves through its canonical object-model pointer.";
         }
 
         public void PrepareObjects(TestContext context)

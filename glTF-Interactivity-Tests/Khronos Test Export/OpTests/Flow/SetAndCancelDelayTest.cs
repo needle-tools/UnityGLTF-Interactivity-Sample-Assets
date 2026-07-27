@@ -22,7 +22,7 @@ namespace Khronos_Test_Export
 
         public string GetTestDescription()
         {
-            return "";
+            return "Verifies setDelay and cancelDelay flow behavior, including resolution of the delay ref through its canonical object-model pointer.";
         }
 
         public void PrepareObjects(TestContext context)
