@@ -437,6 +437,70 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &945777032
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 945777035}
+  - component: {fileID: 945777034}
+  - component: {fileID: 945777033}
+  m_Layer: 0
+  m_Name: GameObject
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &945777033
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 945777032}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d2fe5546f775c47d2820aa5e8a715f53, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  _data:
+    _json: '{"nest":{"source":"Embed","macro":null,"embed":{"variables":{"Kind":"Flow","collection":{"$content":[],"$version":"A"},"$version":"A"},"controlInputDefinitions":[],"controlOutputDefinitions":[],"valueInputDefinitions":[],"valueOutputDefinitions":[],"title":null,"summary":null,"pan":{"x":0.0,"y":0.0},"zoom":1.0,"elements":[{"coroutine":false,"defaultValues":{},"position":{"x":-204.0,"y":-144.0},"guid":"746e213c-2b8f-4989-90b1-eed5f7e41878","$version":"A","$type":"Unity.VisualScripting.Start"},{"coroutine":false,"defaultValues":{},"position":{"x":-204.0,"y":60.0},"guid":"a7c90151-7f2a-404e-82dd-f5e4c7293ad5","$version":"A","$type":"Unity.VisualScripting.Update"},{"defaultValues":{},"position":{"x":-549.0,"y":-230.0},"guid":"b9e819a3-99bf-4a4c-91b5-93ae80ce06a0","$version":"A","$type":"Unity.VisualScripting.GltfAssetVersionUnit"},{"extensionName":"KHR_node_visibility","defaultValues":{},"position":{"x":-606.0,"y":57.0},"guid":"7e4cc6e5-908a-4be0-89dc-533dfc30b4ff","$version":"A","$type":"Unity.VisualScripting.GltfExtensionEnabledUnit"},{"position":{"xMin":-501.0,"yMin":-69.0,"xMax":-401.0,"yMax":31.0},"title":"Sticky
+      Note","body":null,"colorTheme":"Classic","guid":"653b7056-0467-4bc0-aa96-1478cbd2fae3","$type":"Unity.VisualScripting.StickyNote"}],"$version":"A"}}}'
+    _objectReferences: []
+--- !u!114 &945777034
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 945777032}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e741851cba3ad425c91ecf922cc6b379, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  _data:
+    _json: '{"declarations":{"Kind":"Object","collection":{"$content":[],"$version":"A"},"$version":"A"}}'
+    _objectReferences: []
+--- !u!4 &945777035
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 945777032}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: -1.2920306, y: 4.293324, z: 0.09169106}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1077566343
 GameObject:
   m_ObjectHideFlags: 0
@@ -776,11 +840,17 @@ MonoBehaviour:
     typeFullName: Khronos_Test_Export.InterGlbCommunication.InterGlbCommunicationFileB
   - Enabled: 0
     Name: UserInteractions/eventOnHover
-    Description: hoverability extension
+    Description: KHR_node_hoverability / event/onHoverIn + event/onHoverOut. Hover
+      the LEFT cube (move onto it and away again, must fire); then hover the MIDDLE
+      cube (hoverable=false) and the small cube on top of the RIGHT cube (inherited
+      hoverable=false) - both must NOT fire.
     typeFullName: Khronos_Test_Export.OnHoverTests
   - Enabled: 0
     Name: UserInteractions/eventOnSelect
-    Description: selectability extension
+    Description: KHR_node_selectability / event/onSelect. Select the LEFT cube (must
+      fire); then try to select the MIDDLE cube (selectable=false) and the small
+      cube on top of the RIGHT cube (inherited selectable=false) - both must NOT
+      fire.
     typeFullName: Khronos_Test_Export.OnSelectTests
   - Enabled: 1
     Name: animation/start
@@ -800,7 +870,7 @@ MonoBehaviour:
   - Enabled: 1
     Name: event/Event Refs
     Description: Verifies that event/onStart, event/onTick, and event/receive each
-      output a valid (non-null) event ref.
+      output a valid event ref that resolves through its canonical object-model pointer.
     typeFullName: Khronos_Test_Export.EventRefsTest
   - Enabled: 1
     Name: event/send and receive
@@ -808,8 +878,8 @@ MonoBehaviour:
     typeFullName: Khronos_Test_Export.EventTests
   - Enabled: 1
     Name: event/stopPropagation
-    Description: Sends a custom event. Receiver A stops propagation; Receiver B must
-      not be triggered.
+    Description: Verifies immediate and non-immediate propagation stopping, and handling
+      of an invalid event reference.
     typeFullName: Khronos_Test_Export.StopPropagation
   - Enabled: 1
     Name: flow/branch
@@ -833,7 +903,8 @@ MonoBehaviour:
     typeFullName: Khronos_Test_Export.SequenceTest
   - Enabled: 1
     Name: flow/setDelay and cancelDelay
-    Description: 
+    Description: Verifies setDelay and cancelDelay flow behavior, including resolution
+      of the delay ref through its canonical object-model pointer.
     typeFullName: Khronos_Test_Export.SetAndCancelDelayTest
   - Enabled: 1
     Name: flow/switch
@@ -851,6 +922,11 @@ MonoBehaviour:
     Name: flow/while
     Description: 
     typeFullName: Khronos_Test_Export.WhileLoopTest
+  - Enabled: 1
+    Name: pointer/AssetCapabilities_GetTests
+    Description: "Reads the asset capability and runtime limit virtual pointers (KHR_interactivity
+      \xA74.2.1 / \xA74.2.2)."
+    typeFullName: Khronos_Test_Export.AssetCapabilitiesGetTests
   - Enabled: 1
     Name: pointer/CoreReadOnlyPointers_GetTests
     Description: 
@@ -896,6 +972,8 @@ MonoBehaviour:
     typeFullName: Khronos_Test_Export.VariableSetMultipleTest
   testName: Overview
   indexFilename: test-index
+  ExportAllInOne: 1
+  ExportIndividual: 1
 --- !u!4 &1481517797
 Transform:
   m_ObjectHideFlags: 0
@@ -927,6 +1005,8 @@ MonoBehaviour:
   testCases: []
   testName: mathtests
   indexFilename: mathtests-index
+  ExportAllInOne: 1
+  ExportIndividual: 1
 --- !u!114 &1481517799
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -960,13 +1040,19 @@ MonoBehaviour:
     Description: Receives a mesh Ref from File A via a custom event and echoes it
       back via another event.
     typeFullName: Khronos_Test_Export.InterGlbCommunication.InterGlbCommunicationFileB
-  - Enabled: 1
+  - Enabled: 0
     Name: UserInteractions/eventOnHover
-    Description: hoverability extension
+    Description: KHR_node_hoverability / event/onHoverIn + event/onHoverOut. Hover
+      the LEFT cube (move onto it and away again, must fire); then hover the MIDDLE
+      cube (hoverable=false) and the small cube on top of the RIGHT cube (inherited
+      hoverable=false) - both must NOT fire.
     typeFullName: Khronos_Test_Export.OnHoverTests
   - Enabled: 0
     Name: UserInteractions/eventOnSelect
-    Description: selectability extension
+    Description: KHR_node_selectability / event/onSelect. Select the LEFT cube (must
+      fire); then try to select the MIDDLE cube (selectable=false) and the small
+      cube on top of the RIGHT cube (inherited selectable=false) - both must NOT
+      fire.
     typeFullName: Khronos_Test_Export.OnSelectTests
   - Enabled: 0
     Name: animation/start
@@ -986,7 +1072,7 @@ MonoBehaviour:
   - Enabled: 0
     Name: event/Event Refs
     Description: Verifies that event/onStart, event/onTick, and event/receive each
-      output a valid (non-null) event ref.
+      output a valid event ref that resolves through its canonical object-model pointer.
     typeFullName: Khronos_Test_Export.EventRefsTest
   - Enabled: 0
     Name: event/send and receive
@@ -994,8 +1080,8 @@ MonoBehaviour:
     typeFullName: Khronos_Test_Export.EventTests
   - Enabled: 0
     Name: event/stopPropagation
-    Description: Sends a custom event. Receiver A stops propagation; Receiver B must
-      not be triggered.
+    Description: Verifies immediate and non-immediate propagation stopping, and handling
+      of an invalid event reference.
     typeFullName: Khronos_Test_Export.StopPropagation
   - Enabled: 0
     Name: flow/branch
@@ -1019,7 +1105,8 @@ MonoBehaviour:
     typeFullName: Khronos_Test_Export.SequenceTest
   - Enabled: 0
     Name: flow/setDelay and cancelDelay
-    Description: 
+    Description: Verifies setDelay and cancelDelay flow behavior, including resolution
+      of the delay ref through its canonical object-model pointer.
     typeFullName: Khronos_Test_Export.SetAndCancelDelayTest
   - Enabled: 0
     Name: flow/switch
@@ -1037,6 +1124,11 @@ MonoBehaviour:
     Name: flow/while
     Description: 
     typeFullName: Khronos_Test_Export.WhileLoopTest
+  - Enabled: 0
+    Name: pointer/AssetCapabilities_GetTests
+    Description: "Reads the asset capability and runtime limit virtual pointers (KHR_interactivity
+      \xA74.2.1 / \xA74.2.2)."
+    typeFullName: Khronos_Test_Export.AssetCapabilitiesGetTests
   - Enabled: 0
     Name: pointer/CoreReadOnlyPointers_GetTests
     Description: 
@@ -1082,6 +1174,8 @@ MonoBehaviour:
     typeFullName: Khronos_Test_Export.VariableSetMultipleTest
   testName: TestName
   indexFilename: interglb-index
+  ExportAllInOne: 0
+  ExportIndividual: 1
 --- !u!4 &135977184900898654
 Transform:
   m_ObjectHideFlags: 0
@@ -1571,3 +1665,4 @@ SceneRoots:
   - {fileID: 1381651752}
   - {fileID: 672773447}
   - {fileID: 1291429112}
+  - {fileID: 945777035}
