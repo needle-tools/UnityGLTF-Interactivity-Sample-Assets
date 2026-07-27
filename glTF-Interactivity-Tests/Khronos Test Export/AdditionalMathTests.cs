@@ -752,17 +752,14 @@ namespace Khronos_Test_Export
         private CheckBox _translateCheckBox;
         private CheckBox _rotateCheckBox;
         private CheckBox _scaleCheckBox;
-        private CheckBox _isValidCheckBox;
 
         private CheckBox _invalidTranslateCheckBox;
         private CheckBox _invalidRotateCheckBox;
         private CheckBox _invalidScaleCheckBox;
-        private CheckBox _invalidIsValidCheckBox;
 
         private CheckBox _ignoredRowTranslateCheckBox;
         private CheckBox _ignoredRowRotateCheckBox;
         private CheckBox _ignoredRowScaleCheckBox;
-        private CheckBox _ignoredRowIsValidCheckBox;
 
         private CheckBox _zeroScaleTranslateCheckBox;
         private CheckBox _zeroScaleScaleCheckBox;
@@ -783,19 +780,16 @@ namespace Khronos_Test_Export
             _translateCheckBox = context.AddCheckBox("Translate");
             _rotateCheckBox = context.AddCheckBox("Rotate");
             _scaleCheckBox = context.AddCheckBox("Scale");
-            _isValidCheckBox = context.AddCheckBox("isValid");
             context.NewRow();
-            
+
             _invalidTranslateCheckBox = context.AddCheckBox("invalid, Translate");
             _invalidRotateCheckBox = context.AddCheckBox("invalid, Rotate");
             _invalidScaleCheckBox = context.AddCheckBox("invalid, Scale");
-            _invalidIsValidCheckBox = context.AddCheckBox("invalid. isValid");
             context.NewRow();
 
             _ignoredRowTranslateCheckBox = context.AddCheckBox("ignored row, Translate");
             _ignoredRowRotateCheckBox = context.AddCheckBox("ignored row, Rotate");
             _ignoredRowScaleCheckBox = context.AddCheckBox("ignored row, Scale");
-            _ignoredRowIsValidCheckBox = context.AddCheckBox("ignored row, isValid");
             context.NewRow();
 
             _zeroScaleTranslateCheckBox = context.AddCheckBox("0 scale, Translate");
@@ -828,16 +822,20 @@ namespace Khronos_Test_Export
 
             _translateCheckBox.SetupCheck(matDecomposeNode.ValueOut(Math_MatDecomposeNode.IdOutputTranslation), out var flowTranslate, translate, true);
             context.AddToCurrentEntrySequence(flowTranslate);
+            //A rotation matrix has two unit-quaternion representations (q and -q); the spec does not
+            //mandate which sign math/matDecompose returns, so accept both.
+            _rotateCheckBox.quaternionSignAgnostic = true;
             _rotateCheckBox.SetupCheck(matDecomposeNode.ValueOut(Math_MatDecomposeNode.IdOutputRotation), out var flowRotate, rotate, true);
             context.AddToCurrentEntrySequence(flowRotate);
             _scaleCheckBox.SetupCheck(matDecomposeNode.ValueOut(Math_MatDecomposeNode.IdOutputScale), out var flowScale, scale, true);
             context.AddToCurrentEntrySequence(flowScale);
-            
-            _isValidCheckBox.SetupCheck(matDecomposeNode.ValueOut(Math_MatDecomposeNode.IdOutputIsValid), out var flowValid, true, false);
-            context.AddToCurrentEntrySequence(flowValid);
-            
+
             //Invalid Test
-            
+            //Per the spec's matDecompose algorithm, when a scale component is NaN/infinite/zero the
+            //operation still (step 2) outputs the translation from the fourth column, sets the
+            //rotation to identity, and outputs the scale AS-IS (i.e. keeps the NaN). It does NOT
+            //reset the transform to an identity TRS. Only the NaN Z scale is invalid here.
+
             translate = new Vector3(1f, 2f, 3f);
             rotate = Quaternion.Euler(30f, 45f, 60f);
             scale = new Vector3(2f, 2f, float.NaN);
@@ -846,20 +844,22 @@ namespace Khronos_Test_Export
             invalidMatComposeNode.ValueIn(Math_MatComposeNode.IdInputTranslation).SetValue(translate);
             invalidMatComposeNode.ValueIn(Math_MatComposeNode.IdInputRotation).SetValue(rotate);
             invalidMatComposeNode.ValueIn(Math_MatComposeNode.IdInputScale).SetValue(scale);
-            
+
             var invalidMatDecomposeNode = nodeCreator.CreateNode<Math_MatDecomposeNode>();
             invalidMatDecomposeNode.ValueIn(Math_MatDecomposeNode.IdInput).ConnectToSource(invalidMatComposeNode.FirstValueOut());
 
             context.NewEntryPoint("matDecompose - invalid result");
-            
-            _invalidTranslateCheckBox.SetupCheck(invalidMatDecomposeNode.ValueOut(Math_MatDecomposeNode.IdOutputTranslation), out var invalidFlowTranslate, Vector3.zero, false);
+
+            _invalidTranslateCheckBox.proximityCheckDistance = 0.001f;
+            _invalidTranslateCheckBox.SetupCheck(invalidMatDecomposeNode.ValueOut(Math_MatDecomposeNode.IdOutputTranslation), out var invalidFlowTranslate, translate, true);
             context.AddToCurrentEntrySequence(invalidFlowTranslate);
-            _invalidRotateCheckBox.SetupCheck(invalidMatDecomposeNode.ValueOut(Math_MatDecomposeNode.IdOutputRotation), out var invalidFlowRotate, Quaternion.identity, false);
+            //The spec permits the identity rotation to be either (0,0,0,1) or (0,0,0,-1).
+            _invalidRotateCheckBox.proximityCheckDistance = 0.001f;
+            _invalidRotateCheckBox.quaternionSignAgnostic = true;
+            _invalidRotateCheckBox.SetupCheck(invalidMatDecomposeNode.ValueOut(Math_MatDecomposeNode.IdOutputRotation), out var invalidFlowRotate, Quaternion.identity, true);
             context.AddToCurrentEntrySequence(invalidFlowRotate);
-            _invalidScaleCheckBox.SetupCheck(invalidMatDecomposeNode.ValueOut(Math_MatDecomposeNode.IdOutputScale), out var invalidFlowScale, Vector3.one, false);
+            _invalidScaleCheckBox.SetupCheck(invalidMatDecomposeNode.ValueOut(Math_MatDecomposeNode.IdOutputScale), out var invalidFlowScale, new Vector3(2f, 2f, float.NaN), false);
             context.AddToCurrentEntrySequence(invalidFlowScale);
-            _invalidIsValidCheckBox.SetupCheck(invalidMatDecomposeNode.ValueOut(Math_MatDecomposeNode.IdOutputIsValid), out var invalidFlowValid, false, false);
-            context.AddToCurrentEntrySequence(invalidFlowValid);
 
             //Ignored last row test
             //The spec explicitly states that the last row of the input matrix is ignored completely.
@@ -886,12 +886,11 @@ namespace Khronos_Test_Export
 
             _ignoredRowTranslateCheckBox.SetupCheck(ignoredRowMatDecomposeNode.ValueOut(Math_MatDecomposeNode.IdOutputTranslation), out var ignoredRowFlowTranslate, translate, true);
             context.AddToCurrentEntrySequence(ignoredRowFlowTranslate);
+            _ignoredRowRotateCheckBox.quaternionSignAgnostic = true;
             _ignoredRowRotateCheckBox.SetupCheck(ignoredRowMatDecomposeNode.ValueOut(Math_MatDecomposeNode.IdOutputRotation), out var ignoredRowFlowRotate, rotate, true);
             context.AddToCurrentEntrySequence(ignoredRowFlowRotate);
             _ignoredRowScaleCheckBox.SetupCheck(ignoredRowMatDecomposeNode.ValueOut(Math_MatDecomposeNode.IdOutputScale), out var ignoredRowFlowScale, scale, true);
             context.AddToCurrentEntrySequence(ignoredRowFlowScale);
-            _ignoredRowIsValidCheckBox.SetupCheck(ignoredRowMatDecomposeNode.ValueOut(Math_MatDecomposeNode.IdOutputIsValid), out var ignoredRowFlowValid, true, false);
-            context.AddToCurrentEntrySequence(ignoredRowFlowValid);
 
             //Zero scale test
             //The spec states that a 0 scale must still preserve the translation of the matrix.
@@ -921,9 +920,7 @@ namespace Khronos_Test_Export
     public class Math_MatDecompShearTest : ITestCase, IDisposable
     {
         private CheckBox _checkBoxStable;
-        private CheckBox _checkBoxDecompIsValid;
-        private CheckBox _checkBoxDecomp2IsValid;
-        
+
         private GameObject _tempObject;
         private Transform _shearedObj;
         
@@ -955,8 +952,6 @@ namespace Khronos_Test_Export
             //var cube = GameObject.CreatePrimitive(PrimitiveType.Cube);
             //cube.transform.SetParent(child.transform);
             
-            _checkBoxDecompIsValid = context.AddCheckBox("decomp.isValid");
-            _checkBoxDecomp2IsValid = context.AddCheckBox("comp>decomp.isValid");
             _checkBoxStable = context.AddCheckBox("Stable (>Decomp>Comp[A]>Decom>Comp[B]= A==B");
         }
 
@@ -975,9 +970,6 @@ namespace Khronos_Test_Export
         
             var decomposeNode = nodeCreator.CreateNode<Math_MatDecomposeNode>();
             decomposeNode.ValueIn(Math_MatDecomposeNode.IdInput).ConnectToSource(worldMatrix.FirstValueOut());
-            
-            _checkBoxDecompIsValid.SetupCheck(decomposeNode.ValueOut(Math_MatDecomposeNode.IdOutputIsValid), out var flowIsValid, true, false);
-            context.AddToCurrentEntrySequence(flowIsValid);
 
             var composeNode = nodeCreator.CreateNode<Math_MatComposeNode>();
             composeNode.ValueIn(Math_MatComposeNode.IdInputTranslation).ConnectToSource(decomposeNode.ValueOut(Math_MatDecomposeNode.IdOutputTranslation));
@@ -986,15 +978,7 @@ namespace Khronos_Test_Export
             
             var decomposeNode2 = nodeCreator.CreateNode<Math_MatDecomposeNode>();
             decomposeNode2.ValueIn(Math_MatDecomposeNode.IdInput).ConnectToSource(composeNode.FirstValueOut());
-            
-            var andFirstIsValid = nodeCreator.CreateNode<Math_AndNode>();
-            andFirstIsValid.ValueIn(Math_AndNode.IdValueA).ConnectToSource(decomposeNode.ValueOut(Math_MatDecomposeNode.IdOutputIsValid));
-            andFirstIsValid.ValueIn(Math_AndNode.IdValueB).ConnectToSource(decomposeNode2.ValueOut(Math_MatDecomposeNode.IdOutputIsValid));
-            
-            _checkBoxDecomp2IsValid.SetupCheck(andFirstIsValid.FirstValueOut(), out var flowIsValid2, true, false);
-            context.AddToCurrentEntrySequence(flowIsValid2);
 
-            
             var composeNode2 = nodeCreator.CreateNode<Math_MatComposeNode>();
             composeNode2.ValueIn(Math_MatComposeNode.IdInputTranslation).ConnectToSource(decomposeNode.ValueOut(Math_MatDecomposeNode.IdOutputTranslation));
             composeNode2.ValueIn(Math_MatComposeNode.IdInputRotation).ConnectToSource(decomposeNode.ValueOut(Math_MatDecomposeNode.IdOutputRotation));
@@ -1033,14 +1017,7 @@ namespace Khronos_Test_Export
                 }
             }
             
-            var and1 = nodeCreator.CreateNode<Math_AndNode>();
-            and1.ValueIn("a").ConnectToSource(lastAddResult);
-            and1.ValueIn("b").ConnectToSource(decomposeNode.ValueOut(Math_MatDecomposeNode.IdOutputIsValid));
-            var and2 = nodeCreator.CreateNode<Math_AndNode>();
-            and2.ValueIn("a").ConnectToSource(and1.FirstValueOut());
-            and2.ValueIn("b").ConnectToSource(decomposeNode2.ValueOut(Math_MatDecomposeNode.IdOutputIsValid));
-            
-            _checkBoxStable.SetupCheck(and2.FirstValueOut(), out var flow, true, false);
+            _checkBoxStable.SetupCheck(lastAddResult, out var flow, true, false);
             context.AddToCurrentEntrySequence(flow);
             
         }

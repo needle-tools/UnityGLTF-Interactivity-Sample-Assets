@@ -35,6 +35,13 @@ namespace Khronos_Test_Export
         private bool proximityCheck = false;
         public bool flowOnce = false;
 
+        /// <summary>
+        /// When set, a Quaternion proximity check treats q and -q as equal (compares |dot| instead of
+        /// dot), since both represent the same rotation. Required e.g. by math/matDecompose, whose spec
+        /// permits the identity rotation to be either (0,0,0,1) or (0,0,0,-1).
+        /// </summary>
+        public bool quaternionSignAgnostic = false;
+
         private string resultVarName = null;
         private string resultPassVarName = null;
         
@@ -593,6 +600,88 @@ namespace Khronos_Test_Export
             });
         }
         
+        /// <summary>
+        /// Builds a component-wise check for a vector (float2/3/4) whose expected value contains at
+        /// least one NaN component. math/eq compares NaN as not-equal, so such a value can never be
+        /// matched by the regular equality/proximity paths. Instead each component is extracted and
+        /// checked individually: NaN components via math/isNaN, finite components via a tolerance
+        /// (|actual - expected| &lt; proximityCheckDistance), and the per-component results are ANDed.
+        /// Returns false (and leaves the outputs untouched) when the value is not a NaN-bearing vector.
+        /// </summary>
+        private bool TryBuildNaNVectorCheck(object valueToCompare, out GltfInteractivityExportNode resultNode, out ValueInRef inputValue)
+        {
+            resultNode = null;
+            inputValue = null;
+
+            GltfInteractivityExportNode extractNode;
+            float[] components;
+
+            if (valueToCompare is Vector2 v2 && (float.IsNaN(v2.x) || float.IsNaN(v2.y)))
+            {
+                extractNode = context.interactivityExportContext.CreateNode<Math_Extract2Node>();
+                inputValue = extractNode.ValueIn(Math_Extract2Node.IdValueIn);
+                components = new[] { v2.x, v2.y };
+            }
+            else if (valueToCompare is Vector3 v3 && (float.IsNaN(v3.x) || float.IsNaN(v3.y) || float.IsNaN(v3.z)))
+            {
+                extractNode = context.interactivityExportContext.CreateNode<Math_Extract3Node>();
+                inputValue = extractNode.ValueIn(Math_Extract3Node.IdValueIn);
+                components = new[] { v3.x, v3.y, v3.z };
+            }
+            else if (valueToCompare is Vector4 v4 && (float.IsNaN(v4.x) || float.IsNaN(v4.y) || float.IsNaN(v4.z) || float.IsNaN(v4.w)))
+            {
+                extractNode = context.interactivityExportContext.CreateNode<Math_Extract4Node>();
+                inputValue = extractNode.ValueIn(Math_Extract4Node.IdValueIn);
+                components = new[] { v4.x, v4.y, v4.z, v4.w };
+            }
+            else
+            {
+                return false;
+            }
+
+            ValueOutRef combined = null;
+            for (int i = 0; i < components.Length; i++)
+            {
+                GltfInteractivityExportNode componentNode;
+                if (float.IsNaN(components[i]))
+                {
+                    var isNaNNode = context.interactivityExportContext.CreateNode<Math_IsNaNNode>();
+                    isNaNNode.ValueIn(Math_IsNaNNode.IdValueA).ConnectToSource(extractNode.ValueOut(i.ToString()));
+                    componentNode = isNaNNode;
+                }
+                else
+                {
+                    var subNode = context.interactivityExportContext.CreateNode<Math_SubNode>();
+                    subNode.ValueIn("a").ConnectToSource(extractNode.ValueOut(i.ToString()));
+                    subNode.ValueIn("b").SetValue(components[i]);
+
+                    var absNode = context.interactivityExportContext.CreateNode<Math_AbsNode>();
+                    absNode.ValueIn("a").ConnectToSource(subNode.FirstValueOut());
+
+                    var lessThanNode = context.interactivityExportContext.CreateNode<Math_LtNode>();
+                    lessThanNode.ValueIn("a").ConnectToSource(absNode.FirstValueOut());
+                    lessThanNode.SetValueInSocket("b", proximityCheckDistance);
+                    componentNode = lessThanNode;
+                }
+
+                if (combined == null)
+                {
+                    combined = componentNode.FirstValueOut();
+                    resultNode = componentNode;
+                }
+                else
+                {
+                    var andNode = context.interactivityExportContext.CreateNode<Math_AndNode>();
+                    andNode.ValueIn("a").ConnectToSource(combined);
+                    andNode.ValueIn("b").ConnectToSource(componentNode.FirstValueOut());
+                    combined = andNode.FirstValueOut();
+                    resultNode = andNode;
+                }
+            }
+
+            return true;
+        }
+
         public void SetupCheck(out ValueInRef inputValue, out FlowInRef flow, object valueToCompare,
             bool proximityCheck = false)
         {
@@ -600,7 +689,13 @@ namespace Khronos_Test_Export
             var compareValueType = GltfTypes.TypeIndex(valueToCompare.GetType());
         
             GltfInteractivityExportNode eqNode = null;
-            if (proximityCheck)
+            if (TryBuildNaNVectorCheck(valueToCompare, out eqNode, out inputValue))
+            {
+                // A vector containing at least one NaN component (e.g. an "invalid" matDecompose
+                // scale result). math/eq against NaN is always false, so we compare component-wise:
+                // NaN components are verified with math/isNaN, finite components with a tolerance check.
+            }
+            else if (proximityCheck)
             {
                 if (valueToCompare is Matrix4x4 vtcMat)
                 {
@@ -672,9 +767,19 @@ namespace Khronos_Test_Export
                     }
                     
                     dotNode.ValueIn(Math_DotNode.IdValueB).SetValue(valueToCompareNorm);
-                    
+
+                    // For a sign-agnostic quaternion check, q and -q are the same rotation, so compare
+                    // the absolute dot product against 1 rather than the signed dot.
+                    ValueOutRef dotResult = dotNode.FirstValueOut();
+                    if (quaternionSignAgnostic && valueToCompare is Quaternion)
+                    {
+                        var absDotNode = context.interactivityExportContext.CreateNode<Math_AbsNode>();
+                        absDotNode.ValueIn("a").ConnectToSource(dotNode.FirstValueOut());
+                        dotResult = absDotNode.FirstValueOut();
+                    }
+
                     var gtNode = context.interactivityExportContext.CreateNode<Math_GtNode>();
-                    gtNode.ValueIn(Math_GtNode.IdValueA).ConnectToSource(dotNode.FirstValueOut());
+                    gtNode.ValueIn(Math_GtNode.IdValueA).ConnectToSource(dotResult);
                     gtNode.SetValueInSocket("b", 1f-proximityCheckDistance);
 
                     var lengthNode = context.interactivityExportContext.CreateNode<Math_LengthNode>();
