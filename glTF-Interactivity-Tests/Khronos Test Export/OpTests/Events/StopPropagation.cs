@@ -6,59 +6,105 @@ namespace Khronos_Test_Export
 {
     public class StopPropagation : ITestCase
     {
-        private CheckBox _receiverACheckbox;
-        private CheckBox _receiverBCheckbox;
+        private CheckBox _immediateReceiverACheckbox;
+        private CheckBox _immediateReceiverBCheckbox;
+        private CheckBox _nonImmediateReceiverACheckbox;
+        private CheckBox _nonImmediateReceiverBCheckbox;
+        private CheckBox _invalidEventCheckbox;
 
         public string GetTestName() => "event/stopPropagation";
 
         public string GetTestDescription() =>
-            "Sends a custom event. Receiver A stops propagation; Receiver B must not be triggered.";
+            "Verifies immediate and non-immediate propagation stopping, and handling of an invalid event reference.";
 
         public void PrepareObjects(TestContext context)
         {
-            _receiverACheckbox = context.AddCheckBox("Receiver A: received event", true);
-            _receiverBCheckbox = context.AddCheckBox("Receiver B: NOT triggered (propagation stopped)", true);
+            _immediateReceiverACheckbox = context.AddCheckBox("stopImmediate=true: Receiver A and out triggered", true);
+            _immediateReceiverBCheckbox = context.AddCheckBox("stopImmediate=true: Receiver B not triggered", true);
+            _nonImmediateReceiverACheckbox = context.AddCheckBox("stopImmediate=false: Receiver A and out triggered", true);
+            _nonImmediateReceiverBCheckbox = context.AddCheckBox("stopImmediate=false: Receiver B triggered once", true);
+            _invalidEventCheckbox = context.AddCheckBox("Invalid event ref: out triggered", true);
         }
 
         public void CreateNodes(TestContext context)
         {
             var nodeCreator = context.interactivityExportContext;
 
-            // Private (underscore-prefixed) event so it stays local to this GLB
+            CreateSameGraphHandlerCase(
+                context,
+                "stopImmediate=true",
+                true,
+                0,
+                _immediateReceiverACheckbox,
+                _immediateReceiverBCheckbox);
+
+            CreateSameGraphHandlerCase(
+                context,
+                "stopImmediate=false",
+                false,
+                1,
+                _nonImmediateReceiverACheckbox,
+                _nonImmediateReceiverBCheckbox);
+
+            // An invalid event reference is a no-op, but the out flow must still activate.
+            context.NewEntryPoint("invalid event ref", 1f);
+
+            var invalidEventStopNode = nodeCreator.CreateNode<Event_StopPropagationNode>();
+            invalidEventStopNode.ValueIn(Event_StopPropagationNode.IdStopImmediate).SetValue(true);
+            invalidEventStopNode.ValueIn(Event_StopPropagationNode.IdEvent).SetValue(null);
+
+            context.AddToCurrentEntrySequence(
+                invalidEventStopNode.FlowIn(Event_StopPropagationNode.IdFlowIn));
+
+            _invalidEventCheckbox.SetupCheck(out var invalidEventCheckFlowIn);
+            invalidEventStopNode.FlowOut(Event_StopPropagationNode.IdFlowOut)
+                .ConnectToFlowDestination(invalidEventCheckFlowIn);
+        }
+
+        private static void CreateSameGraphHandlerCase(
+            TestContext context,
+            string caseName,
+            bool stopImmediate,
+            int expectedReceiverBCalls,
+            CheckBox receiverACheckbox,
+            CheckBox receiverBCheckbox)
+        {
+            var nodeCreator = context.interactivityExportContext;
+
+            // Private (underscore-prefixed) event so it stays local to this GLB.
             var eventId = nodeCreator.Context.AddEventWithIdIfNeeded(
                 "_stopPropagationEvent_" + Guid.NewGuid());
 
-            // ── On start: send the event ─────────────────────────────────────────────
             var sendNode = nodeCreator.CreateNode<Event_SendNode>();
             sendNode.Configuration[Event_SendNode.IdEvent].Value = eventId;
 
-            context.NewEntryPoint(GetTestName(), 1f);
+            context.NewEntryPoint(caseName, 1f);
             context.AddToCurrentEntrySequence(sendNode.FlowIn(Event_SendNode.IdFlowIn));
 
-            // ── Receiver A (created first → processes the event before Receiver B) ───
+            // Receiver A appears first in JSON and is therefore activated first.
             var receiveA = nodeCreator.CreateNode<Event_ReceiveNode>();
             receiveA.Configuration[Event_ReceiveNode.IdEventConfig].Value = eventId;
 
-            // Stop propagation: pass the event ref provided by the receive node
             var stopPropNode = nodeCreator.CreateNode<Event_StopPropagationNode>();
             stopPropNode.ValueIn(Event_StopPropagationNode.IdEvent)
                 .ConnectToSource(receiveA.ValueOut(Event_ReceiveNode.IdEventOut));
-            stopPropNode.ValueIn(Event_StopPropagationNode.IdStopImmediate).SetValue(false);
+            stopPropNode.ValueIn(Event_StopPropagationNode.IdStopImmediate).SetValue(stopImmediate);
 
-            // Flow: receiveA → stopPropagation → checkbox A passes
             receiveA.FlowOut(Event_ReceiveNode.IdFlowOut)
                 .ConnectToFlowDestination(stopPropNode.FlowIn(Event_StopPropagationNode.IdFlowIn));
 
-            _receiverACheckbox.SetupCheck(out var checkAFlowIn);
+            receiverACheckbox.SetupCheck(out var checkAFlowIn);
             stopPropNode.FlowOut(Event_StopPropagationNode.IdFlowOut)
                 .ConnectToFlowDestination(checkAFlowIn);
 
-            // ── Receiver B (created second → must NOT fire after stopPropagation) ────
+            // With stopImmediate=true this pending same-graph handler is cancelled.
+            // With stopImmediate=false it must still be activated.
             var receiveB = nodeCreator.CreateNode<Event_ReceiveNode>();
             receiveB.Configuration[Event_ReceiveNode.IdEventConfig].Value = eventId;
 
-            // Verify Receiver B fires exactly 0 times; passes at fallback if count == 0
-            _receiverBCheckbox.SetupCheckFlowTimes(out var receiverBCounterFlow, 0);
+            receiverBCheckbox.SetupCheckFlowTimes(
+                out var receiverBCounterFlow,
+                expectedReceiverBCalls);
             receiveB.FlowOut(Event_ReceiveNode.IdFlowOut)
                 .ConnectToFlowDestination(receiverBCounterFlow);
         }
