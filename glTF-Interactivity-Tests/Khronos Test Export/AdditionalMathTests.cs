@@ -369,6 +369,99 @@ namespace Khronos_Test_Export
         }
     }
     
+    /// <summary>
+    /// math/quatFromAngles: build a unit quaternion from three Tait-Bryan intrinsic angles
+    /// applied in the order given by the "order" configuration.
+    ///
+    /// The expected value is derived directly from the spec: each axis angle is turned into a
+    /// quaternion using the math/quatFromAxisAngle definition (axis * sin(0.5*angle), cos(0.5*angle))
+    /// and the per-axis quaternions are combined with the math/quatMul Hamilton product in the
+    /// literal order of the configuration string. Several orders are covered (default yxz plus
+    /// non-default orders) to exercise the multiplication ordering.
+    /// </summary>
+    [TestCreator.IgnoreTestCase]
+    public class Math_QuatFromAnglesTest : ITestCase
+    {
+        // Distinct non-trivial angles (radians) so different orders yield different results.
+        private const float X = 30f * Mathf.Deg2Rad;
+        private const float Y = 45f * Mathf.Deg2Rad;
+        private const float Z = 60f * Mathf.Deg2Rad;
+
+        // All six Tait-Bryan orders permitted by the spec (yxz is the default).
+        private static readonly string[] Orders = { "xyz", "xzy", "yxz", "yzx", "zxy", "zyx" };
+        private CheckBox[] _checkBoxes;
+
+        public string GetTestName() => "math/quatFromAngles";
+        public string GetTestDescription() => "";
+
+        public void PrepareObjects(TestContext context)
+        {
+            _checkBoxes = new CheckBox[Orders.Length];
+            for (int i = 0; i < Orders.Length; i++)
+                _checkBoxes[i] = context.AddCheckBox($"order {Orders[i]}");
+        }
+
+        public void CreateNodes(TestContext context)
+        {
+            var nc = context.interactivityExportContext;
+
+            for (int i = 0; i < Orders.Length; i++)
+            {
+                var order = Orders[i];
+
+                var node = nc.CreateNode<Math_QuatFromAnglesNode>();
+                node.Configuration[Math_QuatFromAnglesNode.IdConfigOrder].Value = order;
+                node.ValueIn(Math_QuatFromAnglesNode.IdX).SetValue(X);
+                node.ValueIn(Math_QuatFromAnglesNode.IdY).SetValue(Y);
+                node.ValueIn(Math_QuatFromAnglesNode.IdZ).SetValue(Z);
+
+                var expected = ExpectedQuat(order, X, Y, Z);
+
+                context.NewEntryPoint($"quatFromAngles-{order}");
+                _checkBoxes[i].proximityCheckDistance = 0.001f;
+                _checkBoxes[i].SetupCheck(node.FirstValueOut(), out var flow, expected, true);
+                context.AddToCurrentEntrySequence(flow);
+            }
+        }
+
+        // Per-axis quaternion per math/quatFromAxisAngle: (axis * sin(0.5*angle), cos(0.5*angle)).
+        private static Vector4 AxisQuat(Vector3 axis, float angle)
+        {
+            float s = Mathf.Sin(0.5f * angle);
+            float c = Mathf.Cos(0.5f * angle);
+            return new Vector4(axis.x * s, axis.y * s, axis.z * s, c);
+        }
+
+        // Hamilton product a (x) b per math/quatMul.
+        private static Vector4 QuatMul(Vector4 a, Vector4 b)
+        {
+            return new Vector4(
+                a.w * b.x + a.x * b.w + a.y * b.z - a.z * b.y,
+                a.w * b.y + a.y * b.w + a.z * b.x - a.x * b.z,
+                a.w * b.z + a.z * b.w + a.x * b.y - a.y * b.x,
+                a.w * b.w - a.x * b.x - a.y * b.y - a.z * b.z);
+        }
+
+        private static Quaternion ExpectedQuat(string order, float x, float y, float z)
+        {
+            // Identity quaternion (0,0,0,1).
+            var result = new Vector4(0f, 0f, 0f, 1f);
+            foreach (var axis in order)
+            {
+                Vector4 q;
+                switch (axis)
+                {
+                    case 'x': q = AxisQuat(new Vector3(1f, 0f, 0f), x); break;
+                    case 'y': q = AxisQuat(new Vector3(0f, 1f, 0f), y); break;
+                    case 'z': q = AxisQuat(new Vector3(0f, 0f, 1f), z); break;
+                    default: continue;
+                }
+                result = QuatMul(result, q);
+            }
+            return new Quaternion(result.x, result.y, result.z, result.w);
+        }
+    }
+
     [TestCreator.IgnoreTestCase]
     public class Math_SelectTest : ITestCase
     {

@@ -1799,6 +1799,7 @@ namespace Khronos_Test_Export
             additionalCases.Add(new Math_MatDecomposeTest());
             additionalCases.Add(new Math_QuatToAxisAngleTest());
             additionalCases.Add(new Math_QuatFromAxisAngleTest());
+            additionalCases.Add(new Math_QuatFromAnglesTest());
             additionalCases.Add(new Math_Extract2Test());
             additionalCases.Add(new Math_Extract3Test());
             additionalCases.Add(new Math_Extract4Test());
