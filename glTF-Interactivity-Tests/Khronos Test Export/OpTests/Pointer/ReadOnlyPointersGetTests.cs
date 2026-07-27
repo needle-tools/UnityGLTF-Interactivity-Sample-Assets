@@ -25,7 +25,7 @@ namespace Khronos_Test_Export
                 }),
             ("/meshes.length", (TestContext c) => (c.interactivityExportContext.Context.exporter.GetRoot().Meshes.Count, null)),
             ("/meshes/0/primitives.length", (TestContext c) => (c.interactivityExportContext.Context.exporter.GetRoot().Meshes[0].Primitives.Count, null)),
-            ("/meshes/0/primitives/0/material",(TestContext c) => (new StaticRefPointer($"/materials/{c.interactivityExportContext.Context.exporter.GetRoot().Meshes[0].Primitives[0].Material.Id}/"), null)),
+            ("/meshes/0/primitives/0/material",(TestContext c) => (new StaticRefPointer($"/materials/{c.interactivityExportContext.Context.exporter.GetRoot().Meshes[0].Primitives[0].Material.Id}"), null)),
            
             ("/nodes/[]/weights.length", context =>
                 {
@@ -47,7 +47,7 @@ namespace Khronos_Test_Export
             {
                 var cameraNodeId = c.interactivityExportContext.Context.exporter.GetTransformIndex(cameraObject.transform);
                 var root = c.interactivityExportContext.Context.exporter.GetRoot();
-                return (new StaticRefPointer($"/cameras/{root.Nodes[cameraNodeId].Camera.Id}/"), $"/nodes/{cameraNodeId}/camera");
+                return (new StaticRefPointer($"/cameras/{root.Nodes[cameraNodeId].Camera.Id}"), $"/nodes/{cameraNodeId}/camera");
             }),
             ("/nodes/0/children.length", (TestContext c) => (c.interactivityExportContext.Context.exporter.GetRoot().Nodes[0].Children.Count, null)),
             
@@ -58,25 +58,25 @@ namespace Khronos_Test_Export
                     if (parentNode == null)
                         throw new Exception("No node with children found");
                     var parentIndex = root.Nodes.IndexOf(parentNode);
-                    return (new StaticRefPointer($"/nodes/{parentNode.Children[0].Id}/"), $"/nodes/{parentIndex}/children/0");
+                    return (new StaticRefPointer($"/nodes/{parentNode.Children[0].Id}"), $"/nodes/{parentIndex}/children/0");
                     
                 }),
             ("/nodes/[]/mesh", (TestContext c) => (  
-                    new StaticRefPointer($"/meshes/{c.interactivityExportContext.Context.exporter.GetRoot().Nodes.First(n =>  n.Mesh != null).Mesh.Id}/"),
+                    new StaticRefPointer($"/meshes/{c.interactivityExportContext.Context.exporter.GetRoot().Nodes.First(n =>  n.Mesh != null).Mesh.Id}"),
                     "/nodes/{nodeWithMesh}/mesh")),
             ("/nodes/1/parent", (TestContext c) =>
             {
                     var r = c.interactivityExportContext.Context.exporter.GetRoot();
                     var n = r.Nodes[1];
                     var parent = r.Nodes.Find(n2 => n2.Children?.FirstOrDefault(c => c.Id == 1) != null);
-                    return (new StaticRefPointer($"/nodes/{r.Nodes.IndexOf(parent)}/"), null);
+                    return (new StaticRefPointer($"/nodes/{r.Nodes.IndexOf(parent)}"), null);
             }),
             ("/scene", (TestContext c) => (0, null)),
             ("/scenes.length", (TestContext c) => (1, null)),
             ("/scenes/0/nodes.length", (TestContext c) => 
                 (c.interactivityExportContext.Context.exporter.GetRoot().Scenes[0].Nodes.Count, null)),
             
-            ("/scenes/0/nodes/0",  (TestContext c) => (new StaticRefPointer("/nodes/0/"), null)),
+            ("/scenes/0/nodes/0",  (TestContext c) => (new StaticRefPointer("/nodes/0"), null)),
         
             ("/nodes/[]/skin", context =>
                 {
@@ -85,7 +85,7 @@ namespace Khronos_Test_Export
                     if (skinnedNode == null)
                         throw new Exception("No skinned node found");
                     var skinnedNodeIndex = root.Nodes.IndexOf(skinnedNode);
-                    return (new StaticRefPointer($"/skins/{skinnedNode.Skin.Id}/"), $"/nodes/{skinnedNodeIndex}/skin");
+                    return (new StaticRefPointer($"/skins/{skinnedNode.Skin.Id}"), $"/nodes/{skinnedNodeIndex}/skin");
                     
                 }),
             ("/skins.length", context =>
@@ -114,7 +114,7 @@ namespace Khronos_Test_Export
                     var skin = root.Skins.FirstOrDefault();
                     if (skin.Skeleton == null)
                         skin.Skeleton = new NodeId() { Id = 0, Root = root };
-                    return (new StaticRefPointer($"/nodes/{skin.Skeleton.Id}/"), $"/skins/{root.Skins.IndexOf(skin)}/skeleton");
+                    return (new StaticRefPointer($"/nodes/{skin.Skeleton.Id}"), $"/skins/{root.Skins.IndexOf(skin)}/skeleton");
                 }),
         };
         
@@ -265,7 +265,7 @@ namespace Khronos_Test_Export
                     if (nodeWithMesh != null)
                     {
                         var nodeIndex = root.Nodes.IndexOf(nodeWithMesh);
-                        pointerGet.ValueIn("nodeWithMesh").SetValue(new StaticRefPointer($"/nodes/{nodeIndex}/")); 
+                        pointerGet.ValueIn("nodeWithMesh").SetValue(new StaticRefPointer($"/nodes/{nodeIndex}")); 
                     }
                     else
                     {

@@ -172,58 +172,58 @@ namespace Khronos_Test_Export
             // By Index
             new LightPointerTest()
             {
-                template = PointersHelper.IdPointerTemplLightByIndex + "color",
+                template = PointersHelper.IdPointerTemplLightByIndex + "/color",
                 value = ColorRGB(Color.red),
                 LightType = LightType.Spot
             },
             new LightPointerTest()
             {
-                template = PointersHelper.IdPointerTemplLightByIndex + "intensity",
+                template = PointersHelper.IdPointerTemplLightByIndex + "/intensity",
                 value = 4f
             },
             new LightPointerTest()
             {
-                template = PointersHelper.IdPointerTemplLightByIndex + "range",
+                template = PointersHelper.IdPointerTemplLightByIndex + "/range",
                 value = 9f
             },
             new LightPointerTest()
             {
-                template = PointersHelper.IdPointerTemplLightByIndex + "spot/innerConeAngle",
+                template = PointersHelper.IdPointerTemplLightByIndex + "/spot/innerConeAngle",
                 value = 2f,
                 LightType = LightType.Spot
             },
             new LightPointerTest()
             {
-                template = PointersHelper.IdPointerTemplLightByIndex + "spot/outerConeAngle",
+                template = PointersHelper.IdPointerTemplLightByIndex + "/spot/outerConeAngle",
                 value = 5f,
                 LightType = LightType.Spot
             },
             // By Ref
             new LightPointerTest()
             {
-                template = PointersHelper.IdPointerTemplLightByRef + "color",
+                template = PointersHelper.IdPointerTemplLightByRef + "/color",
                 value = ColorRGB(Color.red),
                 LightType = LightType.Spot
             },
             new LightPointerTest()
             {
-                template = PointersHelper.IdPointerTemplLightByRef + "intensity",
+                template = PointersHelper.IdPointerTemplLightByRef + "/intensity",
                 value = 4f
             },
             new LightPointerTest()
             {
-                template = PointersHelper.IdPointerTemplLightByRef + "range",
+                template = PointersHelper.IdPointerTemplLightByRef + "/range",
                 value = 9f
             },
             new LightPointerTest()
             {
-                template = PointersHelper.IdPointerTemplLightByRef + "spot/innerConeAngle",
+                template = PointersHelper.IdPointerTemplLightByRef + "/spot/innerConeAngle",
                 value = 2f,
                 LightType = LightType.Spot
             },
             new LightPointerTest()
             {
-                template = PointersHelper.IdPointerTemplLightByRef + "spot/outerConeAngle",
+                template = PointersHelper.IdPointerTemplLightByRef + "/spot/outerConeAngle",
                 value = 5f,
                 LightType = LightType.Spot
             },
@@ -570,8 +570,8 @@ namespace Khronos_Test_Export
                     }
                     if (sub.template.Contains(PointersHelper.IdPointerMaterialRef)) // By Ref
                     {
-                        pSet.ValueIn(PointersHelper.IdPointerMaterialRef).SetValue(new StaticRefPointer($"/materials/{materialIndex}/"));
-                        pGet.ValueIn(PointersHelper.IdPointerMaterialRef).SetValue(new StaticRefPointer($"/materials/{materialIndex}/"));
+                        pSet.ValueIn(PointersHelper.IdPointerMaterialRef).SetValue(new StaticRefPointer($"/materials/{materialIndex}"));
+                        pGet.ValueIn(PointersHelper.IdPointerMaterialRef).SetValue(new StaticRefPointer($"/materials/{materialIndex}"));
                         var gltfMaterial = context.interactivityExportContext.Context.exporter.GetRoot().Materials[materialIndex];
                         gltfMaterial.AlphaMode = AlphaMode.MASK;
                         gltfMaterial.AlphaCutoff = 1f;
@@ -586,8 +586,8 @@ namespace Khronos_Test_Export
                     }
                     if (sub.template.Contains(PointersHelper.IdPointerLightRef)) // By ref
                     {
-                        pSet.ValueIn(PointersHelper.IdPointerLightRef).SetValue(new StaticRefPointer($"/extensions/KHR_lights_punctual/lights/{lightIndex}/"));
-                        pGet.ValueIn(PointersHelper.IdPointerLightRef).SetValue(new StaticRefPointer($"/extensions/KHR_lights_punctual/lights/{lightIndex}/"));
+                        pSet.ValueIn(PointersHelper.IdPointerLightRef).SetValue(new StaticRefPointer($"/extensions/KHR_lights_punctual/lights/{lightIndex}"));
+                        pGet.ValueIn(PointersHelper.IdPointerLightRef).SetValue(new StaticRefPointer($"/extensions/KHR_lights_punctual/lights/{lightIndex}"));
                         pointerString = pointerString.Replace("{"+PointersHelper.IdPointerLightRef+"}", lightIndex.ToString());
                     }
                     

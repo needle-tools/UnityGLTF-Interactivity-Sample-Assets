@@ -28,7 +28,7 @@ public class InterfaceSample : MonoBehaviour ,IInteractivityExport
         vector3Node.SetValueInSocketSource("c", equalNode, "value", TypeRestriction.LimitToFloat);
         
         var setPositionNode = nodes.CreateNode<Pointer_SetNode>();
-        PointersHelper.AddPointerConfig(setPositionNode, PointersHelper.IdPointerTemplNodeByRef + "translation", GltfTypes.Float3);
+        PointersHelper.AddPointerConfig(setPositionNode, PointersHelper.IdPointerTemplNodeByRef + "/translation", GltfTypes.Float3);
         int thisTransformIndex = nodes.Context.exporter.GetTransformIndex(transform);
         PointersHelper.AddPointerTemplateValueInput(setPositionNode, PointersHelper.IdPointerNodeRef, thisTransformIndex);
         setPositionNode.SetValueInSocketSource("value", vector3Node, "value", TypeRestriction.LimitToFloat3);
