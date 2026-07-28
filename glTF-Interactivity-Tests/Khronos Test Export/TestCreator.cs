@@ -102,6 +102,7 @@ namespace Khronos_Test_Export
                         Name = testCase.GetTestName(),
                         Description = testCase.GetTestDescription(),
                         typeFullName = testCase.GetType().ToString(),
+                        Enabled = false
                     });
                 }
             }

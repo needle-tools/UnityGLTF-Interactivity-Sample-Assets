@@ -9,6 +9,7 @@ using Newtonsoft.Json.Linq;
 using TMPro;
 using UnityEditor;
 using UnityEngine;
+using UnityEngine.Serialization;
 using UnityGLTF;
 using UnityGLTF.Interactivity;
 using UnityGLTF.Interactivity.Export;
@@ -19,6 +20,7 @@ namespace Khronos_Test_Export
 {
     public class TestExporter : MonoBehaviour, IInteractivityExport
     {
+        [HideInInspector] public string testExportPath = "";
         public CheckBox checkBoxPrefab;
         public TextMeshPro caseLabelPrefab;
 
@@ -262,10 +264,9 @@ namespace Khronos_Test_Export
 
         public string ShowDestinationFolderDialog()
         {
-            var path = EditorPrefs.GetString("GLTFTestExportPath", "");
-            path = UnityEditor.EditorUtility.SaveFolderPanel("Destination Folder", path, "");
-            EditorPrefs.SetString("GLTFTestExportPath", path);
-            return path;
+            testExportPath = UnityEditor.EditorUtility.SaveFolderPanel("Destination Folder", testExportPath, "");
+            testExportPath = System.IO.Path.GetRelativePath(Application.dataPath, testExportPath);
+            return testExportPath;
         }
         
         public void ExportTest(ITestCase[] cases, bool batchExport, string allInOneName, string indexFileName)
@@ -440,18 +441,22 @@ namespace Khronos_Test_Export
                 base.OnInspectorGUI();
                 var exporter = target as TestExporter;
                 
-                var path = EditorPrefs.GetString("GLTFTestExportPath", "");
+                var path = target.GetType().GetField(nameof(TestExporter.testExportPath)).GetValue(target) as string;
                 GUILayout.Label("Export Path: ");
                 EditorGUILayout.BeginHorizontal();
-                EditorGUI.BeginDisabledGroup(true);
-                EditorGUILayout.TextField(path, GUILayout.ExpandWidth(true));
-                EditorGUI.EndDisabledGroup();
+                var newPath = EditorGUILayout.TextField(path, GUILayout.ExpandWidth(true));
+                if (newPath != path)
+                {
+                    path = newPath;
+                    target.GetType().GetField(nameof(TestExporter.testExportPath)).SetValue(target, path);
+                }
                 
                 var btn = GUILayout.Button("Select Exporter Folder", GUILayout.MinWidth(150));
                 EditorGUILayout.EndHorizontal();
                 if (btn)
                 {
-                    exporter.ShowDestinationFolderDialog();
+                    var newpath = exporter.ShowDestinationFolderDialog();
+                    target.GetType().GetField(nameof(TestExporter.testExportPath)).SetValue(target, newpath);
                 }
           
             }
