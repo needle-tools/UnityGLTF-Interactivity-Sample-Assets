@@ -1,0 +1,28 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3f2a1c9d84be4a1d9c7e5b0f6a2d8e41, type: 3}
+  m_Name: TrafficLight.modeldef
+  m_EditorClassIdentifier:
+  scene: {fileID: 102900000, guid: 146197fb093f69b429ac5c10555c2e32, type: 3}
+  modelFolderName: 'TrafficLight'
+  fileName: 'TrafficLight'
+  label: 'Traffic Light'
+  description: 'Left Traffic Light: Click on the button to start the sequence. Right Traffic Light: Click on the button to switch to next phase.'
+  tags:
+  - interactivity
+  - showcase
+  exportGlb: 1
+  exportGltf: 1
+  includeInIndex: 1
+  licenseInformation: 'Donated by Needle for glTF testing.'
+  licenseStatement: 'This model is licensed under a Creative Commons Attribution 4.0 International License.'
+  cachedScenePath: 'Packages/com.needle.gltf-interactivity-scenes/Interactivity Repo Models/20250102-Trafficlight/TrafficLight.unity'
