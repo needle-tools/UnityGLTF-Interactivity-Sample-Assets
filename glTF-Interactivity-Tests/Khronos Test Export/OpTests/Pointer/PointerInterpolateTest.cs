@@ -44,8 +44,8 @@ namespace Khronos_Test_Export
 
         private static readonly Vector3 StartPosition = Vector3.zero;
         private static readonly Vector3 TargetPosition = new Vector3(2f, 3f, 4f);
-        private static readonly Vector2 P1 = new Vector2(1f, 1f);
-        private static readonly Vector2 P2 = new Vector2(1f, 1f);
+        private static readonly Vector2 P1 = new Vector2(0.25f, 0.1f);
+        private static readonly Vector2 P2 = new Vector2(0.25f, 1f);
         private const float Duration = 4f;
 
         public string GetTestName()

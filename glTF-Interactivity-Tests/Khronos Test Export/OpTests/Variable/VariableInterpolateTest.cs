@@ -52,8 +52,8 @@ namespace Khronos_Test_Export
             
             node.Configuration[Variable_InterpolateNode.IdConfigUseSlerp].Value = false;
             node.Configuration[Variable_InterpolateNode.IdConfigVariable].Value = var1Id;
-            var pointA = new Vector2(1f, 1f);
-            var pointB = new Vector2(1f, 1f);
+            var pointA = new Vector2(0.25f, 0.1f);
+            var pointB = new Vector2(0.25f, 1f);
             var targetValue = 10f;
             var duration = 4f;
             node.ValueIn(Variable_InterpolateNode.IdPoint1).SetValue(pointA);
