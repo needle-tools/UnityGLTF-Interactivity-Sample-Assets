@@ -297,12 +297,17 @@ namespace Khronos_Test_Export
         {
             var settings = GLTFSettings.GetDefaultSettings();
             settings.UseCaching = false;
+            settings.ExportDisabledGameObjects = true;
             var testFileExporterPLugin = settings.ExportPlugins.FirstOrDefault(ep => ep is TestFileExporterPlugin);
             if (testFileExporterPLugin == null)
             {
                 testFileExporterPLugin = new TestFileExporterPlugin();
                 settings.ExportPlugins.Add(testFileExporterPLugin);
             }
+            
+            var visbility = settings.ExportPlugins.FirstOrDefault( ep => ep is VisibilityExport);
+            if (visbility != null)
+                visbility.Enabled = true;
 
             testFileExporterPLugin.Enabled = true;
 
