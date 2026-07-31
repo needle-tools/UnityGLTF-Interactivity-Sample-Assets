@@ -242,7 +242,8 @@ namespace Khronos_Test_Export
             },
             new PbrMaterialPointerTest()
             {
-                Extension = "pbrMetallicRoughness",
+                // No Extension here: pbrMetallicRoughness is a core material property, not an extension.
+                // PbrMaterialPointerTest overrides materialTemplate, so the pointer path is unaffected.
                 materialProperties = new[]
                     {
                         new MaterialProperty("baseColorFactor", Color.blue),
@@ -460,59 +461,57 @@ namespace Khronos_Test_Export
         {
             if (string.IsNullOrEmpty(extensionName))
                 return;
-       
-            if (exporter.GetRoot().Materials[materialIndex].Extensions == null)
-                exporter.GetRoot().Materials[materialIndex].Extensions = new Dictionary<string, IExtension>();
 
-            exporter.DeclareExtensionUsage(extensionName);
-
-            var ext = exporter.GetRoot().Materials[materialIndex].Extensions;
-            if (ext.ContainsKey(extensionName))
-                return;
-            
+            IExtension newExtension;
             switch (extensionName)
             {
                 case KHR_materials_specular_Factory.EXTENSION_NAME:
-                    ext.Add(extensionName, new KHR_materials_specular());
+                    newExtension = new KHR_materials_specular();
                     break;
                 case KHR_materials_anisotropy_Factory.EXTENSION_NAME:
-                    ext.Add(extensionName, new KHR_materials_anisotropy());
+                    newExtension = new KHR_materials_anisotropy();
                     break;
                 case KHR_materials_clearcoat_Factory.EXTENSION_NAME:
-                    ext.Add(extensionName, new KHR_materials_clearcoat());
+                    newExtension = new KHR_materials_clearcoat();
                     break;
                 case KHR_materials_dispersion_Factory.EXTENSION_NAME:
-                    ext.Add(extensionName, new KHR_materials_dispersion());
+                    newExtension = new KHR_materials_dispersion();
                     break;
                 case KHR_materials_emissive_strength_Factory.EXTENSION_NAME:
-                    ext.Add(extensionName, new KHR_materials_emissive_strength());
+                    newExtension = new KHR_materials_emissive_strength();
                     break;
                 case KHR_materials_ior_Factory.EXTENSION_NAME:
-                    ext.Add(extensionName, new KHR_materials_ior());
+                    newExtension = new KHR_materials_ior();
                     break;
                 case KHR_materials_iridescence_Factory.EXTENSION_NAME:
-                    ext.Add(extensionName, new KHR_materials_iridescence());
+                    newExtension = new KHR_materials_iridescence();
                     break;
                 case KHR_materials_sheen_Factory.EXTENSION_NAME:
-                    ext.Add(extensionName, new KHR_materials_sheen());
+                    newExtension = new KHR_materials_sheen();
                     break;
                 case KHR_materials_volume_Factory.EXTENSION_NAME:
-                    ext.Add(extensionName, new KHR_materials_volume());
+                    newExtension = new KHR_materials_volume();
                     break;
                 case KHR_materials_transmission_Factory.EXTENSION_NAME:
-                    ext.Add(extensionName, new KHR_materials_transmission());
-                    break;
-                case "pbrMetallicRoughness":
+                    newExtension = new KHR_materials_transmission();
                     break;
                 // case KHR_materials_pbrSpecularGlossinessExtensionFactory.EXTENSION_NAME:
-                //     ext.Add(extensionName, new KHR_materials_pbrSpecularGlossinessExtension(
-                //         ));
+                //     newExtension = new KHR_materials_pbrSpecularGlossinessExtension();
                 //     break;
                 default:
+                    // Not a known material extension, so it must not end up in extensionsUsed either.
                     Debug.LogWarning("Unknown material extension: " + extensionName);
-                    break;
+                    return;
             }
-            
+
+            exporter.DeclareExtensionUsage(extensionName);
+
+            var gltfMaterial = exporter.GetRoot().Materials[materialIndex];
+            if (gltfMaterial.Extensions == null)
+                gltfMaterial.Extensions = new Dictionary<string, IExtension>();
+
+            if (!gltfMaterial.Extensions.ContainsKey(extensionName))
+                gltfMaterial.Extensions.Add(extensionName, newExtension);
         }
 
         public void CreateNodes(TestContext context)
@@ -540,7 +539,8 @@ namespace Khronos_Test_Export
                 if (testLights.TryGetValue(check.test, out var l))
                     lightIndex = context.interactivityExportContext.Context.exporter.GetLightIndex(l);
                 
-                if (!string.IsNullOrEmpty(check.test.Extension))
+                // Material tests declare their extension in AddMaterialExtension, which only accepts known ones.
+                if (!(check.test is MaterialPointerTest) && !string.IsNullOrEmpty(check.test.Extension))
                 {
                     exporter.DeclareExtensionUsage(check.test.Extension);
                 }
