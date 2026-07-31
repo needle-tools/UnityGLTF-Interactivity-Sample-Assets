@@ -16,14 +16,18 @@ namespace Khronos_Test_Export
         private TestLayout _layout = new ();
         private CheckBox _checkBoxPrefab;
         private TextMeshPro _caseLabelPrefab;
+        private TextMeshPro _labelPrefab;
         public int maxRows = 15;
-        
+
         private Transform _root;
 
         public Transform Root => _root;
 
         public IEnumerable<TextMeshPro> CaseLabels => cases.Select(c => c.caseLabel);
         public IEnumerable<CheckBox> CheckBoxes => cases.SelectMany(c => c.checkBoxes);
+        public IEnumerable<TextMeshPro> Labels => cases.SelectMany(c => c.labels);
+        public IEnumerable<CheckBox> Markers => cases.SelectMany(c => c.markers);
+        public IEnumerable<GameObject> Arrows => cases.SelectMany(c => c.arrows);
 
         public class Entry
         {
@@ -32,13 +36,22 @@ namespace Khronos_Test_Export
             public float? delayedExecutionTime = null;
             public bool requiresUserInteraction = false;
         }
-        
+
         public class Case
         {
             public string CaseName => caseLabel.text;
             public TextMeshPro caseLabel;
             public List<CheckBox> checkBoxes = new List<CheckBox>();
-            
+            public List<TextMeshPro> labels = new List<TextMeshPro>();
+
+            /// <summary>
+            /// Purely visual on-object checkmark markers (see <see cref="AddObjectMarker"/>). Not part
+            /// of <see cref="checkBoxes"/>, so they don't show up as separate sub-tests in the exported
+            /// test json/readme - they just mirror the pass/fail state of a real check right at the object.
+            /// </summary>
+            public List<CheckBox> markers = new List<CheckBox>();
+            public List<GameObject> arrows = new List<GameObject>();
+
             public List<Entry> entryNodes = new List<Entry>();
         }
         
@@ -52,6 +65,7 @@ namespace Khronos_Test_Export
         private GltfInteractivityExportNode _lastDelayedFallback = null;
         private List<FlowInRef> _currentEntryFlows = new List<FlowInRef>();
         private List<FlowInRef> _currentFallbackFlows = new List<FlowInRef>();
+        private List<GltfInteractivityExportNode> _earlyCompletionTriggers = new List<GltfInteractivityExportNode>();
 
         public void AddResultEventForAllTests()
         {
@@ -59,7 +73,7 @@ namespace Khronos_Test_Export
             var allCheckBoxes = cases.SelectMany(c => c.checkBoxes).Where( c => c.ResultPassValueVarId != -1);
             if (maxExecutionTime > 0)
                 maxExecutionTime += 0.5f; // Add some buffer time to ensure all checks are done
-            
+
             var start = interactivityExportContext.CreateNode<Event_OnStartNode>();
             var startEvent = interactivityExportContext.CreateNode<Event_SendNode>();
             var onStartEventArgs = new Dictionary<string, GltfInteractivityNode.EventValues>();
@@ -74,13 +88,14 @@ namespace Khronos_Test_Export
             startEvent.ValueIn("expectedDuration").SetValue(maxExecutionTime);
 
             FlowOutRef startFlowToResult = null;
+            GltfInteractivityExportNode delayNode = null;
             if (maxExecutionTime == 0)
             {
                 startFlowToResult = startEvent.FlowOut();
             }
             else
             {
-                var delayNode = interactivityExportContext.CreateNode<Flow_SetDelayNode>();
+                delayNode = interactivityExportContext.CreateNode<Flow_SetDelayNode>();
                 delayNode.ValueIn(Flow_SetDelayNode.IdDuration).SetValue(maxExecutionTime);
                 startEvent.FlowOut().ConnectToFlowDestination(delayNode.FlowIn());
                 startFlowToResult = delayNode.FlowOut(Flow_SetDelayNode.IdFlowDone);
@@ -113,7 +128,26 @@ namespace Khronos_Test_Export
             var branch = interactivityExportContext.CreateNode<Flow_BranchNode>();
             branch.ValueIn(Flow_BranchNode.IdCondition).ConnectToSource(prevAndResult);
             startFlowToResult.ConnectToFlowDestination(branch.FlowIn());
-            
+
+            // Let test cases that already know their result (e.g. a UserInteraction test whose
+            // required gesture just completed) skip the rest of the wait instead of sitting through
+            // the full delayedExecutionTime window before test/onSuccess or test/onFailed fires.
+            foreach (var trigger in _earlyCompletionTriggers)
+            {
+                var triggerFlowOut = trigger.FlowOut("000");
+                if (delayNode != null)
+                {
+                    var cancelDelay = interactivityExportContext.CreateNode<Flow_CancelDelayNode>();
+                    cancelDelay.ValueIn(Flow_CancelDelayNode.IdDelay).ConnectToSource(delayNode.ValueOut(Flow_SetDelayNode.IdOutLastDelay));
+                    triggerFlowOut.ConnectToFlowDestination(cancelDelay.FlowIn());
+                    cancelDelay.FlowOut().ConnectToFlowDestination(branch.FlowIn());
+                }
+                else
+                {
+                    triggerFlowOut.ConnectToFlowDestination(branch.FlowIn());
+                }
+            }
+
             var passEvent = interactivityExportContext.CreateNode<Event_SendNode>();
             passEvent.Configuration[Event_SendNode.IdEvent].Value = interactivityExportContext.Context.AddEventWithIdIfNeeded("test/onSuccess");
 
@@ -125,10 +159,11 @@ namespace Khronos_Test_Export
 
         }
         
-        public TestContext(CheckBox defaultCheckBox, TextMeshPro caseLabelPrefab, Transform root)
+        public TestContext(CheckBox defaultCheckBox, TextMeshPro caseLabelPrefab, TextMeshPro labelPrefab, Transform root)
         {
             _checkBoxPrefab = defaultCheckBox;
             _caseLabelPrefab = caseLabelPrefab;
+            _labelPrefab = labelPrefab;
             _root = root;
             _layout.coloumnSpaceWidth = _checkBoxPrefab.CheckBoxSize.x / 10f;
         }
@@ -237,6 +272,19 @@ namespace Khronos_Test_Export
             _lastEntryPointFallbackSequence = null;
             _lastEntryPointNodeSequence = null;
             _lastDelayedFallback = null;
+        }
+
+        /// <summary>
+        /// Returns a flow-in socket a test case can wire into once it already knows its final
+        /// result (e.g. right after the last event of a UserInteraction test's required gesture
+        /// has fired), so the shared test/onSuccess / test/onFailed evaluation runs immediately
+        /// instead of waiting out the rest of the entry point's delayedExecutionTime window.
+        /// </summary>
+        public void AddEarlyCompletionTrigger(out FlowInRef flowIn)
+        {
+            var proxy = interactivityExportContext.CreateNode<Flow_SequenceNode>();
+            flowIn = proxy.FlowIn(Flow_SequenceNode.IdFlowIn);
+            _earlyCompletionTriggers.Add(proxy);
         }
 
         public void AddFallbackToLastEntryPoint(FlowInRef flow)
@@ -354,6 +402,118 @@ namespace Khronos_Test_Export
             return newCase;
         }
 
+        /// <summary>
+        /// Instantiates an instruction label (using labelPrefab) at a fixed local position, meant to
+        /// tell the tester what to do for manual/user-interaction test cases. Use <see cref="HideOnFlow"/>
+        /// to hide it once the requested interaction was performed successfully.
+        /// </summary>
+        public TextMeshPro AddLabel(string text, Vector3 localPosition)
+        {
+            var newLabel = GameObject.Instantiate(_labelPrefab, _root);
+            newLabel.transform.localPosition = localPosition;
+            newLabel.text = text;
+            newLabel.gameObject.SetActive(true);
+            newLabel.gameObject.name = "Label_" + currentCase.CaseName;
+            currentCase.labels.Add(newLabel);
+            return newLabel;
+        }
+
+        /// <summary>
+        /// Creates a flow-in socket that, when triggered, hides the given object (by scaling it to zero)
+        /// so the tester can see at a glance which interaction was already performed successfully.
+        /// </summary>
+        public void HideOnFlow(Transform target, out FlowInRef flowIn)
+        {
+            var targetIndex = interactivityExportContext.Context.exporter.GetTransformIndex(target);
+
+            var setScale = interactivityExportContext.CreateNode<Pointer_SetNode>();
+            PointersHelper.SetupPointerTemplateAndTargetInput(setScale, PointersHelper.IdPointerNodeIndex, "/nodes/[" + PointersHelper.IdPointerNodeIndex + "]/scale", GltfTypes.Float3);
+            setScale.ValueIn(Pointer_SetNode.IdValue).SetValue(Vector3.zero);
+            setScale.ValueIn(PointersHelper.IdPointerNodeIndex).SetValue(targetIndex);
+
+            flowIn = setScale.FlowIn(Pointer_SetNode.IdFlowIn);
+        }
+
+        /// <summary>
+        /// Instantiates a bare checkbox (no label text, not reserved in the checkbox grid) at a fixed
+        /// local position - meant to be placed directly on/above an interactive object so the tester
+        /// gets immediate pass/fail feedback right where they're looking, in addition to the regular
+        /// checkbox list. It is not added to <see cref="Case.checkBoxes"/>, so it won't appear as its
+        /// own sub-test in the exported json/readme; wire the same flow into it as the real check.
+        /// </summary>
+        public CheckBox AddObjectMarker(Vector3 localPosition, bool asWaiting = true)
+        {
+            var marker = GameObject.Instantiate(_checkBoxPrefab, _root);
+            marker.transform.localPosition = localPosition;
+            marker.gameObject.SetActive(true);
+            marker.gameObject.name = "Marker_" + currentCase.CaseName;
+            marker.SetText("");
+            marker.SetCase(currentCase);
+            marker.context = this;
+            if (asWaiting)
+                marker.Waiting();
+            currentCase.markers.Add(marker);
+            return marker;
+        }
+
+        /// <summary>
+        /// Creates a simple 3D "waypoint" arrow (a downward-pointing cone on a short shaft) hovering
+        /// above a target position, to visually point the tester at the object they need to interact
+        /// with. Combine with <see cref="HideOnFlow"/> to make it disappear once the interaction was
+        /// performed.
+        /// </summary>
+        public GameObject AddPointerArrow(Vector3 localPosition, Color color)
+        {
+            const float coneHeight = 0.7f;
+            const float coneRadius = 0.5f;
+            const int segments = 12;
+
+            var root = new GameObject("PointerArrow_" + currentCase.CaseName);
+            root.transform.SetParent(_root, false);
+            root.transform.localPosition = localPosition;
+
+            var mat = new Material(Shader.Find("Standard")) { color = color };
+            mat.EnableKeyword("_EMISSION");
+            mat.SetColor("_EmissionColor", color * 0.6f);
+
+            var head = new GameObject("ArrowHead");
+            head.transform.SetParent(root.transform, false);
+            var mesh = new Mesh();
+            var vertices = new Vector3[segments + 2];
+            vertices[0] = Vector3.zero; // apex, points at the target below
+            for (int i = 0; i < segments; i++)
+            {
+                var angle = i / (float)segments * Mathf.PI * 2f;
+                vertices[i + 1] = new Vector3(Mathf.Cos(angle) * coneRadius, coneHeight, Mathf.Sin(angle) * coneRadius);
+            }
+            vertices[segments + 1] = new Vector3(0, coneHeight, 0); // base center, closes the cap
+
+            var triangles = new List<int>();
+            for (int i = 0; i < segments; i++)
+            {
+                int a = i + 1;
+                int b = (i + 1) % segments + 1;
+                triangles.Add(0); triangles.Add(b); triangles.Add(a); // side face
+                triangles.Add(segments + 1); triangles.Add(a); triangles.Add(b); // base cap
+            }
+            mesh.vertices = vertices;
+            mesh.triangles = triangles.ToArray();
+            mesh.RecalculateNormals();
+            mesh.RecalculateBounds();
+            head.AddComponent<MeshFilter>().mesh = mesh;
+            head.AddComponent<MeshRenderer>().material = mat;
+
+            var shaft = GameObject.CreatePrimitive(PrimitiveType.Cylinder);
+            shaft.name = "ArrowShaft";
+            shaft.transform.SetParent(root.transform, false);
+            shaft.transform.localPosition = new Vector3(0, coneHeight + 0.6f, 0);
+            shaft.transform.localScale = new Vector3(0.18f, 0.6f, 0.18f);
+            shaft.GetComponent<MeshRenderer>().material = mat;
+
+            currentCase.arrows.Add(root);
+            return root;
+        }
+
         public CheckBox AddCheckBox(string name, bool asWaiting = false, bool flowOnce = false)
         {
             var newCheckBox = GameObject.Instantiate(_checkBoxPrefab, _root);
@@ -374,10 +534,19 @@ namespace Khronos_Test_Export
         {
             foreach (var checkBox in CheckBoxes)
                 GameObject.DestroyImmediate(checkBox.gameObject);
-        
+
             foreach (var caseLabel in CaseLabels)
                 GameObject.DestroyImmediate(caseLabel.gameObject);
-            
+
+            foreach (var label in Labels)
+                GameObject.DestroyImmediate(label.gameObject);
+
+            foreach (var marker in Markers)
+                GameObject.DestroyImmediate(marker.gameObject);
+
+            foreach (var arrow in Arrows)
+                GameObject.DestroyImmediate(arrow);
+
             cases.Clear();
         }
     }

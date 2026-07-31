@@ -15,6 +15,7 @@ using UnityGLTF.Interactivity;
 using UnityGLTF.Interactivity.Export;
 using UnityGLTF.Interactivity.Schema;
 using UnityGLTF.Interactivity.VisualScripting;
+using UnityGLTF.Plugins;
 
 namespace Khronos_Test_Export
 {
@@ -23,6 +24,7 @@ namespace Khronos_Test_Export
         [HideInInspector] public string testExportPath = "";
         public CheckBox checkBoxPrefab;
         public TextMeshPro caseLabelPrefab;
+        public TextMeshPro labelPrefab;
 
         private TestContext currentTestContext;
         private ITestCase[] currentTestCases;
@@ -70,7 +72,16 @@ namespace Khronos_Test_Export
             }
 
             public SubTests[] subTests;
-            
+
+            /// <summary>
+            /// Present only on tests that implement <see cref="IUserInteractionTestCase"/>: the
+            /// synthetic input(s) (e.g. hover/select a specific node) an automated runner must
+            /// perform for this test to be meaningful. Omitted entirely for regular, self-checking
+            /// tests.
+            /// </summary>
+            [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
+            public RequiredInteraction[] requiredInteractions;
+
             public class EntryPointJsonConverter : JsonConverter<EntryPoint>
             {
                 public override void WriteJson(JsonWriter writer, EntryPoint value, JsonSerializer serializer)
@@ -125,6 +136,14 @@ namespace Khronos_Test_Export
            // public string screenshot = "";
             public string[] tags;
             public Dictionary<string, string> variants = new Dictionary<string, string>();
+
+            /// <summary>
+            /// True if this test needs a simulated user input (hover/select/...) to be meaningful -
+            /// lets a runner filter these out (or handle them specially) without opening every
+            /// test-Json file. See <see cref="JsonCaseOutput.requiredInteractions"/> for details.
+            /// </summary>
+            [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
+            public bool? requiresUserInteraction;
         }
 
         private void CreateIndexJsonFile(string name, List<(ITestCase, string, string)> tests)
@@ -138,6 +157,8 @@ namespace Khronos_Test_Export
                 entry.tags = _schemaUsedInCase[test.Item1].ToArray();
                 entry.variants.Add("glTF-Binary", test.Item2.Replace(@"\", "/"));
                 entry.variants.Add("test-Json", test.Item3.Replace(@"\", "/"));
+                if (test.Item1 is IUserInteractionTestCase)
+                    entry.requiresUserInteraction = true;
                 indexData.Add(entry);
             }
 
@@ -197,6 +218,9 @@ namespace Khronos_Test_Export
                 }
 
                 testCaseOutput.subTests = subTests.ToArray();
+
+                if (testCase is IUserInteractionTestCase interactionCase)
+                    testCaseOutput.requiredInteractions = interactionCase.GetRequiredInteractions().ToArray();
             }
 
             jsonOutput.tests = tests.ToArray();
@@ -308,7 +332,7 @@ namespace Khronos_Test_Export
                     {
                         var export = new GLTFSceneExporter(transform, exportContext);
 
-                        currentTestContext = new TestContext(checkBoxPrefab, caseLabelPrefab, transform);
+                        currentTestContext = new TestContext(checkBoxPrefab, caseLabelPrefab, labelPrefab, transform);
                         currentTestCases = new[] { testCase };
                         var newCase = currentTestContext.NewTestCase(testCase.GetTestName());
                         testCase.PrepareObjects(currentTestContext);
@@ -367,7 +391,7 @@ namespace Khronos_Test_Export
                 {
                     var export = new GLTFSceneExporter(transform, exportContext);
 
-                    currentTestContext = new TestContext(checkBoxPrefab, caseLabelPrefab, transform);
+                    currentTestContext = new TestContext(checkBoxPrefab, caseLabelPrefab, labelPrefab, transform);
                     currentTestCases = cases;
                     foreach (var testCase in cases)
                     {

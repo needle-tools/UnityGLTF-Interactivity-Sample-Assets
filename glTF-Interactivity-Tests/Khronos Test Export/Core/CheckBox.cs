@@ -241,10 +241,21 @@ namespace Khronos_Test_Export
             var setPosition = context.interactivityExportContext.CreateNode<Pointer_SetNode>();
             PointersHelper.SetupPointerTemplateAndTargetInput(setPosition, PointersHelper.IdPointerNodeIndex, "/nodes/[" + PointersHelper.IdPointerNodeIndex + "]/translation", GltfTypes.Float3);
             setPosition.ValueIn(Pointer_SetNode.IdValue).SetValue(positionWhenValid);
-            setPosition.ValueIn(PointersHelper.IdPointerNodeIndex).SetValue(nodeIndex);  
-            
-            flowIn = setPosition.FlowIn(); 
+            setPosition.ValueIn(PointersHelper.IdPointerNodeIndex).SetValue(nodeIndex);
+
+            flowIn = setPosition.FlowIn();
             flowOut = setPosition.FlowOut();
+
+            // A waiting (hourglass) checkbox/marker otherwise only clears via the entry point's
+            // timeout fallback in PostCheck, so it would keep showing "waiting" on top of the
+            // valid/invalid mark for the whole interaction window even though the result is
+            // already known. Clear it the instant the result is set instead.
+            if (isWaiting)
+            {
+                DeactivateWaiting(out var waitFlowIn, out var waitFlowOut);
+                flowOut.ConnectToFlowDestination(waitFlowIn);
+                flowOut = waitFlowOut;
+            }
         }
         
         private void SetPassed(out FlowInRef flowIn, out FlowOutRef flowOut)
@@ -850,9 +861,20 @@ namespace Khronos_Test_Export
             validNode.ValueIn(Flow_BranchNode.IdCondition).ConnectToSource(eqNode.FirstValueOut());
 
             SetPassed(out var setPosition, out var flowOutSetValid);
-           
+
             flow = validNode.FlowIn(Flow_BranchNode.IdFlowIn);
-            
+
+            // "Waiting" means "not evaluated yet", not "hasn't passed yet". SetPassed/SetToForeground
+            // only clears the waiting indicator on the pass (True) branch below, so without this the
+            // indicator would stay stuck until the entry point's full timeout on a failing comparison,
+            // instead of resolving immediately once this check actually runs.
+            if (isWaiting)
+            {
+                DeactivateWaiting(out var waitFlowIn, out var waitFlowOut);
+                waitFlowOut.ConnectToFlowDestination(flow);
+                flow = waitFlowIn;
+            }
+
             validNode.FlowOut(Flow_BranchNode.IdFlowOutTrue)
                 .ConnectToFlowDestination(setPosition);
             
