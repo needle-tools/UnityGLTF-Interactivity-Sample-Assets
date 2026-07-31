@@ -1349,6 +1349,235 @@ namespace Khronos_Test_Export
                     return count;
                 }
             },
+            // ─────────────────────────────────────────────────────────────────
+            // Math — integer bitwise edge cases (P1 gap analysis).
+            // Spec: KHR_interactivity integer bitwise operations. All operate on
+            // 32-bit two's complement integers; results MUST be truncated to 32
+            // bits. Every case is exact (approximate = false) and int-typed, so
+            // the auto type-expansion never applies.
+            // ─────────────────────────────────────────────────────────────────
+            // math/and|or|xor|not on INT bit patterns (the table only covered bool).
+            // all-ones (-1) as a mask, and the sign bit (int.MinValue = 0x80000000).
+            new TwoArg<Math_AndNode, int, int>()
+            {
+                autoCreateTestsForAllSupportedInputs = false,
+                a = -1,              // 0xFFFFFFFF
+                b = 0x0F0F0F0F,
+                operation = (a, b) => a & b, // 0x0F0F0F0F
+            },
+            new TwoArg<Math_AndNode, int, int>()
+            {
+                autoCreateTestsForAllSupportedInputs = false,
+                a = int.MinValue,    // 0x80000000, only the sign bit
+                b = int.MinValue,
+                operation = (a, b) => a & b, // int.MinValue
+            },
+            new TwoArg<Math_OrNode, int, int>()
+            {
+                autoCreateTestsForAllSupportedInputs = false,
+                a = 0,
+                b = -1,
+                operation = (a, b) => a | b, // -1
+            },
+            new TwoArg<Math_OrNode, int, int>()
+            {
+                autoCreateTestsForAllSupportedInputs = false,
+                a = int.MaxValue,    // 0x7FFFFFFF
+                b = int.MinValue,    // 0x80000000
+                operation = (a, b) => a | b, // -1 (all ones)
+            },
+            new TwoArg<Math_XorNode, int, int>()
+            {
+                autoCreateTestsForAllSupportedInputs = false,
+                a = -1,
+                b = -1,
+                operation = (a, b) => a ^ b, // 0
+            },
+            new TwoArg<Math_XorNode, int, int>()
+            {
+                autoCreateTestsForAllSupportedInputs = false,
+                a = int.MinValue,
+                b = 0,
+                operation = (a, b) => a ^ b, // sign bit survives
+            },
+            new OneArg<Math_NotNode, int, int>()
+            {
+                autoCreateTestsForAllSupportedInputs = false,
+                a = 0,
+                operation = (a) => ~a, // -1
+            },
+            new OneArg<Math_NotNode, int, int>()
+            {
+                autoCreateTestsForAllSupportedInputs = false,
+                a = -1,
+                operation = (a) => ~a, // 0
+            },
+            new OneArg<Math_NotNode, int, int>()
+            {
+                autoCreateTestsForAllSupportedInputs = false,
+                a = int.MinValue,
+                operation = (a) => ~a, // int.MaxValue
+            },
+            // math/asr: the most significant bit of a MUST be propagated (sign extension),
+            // and only the lowest 5 bits of b are considered (effective range [0, 31]).
+            new TwoArg<Math_RightShiftNode, int, int>()
+            {
+                autoCreateTestsForAllSupportedInputs = false,
+                a = -16,
+                b = 2,
+                operation = (a, b) => SpecAsr(a, b), // -4, sign extended
+            },
+            new TwoArg<Math_RightShiftNode, int, int>()
+            {
+                autoCreateTestsForAllSupportedInputs = false,
+                a = int.MinValue,
+                b = 31,
+                operation = (a, b) => SpecAsr(a, b), // -1, sign fills every bit
+            },
+            new TwoArg<Math_RightShiftNode, int, int>()
+            {
+                autoCreateTestsForAllSupportedInputs = false,
+                a = -16,
+                b = 0,
+                operation = (a, b) => SpecAsr(a, b), // shift by 0 is a no-op
+            },
+            // b = 32 -> lowest 5 bits are 0 -> identical to a shift by 0 (NOT a zeroed result)
+            new TwoArg<Math_RightShiftNode, int, int>()
+            {
+                autoCreateTestsForAllSupportedInputs = false,
+                a = -16,
+                b = 32,
+                operation = (a, b) => SpecAsr(a, b), // -16
+            },
+            // b = 33 -> lowest 5 bits are 1 -> identical to a shift by 1
+            new TwoArg<Math_RightShiftNode, int, int>()
+            {
+                autoCreateTestsForAllSupportedInputs = false,
+                a = -16,
+                b = 33,
+                operation = (a, b) => SpecAsr(a, b), // -8
+            },
+            // negative b: the lowest 5 bits of -1 (0xFFFFFFFF) are 31
+            new TwoArg<Math_RightShiftNode, int, int>()
+            {
+                autoCreateTestsForAllSupportedInputs = false,
+                a = int.MinValue,
+                b = -1,
+                operation = (a, b) => SpecAsr(a, b), // == asr(a, 31) == -1
+            },
+            // math/lsl: result MUST be truncated to 32 bits and reinterpreted as a
+            // two's complement signed integer; only the lowest 5 bits of b count.
+            new TwoArg<Math_LeftShiftNode, int, int>()
+            {
+                autoCreateTestsForAllSupportedInputs = false,
+                a = 1,
+                b = 31,
+                operation = (a, b) => SpecLsl(a, b), // shifts into the sign bit -> int.MinValue
+            },
+            new TwoArg<Math_LeftShiftNode, int, int>()
+            {
+                autoCreateTestsForAllSupportedInputs = false,
+                a = 0x0F0F0F0F,
+                b = 8,
+                operation = (a, b) => SpecLsl(a, b), // high byte shifted out (truncated to 32 bits)
+            },
+            new TwoArg<Math_LeftShiftNode, int, int>()
+            {
+                autoCreateTestsForAllSupportedInputs = false,
+                a = -1,
+                b = 1,
+                operation = (a, b) => SpecLsl(a, b), // -2
+            },
+            new TwoArg<Math_LeftShiftNode, int, int>()
+            {
+                autoCreateTestsForAllSupportedInputs = false,
+                a = 20,
+                b = 0,
+                operation = (a, b) => SpecLsl(a, b), // no-op
+            },
+            new TwoArg<Math_LeftShiftNode, int, int>()
+            {
+                autoCreateTestsForAllSupportedInputs = false,
+                a = 20,
+                b = 32,
+                operation = (a, b) => SpecLsl(a, b), // == lsl(a, 0) == 20
+            },
+            new TwoArg<Math_LeftShiftNode, int, int>()
+            {
+                autoCreateTestsForAllSupportedInputs = false,
+                a = 20,
+                b = 33,
+                operation = (a, b) => SpecLsl(a, b), // == lsl(a, 1) == 40
+            },
+            // math/clz over the whole 32-bit range: 0 -> 32, 1 -> 31, sign bit set -> 0.
+            new OneArg<Math_CountingLeadingZerosNode, int, int>()
+            {
+                autoCreateTestsForAllSupportedInputs = false,
+                a = 0,
+                operation = (a) => SpecClz(a), // 32
+            },
+            new OneArg<Math_CountingLeadingZerosNode, int, int>()
+            {
+                autoCreateTestsForAllSupportedInputs = false,
+                a = 1,
+                operation = (a) => SpecClz(a), // 31
+            },
+            new OneArg<Math_CountingLeadingZerosNode, int, int>()
+            {
+                autoCreateTestsForAllSupportedInputs = false,
+                a = int.MinValue, // 0x80000000
+                operation = (a) => SpecClz(a), // 0
+            },
+            new OneArg<Math_CountingLeadingZerosNode, int, int>()
+            {
+                autoCreateTestsForAllSupportedInputs = false,
+                a = -1, // 0xFFFFFFFF
+                operation = (a) => SpecClz(a), // 0
+            },
+            // math/ctz: 0 -> 32, 1 -> 0, powers of two -> their exponent.
+            new OneArg<Math_CountingTrailingZerosNode, int, int>()
+            {
+                autoCreateTestsForAllSupportedInputs = false,
+                a = 0,
+                operation = (a) => SpecCtz(a), // 32
+            },
+            new OneArg<Math_CountingTrailingZerosNode, int, int>()
+            {
+                autoCreateTestsForAllSupportedInputs = false,
+                a = 1,
+                operation = (a) => SpecCtz(a), // 0
+            },
+            new OneArg<Math_CountingTrailingZerosNode, int, int>()
+            {
+                autoCreateTestsForAllSupportedInputs = false,
+                a = 8,
+                operation = (a) => SpecCtz(a), // 3
+            },
+            new OneArg<Math_CountingTrailingZerosNode, int, int>()
+            {
+                autoCreateTestsForAllSupportedInputs = false,
+                a = int.MinValue, // 0x80000000, only the sign bit is set
+                operation = (a) => SpecCtz(a), // 31
+            },
+            // math/popcnt: 0 -> 0, all-ones -> 32, single sign bit -> 1.
+            new OneArg<Math_CountOneBitsNode, int, int>()
+            {
+                autoCreateTestsForAllSupportedInputs = false,
+                a = 0,
+                operation = (a) => SpecPopcnt(a), // 0
+            },
+            new OneArg<Math_CountOneBitsNode, int, int>()
+            {
+                autoCreateTestsForAllSupportedInputs = false,
+                a = -1,
+                operation = (a) => SpecPopcnt(a), // 32
+            },
+            new OneArg<Math_CountOneBitsNode, int, int>()
+            {
+                autoCreateTestsForAllSupportedInputs = false,
+                a = int.MinValue,
+                operation = (a) => SpecPopcnt(a), // 1
+            },
             new TwoArg<Math_DotNode, Vector2, float>()
             {
                 a = new Vector2(1f, 2f),
@@ -1656,6 +1885,50 @@ namespace Khronos_Test_Export
         {
             float t = Mathf.Clamp01((c - Mathf.Min(a, b)) / Mathf.Abs(b - a));
             return t * t * (3f - 2f * t);
+        }
+
+        // ── Spec-accurate references for the integer bitwise operations ──
+        // The shift ops consider "only the lowest 5 bits of b [...] effective range [0, 31]",
+        // so b is masked rather than clamped: b = 32 behaves like b = 0, and a negative b
+        // takes the low 5 bits of its two's complement representation (b = -1 -> 31).
+        // These are written out explicitly instead of relying on C#'s own (identical)
+        // masking of the shift count, so the spec rule being tested is visible.
+
+        // math/asr — arithmetic right shift, the most significant bit is propagated.
+        private static int SpecAsr(int a, int b) => a >> (b & 31);
+
+        // math/lsl — logical left shift, result truncated to 32 bits.
+        private static int SpecLsl(int a, int b) => unchecked(a << (b & 31));
+
+        // math/clz — leading zeros in the 32-bit two's complement representation; clz(0) = 32.
+        private static int SpecClz(int a)
+        {
+            uint u = unchecked((uint)a);
+            int count = 0;
+            for (int bit = 31; bit >= 0 && (u & (1u << bit)) == 0; bit--)
+                count++;
+            return count;
+        }
+
+        // math/ctz — trailing zeros in the 32-bit two's complement representation; ctz(0) = 32.
+        private static int SpecCtz(int a)
+        {
+            uint u = unchecked((uint)a);
+            int count = 0;
+            for (int bit = 0; bit < 32 && (u & (1u << bit)) == 0; bit++)
+                count++;
+            return count;
+        }
+
+        // math/popcnt — number of set bits in the 32-bit representation.
+        private static int SpecPopcnt(int a)
+        {
+            uint u = unchecked((uint)a);
+            int count = 0;
+            for (int bit = 0; bit < 32; bit++)
+                if ((u & (1u << bit)) != 0)
+                    count++;
+            return count;
         }
 
         protected override void GenerateTestList()

@@ -13,6 +13,9 @@ namespace Khronos_Test_Export
         private CheckBox _checkTwoNulls;
         private CheckBox _checkOneMeshOneNull;
         private CheckBox _checkMeshOneNode;
+        private CheckBox _checkMeshVsStaticMesh;
+        private CheckBox _checkMeshVsStaticNode;
+        private CheckBox _checkChildVsStaticChild;
 
         private GameObject _meshObject;
         private GameObject _childObject;
@@ -33,12 +36,16 @@ namespace Khronos_Test_Export
             _checkTwoNulls = context.AddCheckBox("null == null");
             _checkOneMeshOneNull = context.AddCheckBox("mesh == null");
             _checkMeshOneNode = context.AddCheckBox("mesh == node");
+            _checkMeshVsStaticMesh = context.AddCheckBox("mesh (from node) == mesh (static value)");
+            _checkMeshVsStaticNode = context.AddCheckBox("mesh (from node) == node (static value)");
+            _checkChildVsStaticChild = context.AddCheckBox("child node (from node) == child node (static value)");
 
             _meshObject = GameObject.CreatePrimitive(PrimitiveType.Cube);
             _meshObject.name = "RefEqTestMesh";
             _meshObject.transform.SetParent(context.Root);
             _meshObject.transform.localPosition = new Vector3(0, -999, 0);
             _meshObject.transform.localScale = Vector3.zero;
+            _meshObject.gameObject.SetActive(false);
 
             _childObject = new GameObject("RefEqTestChild");
             _childObject.transform.SetParent(_meshObject.transform);
@@ -49,6 +56,7 @@ namespace Khronos_Test_Export
         {
             var exporter = context.interactivityExportContext.Context.exporter;
             int nodeIndex = exporter.GetTransformIndex(_meshObject.transform);
+            
 
             // Test 1: Same mesh ref
             context.NewEntryPoint("Same mesh ref in ref/eq");
@@ -106,6 +114,51 @@ namespace Khronos_Test_Export
 
             _checkMeshOneNode.SetupCheck(refEqMeshNode.FirstValueOut(), out var checkFlowMeshNode, false);
             context.AddToCurrentEntrySequence(checkFlowMeshNode);
+
+            // The following tests have input A connected to another node (pointer/get) and
+            // input B set to a static ref value.
+            var root = exporter.GetRoot();
+            var meshIndex = root.Nodes[nodeIndex].Mesh.Id;
+            var childNodeIndex = root.Nodes[nodeIndex].Children[0].Id;
+
+            // Test 5: Connected mesh ref and the same mesh as static value
+            context.NewEntryPoint("Connected mesh ref and same static mesh ref in ref/eq");
+            var pGetMeshStatic = context.interactivityExportContext.CreateNode<Pointer_GetNode>();
+            PointersHelper.AddPointerConfig(pGetMeshStatic, "/nodes/["+PointersHelper.IdPointerNodeIndex+"]/mesh", GltfTypes.Ref);
+            pGetMeshStatic.ValueIn(PointersHelper.IdPointerNodeIndex).SetValue(nodeIndex);
+
+            var refEqMeshStatic = context.interactivityExportContext.CreateNode<Ref_EqNode>();
+            refEqMeshStatic.ValueIn(Ref_EqNode.IdValueA).ConnectToSource(pGetMeshStatic.FirstValueOut());
+            refEqMeshStatic.ValueIn(Ref_EqNode.IdValueB).SetValue(new StaticRefPointer($"/meshes/{meshIndex}"));
+
+            _checkMeshVsStaticMesh.SetupCheck(refEqMeshStatic.ValueOut(Ref_EqNode.IdOutValue), out var checkFlowMeshStatic, true);
+            context.AddToCurrentEntrySequence(checkFlowMeshStatic);
+
+            // Test 6: Connected mesh ref and a node as static value
+            context.NewEntryPoint("Connected mesh ref and static node ref in ref/eq");
+            var pGetMeshStaticNode = context.interactivityExportContext.CreateNode<Pointer_GetNode>();
+            PointersHelper.AddPointerConfig(pGetMeshStaticNode, "/nodes/["+PointersHelper.IdPointerNodeIndex+"]/mesh", GltfTypes.Ref);
+            pGetMeshStaticNode.ValueIn(PointersHelper.IdPointerNodeIndex).SetValue(nodeIndex);
+
+            var refEqMeshStaticNode = context.interactivityExportContext.CreateNode<Ref_EqNode>();
+            refEqMeshStaticNode.ValueIn(Ref_EqNode.IdValueA).ConnectToSource(pGetMeshStaticNode.FirstValueOut());
+            refEqMeshStaticNode.ValueIn(Ref_EqNode.IdValueB).SetValue(new StaticRefPointer($"/nodes/{nodeIndex}"));
+
+            _checkMeshVsStaticNode.SetupCheck(refEqMeshStaticNode.ValueOut(Ref_EqNode.IdOutValue), out var checkFlowMeshStaticNode, false);
+            context.AddToCurrentEntrySequence(checkFlowMeshStaticNode);
+
+            // Test 7: Connected child node ref and the same node as static value
+            context.NewEntryPoint("Connected child node ref and same static node ref in ref/eq");
+            var pGetChildStatic = context.interactivityExportContext.CreateNode<Pointer_GetNode>();
+            PointersHelper.AddPointerConfig(pGetChildStatic, "/nodes/["+PointersHelper.IdPointerNodeIndex+"]/children/0", GltfTypes.Ref);
+            pGetChildStatic.ValueIn(PointersHelper.IdPointerNodeIndex).SetValue(nodeIndex);
+
+            var refEqChildStatic = context.interactivityExportContext.CreateNode<Ref_EqNode>();
+            refEqChildStatic.ValueIn(Ref_EqNode.IdValueA).ConnectToSource(pGetChildStatic.FirstValueOut());
+            refEqChildStatic.ValueIn(Ref_EqNode.IdValueB).SetValue(new StaticRefPointer($"/nodes/{childNodeIndex}"));
+
+            _checkChildVsStaticChild.SetupCheck(refEqChildStatic.ValueOut(Ref_EqNode.IdOutValue), out var checkFlowChildStatic, true);
+            context.AddToCurrentEntrySequence(checkFlowChildStatic);
         }
 
         public void Dispose()

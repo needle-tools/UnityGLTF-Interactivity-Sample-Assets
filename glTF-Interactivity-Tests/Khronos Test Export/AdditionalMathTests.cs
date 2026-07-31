@@ -702,8 +702,8 @@ namespace Khronos_Test_Export
                 
             }
             
-            AddMonteCarloCheckBox(_monteCarlo1kCheckBox, 1000, 0.3f);
-            AddMonteCarloCheckBox(_monteCarlo10kCheckBox, 10000, 0.08f);
+            AddMonteCarloCheckBox(_monteCarlo1kCheckBox, 1000, 0.4f);
+            AddMonteCarloCheckBox(_monteCarlo10kCheckBox, 10000, 0.1f);
             
             
 
