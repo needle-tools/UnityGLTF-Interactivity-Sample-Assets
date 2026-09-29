@@ -190,7 +190,7 @@ namespace Tests.Editor
         /// Only written for models we own. These are linked from the showcase table and the root README,
         /// so every model needs one. The layout follows the per-model READMEs of the Khronos glTF sample
         /// models (https://github.com/KhronosGroup/glTF-Sample-Models/tree/main/2.0):
-        /// title, Screenshot, Description, License Information.
+        /// title, Screenshot, Description, (Source,) License Information.
         /// </summary>
         private static void WriteModelReadme(string root, SampleModelDefinition definition)
         {
@@ -216,6 +216,13 @@ namespace Tests.Editor
                 ? $"{definition.Label}, an interactive glTF sample using KHR_interactivity."
                 : definition.Description);
             sb.AppendLine();
+            if (!string.IsNullOrWhiteSpace(definition.source))
+            {
+                sb.AppendLine("## Source");
+                sb.AppendLine();
+                sb.AppendLine(definition.source.Trim());
+                sb.AppendLine();
+            }
             sb.AppendLine("## License Information");
             sb.AppendLine();
             sb.AppendLine(definition.licenseInformation);

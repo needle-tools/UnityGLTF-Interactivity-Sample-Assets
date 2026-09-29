@@ -38,8 +38,14 @@ namespace Tests.Editor
         [Tooltip("Include in model-index.json, the showcase table, and generate a README for this model.")]
         public bool includeInIndex = true;
 
-        [Tooltip("The \"License Information\" section of the generated README, following the wording used " +
-                 "by the Khronos glTF sample models.")]
+        [Tooltip("Optional \"Source\" section of the generated README (Markdown), e.g. where third-party assets " +
+                 "used by this model come from and what was changed. Leave empty to omit the section.")]
+        [TextArea(2, 8)]
+        public string source = "";
+
+        [Tooltip("The \"License Information\" section of the generated README (Markdown), following the wording " +
+                 "used by the Khronos glTF sample models. Credit the authors of any third-party assets here.")]
+        [TextArea(2, 8)]
         public string licenseInformation = "Donated by Needle for glTF testing.";
 
         [Tooltip("License sentence appended to the \"License Information\" section. Leave empty to omit it.")]
