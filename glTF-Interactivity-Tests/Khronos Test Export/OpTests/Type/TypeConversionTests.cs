@@ -6,7 +6,8 @@ namespace Khronos_Test_Export
     /// Tests every type/* conversion node:
     /// boolToInt, boolToFloat, intToBool, intToFloat, floatToInt, floatToBool.
     /// Covers the spec-defined edge cases: float→int truncation toward zero,
-    /// NaN→0 and ±Inf→int max/min, and non-zero/negative → true for the *ToBool nodes.
+    /// NaN→0, and non-zero/negative → true for the *ToBool nodes.
+    /// Double-precision, ±Inf and 32-bit wrap-around conversions are covered by FloatPrecisionTest.
     /// </summary>
     public class TypeConversionTests : ITestCase
     {

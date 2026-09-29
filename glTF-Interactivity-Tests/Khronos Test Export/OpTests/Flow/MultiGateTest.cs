@@ -9,7 +9,8 @@ namespace Khronos_Test_Export
         private CheckBox _randomCheckBox;
         private CheckBox _orderCheckBox;
         private CheckBox _resetCheckBox;
-        
+        private CheckBox _invalidConfigCheckBox;
+
         public string GetTestName()
         {
             return "flow/multiGate";
@@ -26,6 +27,7 @@ namespace Khronos_Test_Export
             _randomCheckBox = context.AddCheckBox("Random (Check if all out flows are triggered once)");
             _orderCheckBox = context.AddCheckBox("Order (008, 004, 001) > (001, 004, 008)");
             _resetCheckBox = context.AddCheckBox("Reset Loop");
+            _invalidConfigCheckBox = context.AddCheckBox("isRandom \"yes\" uses default configuration (in order)");
         }
 
         public void CreateNodes(TestContext context)
@@ -54,6 +56,27 @@ namespace Khronos_Test_Export
                 });
             
             
+            // Invalid configuration: isRandom is not a boolean literal, so the default configuration
+            // (isRandom and isLoop false) is used for both properties and the outputs are activated in order.
+            context.NewEntryPoint(_invalidConfigCheckBox.GetText());
+            var multiGateInvalidConfigNode = nodeCreator.CreateNode<Flow_MultiGateNode>();
+            multiGateInvalidConfigNode.Configuration[Flow_MultiGateNode.IdConfigIsRandom].Value = "yes";
+            multiGateInvalidConfigNode.Configuration[Flow_MultiGateNode.IdConfigIsLoop].Value = false;
+            _invalidConfigCheckBox.SetupOrderFlowCheck(new FlowOutRef[]
+            {
+                multiGateInvalidConfigNode.FlowOut("001"),
+                multiGateInvalidConfigNode.FlowOut("002"),
+                multiGateInvalidConfigNode.FlowOut("003"),
+            });
+
+            context.AddToCurrentEntrySequence(
+                new FlowInRef[]
+                {
+                    multiGateInvalidConfigNode.FlowIn(Flow_MultiGateNode.IdFlowIn),
+                    multiGateInvalidConfigNode.FlowIn(Flow_MultiGateNode.IdFlowIn),
+                    multiGateInvalidConfigNode.FlowIn(Flow_MultiGateNode.IdFlowIn),
+                });
+
             // Random Tests
             var multiGateRandomNode = nodeCreator.CreateNode<Flow_MultiGateNode>();
             context.NewEntryPoint(_randomCheckBox.GetText());

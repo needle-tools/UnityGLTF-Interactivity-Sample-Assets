@@ -215,6 +215,20 @@ namespace Khronos_Test_Export
                 approximate = true,
                 operation = (a) => a - Mathf.Floor(a),
             },
+            // math/neg integer: negating MinValue MUST return MinValue.
+            // Kept before the float entry, the last entry's type decides whether float vector variants are generated.
+            new OneArg<Math_NegNode, int, int>()
+            {
+                autoCreateTestsForAllSupportedInputs = false,
+                a = 5,
+                operation = (a) => -a,
+            },
+            new OneArg<Math_NegNode, int, int>()
+            {
+                autoCreateTestsForAllSupportedInputs = false,
+                a = int.MinValue,
+                operation = (a) => int.MinValue,
+            },
             new OneArg<Math_NegNode, float, float>()
             {
                 a = -8923448.234f,
@@ -304,6 +318,14 @@ namespace Khronos_Test_Export
                 b = -324.234f,
                 operation = (a, b) => Mathf.Min(a, b),
             },
+            // NaN propagates (Mathf.Min/Max would return the non-NaN argument)
+            new TwoArg<Math_MinNode, float, float>()
+            {
+                autoCreateTestsForAllSupportedInputs = false,
+                a = float.NaN,
+                b = 1f,
+                operation = (a, b) => float.NaN,
+            },
             new TwoArg<Math_MinNode, int, int>()
             {
                 a = 3,
@@ -315,6 +337,13 @@ namespace Khronos_Test_Export
                 a = 4653.234f,
                 b = 91293923.234f,
                 operation = (a, b) => Mathf.Max(a, b),
+            },
+            new TwoArg<Math_MaxNode, float, float>()
+            {
+                autoCreateTestsForAllSupportedInputs = false,
+                a = 1f,
+                b = float.NaN,
+                operation = (a, b) => float.NaN,
             },
             new TwoArg<Math_MaxNode, int, int>()
             {
@@ -328,6 +357,14 @@ namespace Khronos_Test_Export
                 b = 2f,
                 c = 3f,
                 operation = (a, b, c) => Mathf.Clamp(a, b, c),
+            },
+            new ThreeArg<Math_ClampNode, float, float>()
+            {
+                autoCreateTestsForAllSupportedInputs = false,
+                a = float.NaN,
+                b = 0f,
+                c = 1f,
+                operation = (a, b, c) => float.NaN,
             },
             new ThreeArg<Math_ClampNode, int, int>()
             {
@@ -476,6 +513,21 @@ namespace Khronos_Test_Export
                 b = 3f,
                 operation = (a, b) => a % b, // -1
             },
+            // math/rem: a = ±Inf -> NaN; finite a with b = ±Inf -> a
+            new TwoArg<Math_RemNode, float, float>()
+            {
+                autoCreateTestsForAllSupportedInputs = false,
+                a = float.PositiveInfinity,
+                b = 1f,
+                operation = (a, b) => float.NaN,
+            },
+            new TwoArg<Math_RemNode, float, float>()
+            {
+                autoCreateTestsForAllSupportedInputs = false,
+                a = 5f,
+                b = float.PositiveInfinity,
+                operation = (a, b) => 5f,
+            },
             // math/rem integer: b == 0 -> 0
             new TwoArg<Math_RemNode, int, int>()
             {
@@ -522,6 +574,14 @@ namespace Khronos_Test_Export
                 a = int.MaxValue,
                 b = 1,
                 operation = (a, b) => unchecked(a + b), // MinValue
+            },
+            // IEEE-754 invalid operation Inf - Inf -> NaN
+            new TwoArg<Math_SubNode, float, float>()
+            {
+                autoCreateTestsForAllSupportedInputs = false,
+                a = float.PositiveInfinity,
+                b = float.PositiveInfinity,
+                operation = (a, b) => float.NaN,
             },
             new TwoArg<Math_SubNode, int, int>()
             {
@@ -577,6 +637,49 @@ namespace Khronos_Test_Export
                 b = 2f,
                 c = float.NaN,
                 operation = (a, b, c) => float.NaN,
+            },
+            // math/saturate: NaN input propagates
+            new OneArg<Math_SaturateNode, float, float>()
+            {
+                autoCreateTestsForAllSupportedInputs = false,
+                a = float.NaN,
+                operation = (a) => float.NaN,
+            },
+            // IEEE-754 invalid operation 0 * Inf -> NaN
+            new TwoArg<Math_MulNode, float, float>()
+            {
+                autoCreateTestsForAllSupportedInputs = false,
+                a = 0f,
+                b = float.PositiveInfinity,
+                operation = (a, b) => float.NaN,
+            },
+            // math/fract is defined as a - floor(a): Inf - Inf -> NaN
+            new OneArg<Math_FractNode, float, float>()
+            {
+                autoCreateTestsForAllSupportedInputs = false,
+                a = float.PositiveInfinity,
+                operation = (a) => float.NaN,
+            },
+            // Integer edge cases given as examples in the spec
+            new OneArg<Math_AbsNode, int, int>()
+            {
+                autoCreateTestsForAllSupportedInputs = false,
+                a = int.MinValue,
+                operation = (a) => int.MinValue,
+            },
+            new TwoArg<Math_MulNode, int, int>()
+            {
+                autoCreateTestsForAllSupportedInputs = false,
+                a = int.MaxValue,
+                b = int.MaxValue,
+                operation = (a, b) => unchecked(a * b), // 1
+            },
+            new TwoArg<Math_MulNode, int, int>()
+            {
+                autoCreateTestsForAllSupportedInputs = false,
+                a = int.MinValue,
+                b = -1,
+                operation = (a, b) => unchecked(a * b), // MinValue
             },
             // Comparison Nodes
             new TwoArg<Math_EqNode, float, bool>()
@@ -733,6 +836,49 @@ namespace Khronos_Test_Export
                 b = 2,
                 operation = (a, b) => a >= b,
             },
+            // Ordered comparisons with a NaN operand are always false
+            new TwoArg<Math_LtNode, float, bool>()
+            {
+                autoCreateTestsForAllSupportedInputs = false,
+                a = float.NaN,
+                b = 1f,
+                operation = (a, b) => a < b,
+            },
+            new TwoArg<Math_LtNode, float, bool>()
+            {
+                autoCreateTestsForAllSupportedInputs = false,
+                a = 1f,
+                b = float.NaN,
+                operation = (a, b) => a < b,
+            },
+            new TwoArg<Math_LeNode, float, bool>()
+            {
+                autoCreateTestsForAllSupportedInputs = false,
+                a = float.NaN,
+                b = 1f,
+                operation = (a, b) => a <= b,
+            },
+            new TwoArg<Math_GtNode, float, bool>()
+            {
+                autoCreateTestsForAllSupportedInputs = false,
+                a = float.NaN,
+                b = 1f,
+                operation = (a, b) => a > b,
+            },
+            new TwoArg<Math_GeNode, float, bool>()
+            {
+                autoCreateTestsForAllSupportedInputs = false,
+                a = float.NaN,
+                b = 1f,
+                operation = (a, b) => a >= b,
+            },
+            new TwoArg<Math_GeNode, float, bool>()
+            {
+                autoCreateTestsForAllSupportedInputs = false,
+                a = float.NaN,
+                b = float.NaN,
+                operation = (a, b) => a >= b,
+            },
             // Special nodes
             new OneArg<Math_IsNaNNode, float, bool>()
             {
@@ -744,6 +890,11 @@ namespace Khronos_Test_Export
                 a = 1f,
                 operation = (a) => float.IsNaN(a),
             },
+            new OneArg<Math_IsNaNNode, float, bool>()
+            {
+                a = float.PositiveInfinity,
+                operation = (a) => float.IsNaN(a),
+            },
             new OneArg<Math_IsInfNode, float, bool>()
             {
                 a = float.PositiveInfinity,
@@ -752,6 +903,16 @@ namespace Khronos_Test_Export
             new OneArg<Math_IsInfNode, float, bool>()
             {
                 a = float.NegativeInfinity,
+                operation = (a) => float.IsInfinity(a),
+            },
+            new OneArg<Math_IsInfNode, float, bool>()
+            {
+                a = float.NaN,
+                operation = (a) => float.IsInfinity(a),
+            },
+            new OneArg<Math_IsInfNode, float, bool>()
+            {
+                a = 1f,
                 operation = (a) => float.IsInfinity(a),
             },
             // math/select
@@ -1117,6 +1278,25 @@ namespace Khronos_Test_Export
                 approximate = true,
                 operation = (a) => Mathf.Sqrt(a), // 0
             },
+            new OneArg<Math_SqrtNode, float, float>()
+            {
+                autoCreateTestsForAllSupportedInputs = false,
+                a = float.PositiveInfinity,
+                operation = (a) => float.PositiveInfinity,
+            },
+            // math/exp: exp(+Inf) -> +Inf; exp(-Inf) -> +0
+            new OneArg<Math_ExpNode, float, float>()
+            {
+                autoCreateTestsForAllSupportedInputs = false,
+                a = float.PositiveInfinity,
+                operation = (a) => float.PositiveInfinity,
+            },
+            new OneArg<Math_ExpNode, float, float>()
+            {
+                autoCreateTestsForAllSupportedInputs = false,
+                a = float.NegativeInfinity,
+                operation = (a) => 0f,
+            },
             // math/cbrt: the cube root of a negative number is a valid real number
             new OneArg<Math_CbrtNode, float, float>()
             {
@@ -1148,6 +1328,36 @@ namespace Khronos_Test_Export
                 b = 0f,
                 approximate = true,
                 operation = (a, b) => 1f,
+            },
+            // math/pow deviations from IEEE-754 pow (matches ECMAScript): NaN^±0 = 1;
+            // ±1^±Inf and ±1^NaN are NaN (Mathf.Pow returns 1 for these)
+            new TwoArg<Math_PowNode, float, float>()
+            {
+                autoCreateTestsForAllSupportedInputs = false,
+                a = float.NaN,
+                b = 0f,
+                operation = (a, b) => 1f,
+            },
+            new TwoArg<Math_PowNode, float, float>()
+            {
+                autoCreateTestsForAllSupportedInputs = false,
+                a = 1f,
+                b = float.PositiveInfinity,
+                operation = (a, b) => float.NaN,
+            },
+            new TwoArg<Math_PowNode, float, float>()
+            {
+                autoCreateTestsForAllSupportedInputs = false,
+                a = -1f,
+                b = float.PositiveInfinity,
+                operation = (a, b) => float.NaN,
+            },
+            new TwoArg<Math_PowNode, float, float>()
+            {
+                autoCreateTestsForAllSupportedInputs = false,
+                a = 1f,
+                b = float.NaN,
+                operation = (a, b) => float.NaN,
             },
             new OneArg<Math_TransposeNode, Matrix4x4, Matrix4x4>()
             {

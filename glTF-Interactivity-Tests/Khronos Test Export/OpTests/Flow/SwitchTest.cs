@@ -8,6 +8,9 @@ namespace Khronos_Test_Export
         private CheckBox _defaultFlowCheck;
         private CheckBox _noCasesDefaultFlowCheck;
         private CheckBox _negateCasesFlowCheck;
+        private CheckBox _fractionalCasesDefaultConfigCheck;
+        private CheckBox _outOfRangeCasesDefaultConfigCheck;
+        private CheckBox _duplicateCasesFlowCheck;
         //private CheckBox _floatNumberCasesFlowCheck;
         public string GetTestName()
         {
@@ -25,6 +28,9 @@ namespace Khronos_Test_Export
             _defaultFlowCheck = context.AddCheckBox("Default flow");
             _noCasesDefaultFlowCheck = context.AddCheckBox("Empty cases default flow");
             _negateCasesFlowCheck = context.AddCheckBox("Negate cases flow");
+            _fractionalCasesDefaultConfigCheck = context.AddCheckBox("Cases [0.5, 1] use default configuration");
+            _outOfRangeCasesDefaultConfigCheck = context.AddCheckBox("Cases [-2147483649, 0] use default configuration");
+            _duplicateCasesFlowCheck = context.AddCheckBox("Duplicate cases [1, 2, 2]");
             //_floatNumberCasesFlowCheck = context.AddCheckBox("Float number cases flow");
         }
 
@@ -53,7 +59,8 @@ namespace Khronos_Test_Export
 
             var switch3Node = noteCreator.CreateNode<Flow_SwitchNode>();
             context.NewEntryPoint(switch3Node.FlowIn(Flow_SwitchNode.IdFlowIn), "Switch empty-cases default flow");
-            switch3Node.Configuration[Flow_SwitchNode.IdConfigurationCases].Value = new int[] {};
+            // Empty arrays are not allowed as configuration values; omitting cases selects the default configuration (no cases).
+            switch3Node.Configuration.Remove(Flow_SwitchNode.IdConfigurationCases);
             switch3Node.ValueIn(Flow_SwitchNode.IdSelection).SetValue(5);
             _noCasesDefaultFlowCheck.SetupCheck(switch3Node.FlowOut(Flow_SwitchNode.IdFDefaultFlowOut));
        
@@ -65,6 +72,28 @@ namespace Khronos_Test_Export
             switch4Node.FlowOut("3");
             switch4Node.ValueIn(Flow_SwitchNode.IdSelection).SetValue(-50);
             _negateCasesFlowCheck.SetupCheck(switch4Node.FlowOut("-50"));
+
+            // A case that is not exactly representable as a 32-bit integer invalidates the whole cases array,
+            // so the default configuration without cases is used and every selection goes to the default flow.
+            var switchFractionalNode = noteCreator.CreateNode<Flow_SwitchNode>();
+            context.NewEntryPoint(switchFractionalNode.FlowIn(Flow_SwitchNode.IdFlowIn), "Switch fractional cases default configuration");
+            switchFractionalNode.Configuration[Flow_SwitchNode.IdConfigurationCases].Value = new object[] {0.5, 1};
+            switchFractionalNode.ValueIn(Flow_SwitchNode.IdSelection).SetValue(1);
+            _fractionalCasesDefaultConfigCheck.SetupCheck(switchFractionalNode.FlowOut(Flow_SwitchNode.IdFDefaultFlowOut));
+
+            var switchOutOfRangeNode = noteCreator.CreateNode<Flow_SwitchNode>();
+            context.NewEntryPoint(switchOutOfRangeNode.FlowIn(Flow_SwitchNode.IdFlowIn), "Switch out of int32 range cases default configuration");
+            switchOutOfRangeNode.Configuration[Flow_SwitchNode.IdConfigurationCases].Value = new object[] {-2147483649L, 0};
+            switchOutOfRangeNode.ValueIn(Flow_SwitchNode.IdSelection).SetValue(0);
+            _outOfRangeCasesDefaultConfigCheck.SetupCheck(switchOutOfRangeNode.FlowOut(Flow_SwitchNode.IdFDefaultFlowOut));
+
+            // Duplicate cases are ignored.
+            var switchDuplicateNode = noteCreator.CreateNode<Flow_SwitchNode>();
+            context.NewEntryPoint(switchDuplicateNode.FlowIn(Flow_SwitchNode.IdFlowIn), "Switch duplicate cases flow");
+            switchDuplicateNode.Configuration[Flow_SwitchNode.IdConfigurationCases].Value = new int[] {1, 2, 2};
+            switchDuplicateNode.FlowOut("1");
+            switchDuplicateNode.ValueIn(Flow_SwitchNode.IdSelection).SetValue(2);
+            _duplicateCasesFlowCheck.SetupCheck(switchDuplicateNode.FlowOut("2"));
             
             // var switch5Node = noteCreator.CreateNode(new Flow_SwitchNode());
             // context.SetEntryPoint(switch5Node.FlowIn(Flow_SwitchNode.IdFlowIn), "Switch float number cases flow");

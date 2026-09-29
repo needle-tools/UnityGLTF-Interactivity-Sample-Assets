@@ -9,7 +9,8 @@ namespace Khronos_Test_Export
         public CheckBox _var1CheckBox;
         public CheckBox _var2CheckBox;
         public CheckBox _var3CheckBox;
-        
+        public CheckBox _duplicateIndexCheckBox;
+
         public string GetTestName()
         {
             return "variable/setMultiple";
@@ -25,6 +26,7 @@ namespace Khronos_Test_Export
             _var1CheckBox = context.AddCheckBox("[var1]");
             _var2CheckBox = context.AddCheckBox("[var2]");
             _var3CheckBox = context.AddCheckBox("[var3]");
+            _duplicateIndexCheckBox = context.AddCheckBox("Duplicate index [var4, var4]");
         }
 
         public void CreateNodes(TestContext context)
@@ -61,6 +63,20 @@ namespace Khronos_Test_Export
             context.AddToCurrentEntrySequence(flow1In);
             context.AddToCurrentEntrySequence(flow2In);
             context.AddToCurrentEntrySequence(flow3In);
+
+            // Duplicate indices in the variables configuration are valid; the variable is set once.
+            var duplicateNode = nodeCreator.CreateNode<Variable_SetNode>();
+            var var4 = nodeCreator.Context.AddVariableWithIdIfNeeded("var4_" + Guid.NewGuid().ToString(), typeof(int));
+            duplicateNode.Configuration[Variable_SetNode.IdConfigVarIndices].Value = new int[] {var4, var4};
+            duplicateNode.ValueIn(var4.ToString()).SetValue(44);
+
+            context.NewEntryPoint("Set variable with duplicate index");
+            context.AddToCurrentEntrySequence(duplicateNode.FlowIn());
+
+            VariablesHelpers.GetVariable(nodeCreator, var4, out var var4Value);
+            _duplicateIndexCheckBox.SetupCheck(out var value4, out var flow4In, 44, false);
+            value4.ConnectToSource(var4Value);
+            context.AddToCurrentEntrySequence(flow4In);
         }
     }
 }

@@ -10,7 +10,8 @@ namespace Khronos_Test_Export
         private CheckBox _remainingInputCheckBox;
         private CheckBox _resetCheckBox;
         private CheckBox _resetCompletedCheckBox;
-        
+        private CheckBox _invalidConfigCheckBox;
+
         public string GetTestName()
         {
             return "flow/waitAll";
@@ -28,6 +29,7 @@ namespace Khronos_Test_Export
             _remainingInputCheckBox = context.AddCheckBox("[remainingInputs]");
             _resetCheckBox = context.AddCheckBox("[reset]");
             _resetCompletedCheckBox = context.AddCheckBox("[reset] [completed]");
+            _invalidConfigCheckBox = context.AddCheckBox("[inputFlows] 65 uses default configuration");
         }
 
         public void CreateNodes(TestContext context)
@@ -118,6 +120,16 @@ namespace Khronos_Test_Export
 
             _resetCompletedCheckBox.SetupCheckFlowTimes(out var flowInTimes, 1);
             waitAllNodeResetCompl.FlowOut(Flow_WaitAllNode.IdFlowOutCompleted).ConnectToFlowDestination(flowInTimes);
+
+            // Invalid Configuration: more than 64 input flows selects the default configuration (zero input flows)
+
+            var waitAllNodeInvalidConfig = nodeCreator.CreateNode<Flow_WaitAllNode>();
+            waitAllNodeInvalidConfig.Configuration[Flow_WaitAllNode.IdConfigInputFlows].Value = 65;
+
+            context.NewEntryPoint("Wait All - Invalid Configuration");
+            _invalidConfigCheckBox.SetupCheck(waitAllNodeInvalidConfig.ValueOut(Flow_WaitAllNode.IdOutRemainingInputs),
+                out var invalidConfigCheckFlow, 0, false);
+            context.AddToCurrentEntrySequence(invalidConfigCheckFlow);
 
         }
     }

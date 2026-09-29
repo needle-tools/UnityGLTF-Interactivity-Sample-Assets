@@ -514,6 +514,7 @@ namespace Khronos_Test_Export
         private CheckBox _selectionCheckBox;
         private CheckBox _defaultCheckBox;
         private CheckBox _specialCasesCheckBox;
+        private CheckBox _invalidCasesCheckBox;
 
         public string GetTestName()
         {
@@ -530,6 +531,7 @@ namespace Khronos_Test_Export
             _selectionCheckBox = context.AddCheckBox("Selection");
             _defaultCheckBox = context.AddCheckBox("Default");
             _specialCasesCheckBox = context.AddCheckBox("Negative Cases [-2,-1,0]");
+            _invalidCasesCheckBox = context.AddCheckBox("Cases [0.5, 1] use default configuration");
         }
 
         public void CreateNodes(TestContext context)
@@ -571,6 +573,18 @@ namespace Khronos_Test_Export
             context.NewEntryPoint(_specialCasesCheckBox.GetText());
             _specialCasesCheckBox.SetupCheck(switchNegNode.FirstValueOut(), out var flowNeg, 22, false);
             context.AddToCurrentEntrySequence(flowNeg);
+
+            // A case that is not exactly representable as a 32-bit integer invalidates the whole cases array,
+            // so the default configuration without cases is used. Input "1" is then an unused extra socket.
+            var switchInvalidCasesNode = nodeCreator.CreateNode<Math_SwitchNode>();
+            switchInvalidCasesNode.Configuration[Math_SwitchNode.IdConfigCases].Value = new object[] { 0.5, 1 };
+            switchInvalidCasesNode.ValueIn(Math_SwitchNode.IdSelection).SetValue(1);
+            switchInvalidCasesNode.ValueIn(Math_SwitchNode.IdDefaultValue).SetValue(99);
+            switchInvalidCasesNode.ValueIn("1").SetValue(22);
+
+            context.NewEntryPoint(_invalidCasesCheckBox.GetText());
+            _invalidCasesCheckBox.SetupCheck(switchInvalidCasesNode.FirstValueOut(), out var flowInvalidCases, 99, false);
+            context.AddToCurrentEntrySequence(flowInvalidCases);
         }
     }
 
@@ -608,7 +622,7 @@ namespace Khronos_Test_Export
             var randomNode = nodeCreator.CreateNode<Math_RandomNode>();
 
             var lastRandomNumberVarId = nodeCreator.Context.AddVariableWithIdIfNeeded(
-                "LastRandomNumber" + Guid.NewGuid().ToString(), "-1",
+                "LastRandomNumber" + Guid.NewGuid().ToString(), -1f,
                 typeof(float));
 
             VariablesHelpers.SetVariable(nodeCreator, lastRandomNumberVarId, out var setVarValue, out var setVarFlowIn,

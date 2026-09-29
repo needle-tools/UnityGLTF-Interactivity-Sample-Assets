@@ -18,7 +18,8 @@ namespace Khronos_Test_Export
         private CheckBox _errorDurationInfCheckBox;
         private CheckBox _errorP1CheckBox;
         private CheckBox _errorP2CheckBox;
-        
+        private CheckBox _slerpCheckBox;
+
         public string GetTestName()
         {
             return "variable/interpolate";
@@ -39,6 +40,7 @@ namespace Khronos_Test_Export
             _errorDurationInfCheckBox = context.AddCheckBox("[Err] flow (duration infinite", false);
             _errorP1CheckBox = context.AddCheckBox("[Err] flow (p1 NaN)", false);
             _errorP2CheckBox = context.AddCheckBox("[Err] flow (p2 NaN)", false);
+            _slerpCheckBox = context.AddCheckBox("useSlerp on float4, value at 100%", true);
         }
 
         public void CreateNodes(TestContext context)
@@ -111,6 +113,28 @@ namespace Khronos_Test_Export
             AddErrorFlowCheck(_errorDurationInfCheckBox, float.PositiveInfinity, Vector2.one, Vector2.one);
             AddErrorFlowCheck(_errorP1CheckBox, 1f, new Vector2(float.NaN, float.NaN), Vector2.one);
             AddErrorFlowCheck(_errorP2CheckBox, 1f, Vector2.one, new Vector2(float.NaN, float.NaN));
+
+            // Spherical interpolation: useSlerp is only valid for float4 variables
+            var slerpDuration = 1f;
+            context.NewEntryPoint(_slerpCheckBox.GetText(), slerpDuration + 0.5f);
+            var slerpVarId = nodeCreator.Context.AddVariableWithIdIfNeeded("varInterpolateSlerp_" + Guid.NewGuid().ToString(),
+                Quaternion.identity, typeof(Quaternion));
+            var slerpTarget = Quaternion.Euler(0f, 90f, 0f);
+
+            var slerpNode = nodeCreator.CreateNode<Variable_InterpolateNode>();
+            slerpNode.Configuration[Variable_InterpolateNode.IdConfigUseSlerp].Value = true;
+            slerpNode.Configuration[Variable_InterpolateNode.IdConfigVariable].Value = slerpVarId;
+            slerpNode.ValueIn(Variable_InterpolateNode.IdValue).SetValue(slerpTarget);
+            slerpNode.ValueIn(Variable_InterpolateNode.IdDuration).SetValue(slerpDuration);
+            slerpNode.ValueIn(Variable_InterpolateNode.IdPoint1).SetValue(pointA);
+            slerpNode.ValueIn(Variable_InterpolateNode.IdPoint2).SetValue(pointB);
+            context.AddToCurrentEntrySequence(slerpNode.FlowIn());
+
+            VariablesHelpers.GetVariable(nodeCreator, slerpVarId, out var slerpValueRef);
+            _slerpCheckBox.quaternionSignAgnostic = true;
+            _slerpCheckBox.SetupCheck(out var slerpCheckValueRef, out var slerpCheckFlowIn, slerpTarget, true);
+            slerpCheckValueRef.ConnectToSource(slerpValueRef);
+            slerpNode.FlowOut(Variable_InterpolateNode.IdFlowOutDone).ConnectToFlowDestination(slerpCheckFlowIn);
         }
     }
 }
