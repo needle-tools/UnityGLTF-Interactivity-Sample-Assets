@@ -94,9 +94,9 @@ namespace Khronos_Test_Export
             
             var name = "TestResult_" + _testCase.CaseName + "_" + text.text;
             
-            if (context.interactivityExportContext.Context.variables.Exists(v => v.Id == name))
+            if (context.interactivityExportContext.Context.variables.Exists(v => v.Name == name))
             {
-                var existingCount = context.interactivityExportContext.Context.variables.Count(v => v.Id.StartsWith(name));
+                var existingCount = context.interactivityExportContext.Context.variables.Count(v => v.Name.StartsWith(name));
                 name += $" ({existingCount.ToString()})";
             }
             resultVarName = name;
@@ -110,9 +110,9 @@ namespace Khronos_Test_Export
             
             var name = "TestResult_HasPassed_" + _testCase.CaseName + "_" + text.text;
             
-            if (context.interactivityExportContext.Context.variables.Exists(v => v.Id == name))
+            if (context.interactivityExportContext.Context.variables.Exists(v => v.Name == name))
             {
-                var existingCount = context.interactivityExportContext.Context.variables.Count(v => v.Id.StartsWith(name));
+                var existingCount = context.interactivityExportContext.Context.variables.Count(v => v.Name.StartsWith(name));
                 name += $" ({existingCount.ToString()})";
             }
             resultPassVarName = name;
@@ -211,7 +211,7 @@ namespace Khronos_Test_Export
                 var initValue = GetDefaultValue(type);
                 
                 var resultVarName = GetResultVariableName();
-                if (context.interactivityExportContext.Context.variables.Exists(v => v.Id == resultVarName))
+                if (context.interactivityExportContext.Context.variables.Exists(v => v.Name == resultVarName))
                     throw new Exception("Variable with the same name already exists: " + resultVarName);
                 ResultValueVarId = context.interactivityExportContext.Context.AddVariableWithIdIfNeeded(resultVarName, initValue, gltfType);
             }
@@ -228,7 +228,7 @@ namespace Khronos_Test_Export
                 var initValue = GetDefaultValue(type);
                 
                 var resultVarName = GetResultVariableName();
-                if (context.interactivityExportContext.Context.variables.Exists(v => v.Id == resultVarName))
+                if (context.interactivityExportContext.Context.variables.Exists(v => v.Name == resultVarName))
                     throw new Exception("Variable with the same name already exists: " + resultVarName);
                 ResultValueVarId = context.interactivityExportContext.Context.AddVariableWithIdIfNeeded(resultVarName, initValue, gltfType);
 
