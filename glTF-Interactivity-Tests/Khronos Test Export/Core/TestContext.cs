@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using Newtonsoft.Json.Linq;
 using TMPro;
 using UnityEngine;
 using UnityGLTF.Interactivity;
@@ -285,6 +286,44 @@ namespace Khronos_Test_Export
             var proxy = interactivityExportContext.CreateNode<Flow_SequenceNode>();
             flowIn = proxy.FlowIn(Flow_SequenceNode.IdFlowIn);
             _earlyCompletionTriggers.Add(proxy);
+        }
+
+        /// <summary>
+        /// Changes the serialized graph after export, for valid JSON the exporter can't produce
+        /// (see <see cref="TestFileExporterPlugin.TestFileExportContext.AddExtensionJsonPatch"/>).
+        /// The patch gets the KHR_interactivity extension object; the test graph is graphs[0].
+        /// </summary>
+        public void PatchSerializedExtension(Action<JObject> patch)
+        {
+            if (interactivityExportContext.Context is TestFileExporterPlugin.TestFileExportContext testExportContext)
+                testExportContext.AddExtensionJsonPatch(patch);
+            else
+                Debug.LogError("PatchSerializedExtension requires the test file exporter plugin.");
+        }
+
+        public void PatchSerializedGraph(Action<JObject> patch)
+        {
+            PatchSerializedExtension(extension => patch((JObject)extension["graphs"][0]));
+        }
+
+        /// <summary> The serialized node of <paramref name="node"/> inside a graph passed to a patch. </summary>
+        public static JObject SerializedNode(JObject graph, GltfInteractivityExportNode node)
+        {
+            if (node.Index < 0)
+                throw new InvalidOperationException($"Node {node.Schema.Op} was removed or merged during export and can't be patched.");
+            return (JObject)graph["nodes"][node.Index];
+        }
+
+        /// <summary> Index of the type with the given signature in a graph passed to a patch; the type is added if missing. </summary>
+        public static int SerializedTypeIndex(JObject graph, string signature)
+        {
+            if (!(graph["types"] is JArray types))
+                graph["types"] = types = new JArray();
+            for (int i = 0; i < types.Count; i++)
+                if ((string)types[i]["signature"] == signature)
+                    return i;
+            types.Add(new JObject { ["signature"] = signature });
+            return types.Count - 1;
         }
 
         public void AddFallbackToLastEntryPoint(FlowInRef flow)

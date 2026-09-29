@@ -65,5 +65,90 @@ namespace Khronos_Test_Export
             pGet.ValueIn(PointersHelper.IdPointerNodeIndex).SetValue(nodeIndex);
             return pGet;
         }
+
+        /// <summary>
+        /// The Y component of the node's /nodes/{}/translation. Y is not affected by the X-negation
+        /// of the Unity->glTF conversion, so it can be compared with the Unity-space clip values directly.
+        /// </summary>
+        public static ValueOutRef CreateTranslationY(GltfInteractivityExportNodes nodeCreator, int nodeIndex)
+        {
+            var pGet = CreateTranslationGet(nodeCreator, nodeIndex);
+            var extract = nodeCreator.CreateNode<Math_Extract3Node>();
+            extract.ValueIn(Math_Extract3Node.IdValueIn).ConnectToSource(pGet.ValueOut(Pointer_GetNode.IdValue));
+            return extract.ValueOut(Math_Extract3Node.IdValueOutY);
+        }
+
+        /// <summary>
+        /// Reads one of the animation state properties (isPlaying, minTime, maxTime, playhead,
+        /// virtualPlayhead) of /animations/{}/extensions/KHR_interactivity/.
+        /// </summary>
+        public static ValueOutRef CreateAnimationStateGet(GltfInteractivityExportNodes nodeCreator, int animationIndex,
+            string property, string gltfType)
+        {
+            var pGet = nodeCreator.CreateNode<Pointer_GetNode>();
+            PointersHelper.SetupPointerTemplateAndTargetInput(pGet, PointersHelper.IdPointerAnimationIndex,
+                "/animations/[" + PointersHelper.IdPointerAnimationIndex + "]/extensions/KHR_interactivity/" + property, gltfType);
+            pGet.ValueIn(PointersHelper.IdPointerAnimationIndex).SetValue(animationIndex);
+            return pGet.ValueOut(Pointer_GetNode.IdValue);
+        }
+
+        public static GltfInteractivityExportNode CreateStart(GltfInteractivityExportNodes nodeCreator, int animationIndex,
+            float startTime, float endTime, float speed = 1f)
+        {
+            var startNode = nodeCreator.CreateNode<Animation_StartNode>();
+            startNode.ValueIn(Animation_StartNode.IdValueAnimationRef).SetValue(new StaticRefPointer($"/animations/{animationIndex}"));
+            startNode.ValueIn(Animation_StartNode.IdValueStartTime).SetValue(startTime);
+            startNode.ValueIn(Animation_StartNode.IdValueEndtime).SetValue(endTime);
+            startNode.ValueIn(Animation_StartNode.IdValueSpeed).SetValue(speed);
+            return startNode;
+        }
+
+        public static GltfInteractivityExportNode CreateStop(GltfInteractivityExportNodes nodeCreator, int animationIndex)
+        {
+            var stopNode = nodeCreator.CreateNode<Animation_StopNode>();
+            stopNode.ValueIn(Animation_StopNode.IdValueAnimationRef).SetValue(new StaticRefPointer($"/animations/{animationIndex}"));
+            return stopNode;
+        }
+
+        public static GltfInteractivityExportNode CreateStopAt(GltfInteractivityExportNodes nodeCreator, int animationIndex, float stopTime)
+        {
+            var stopAtNode = nodeCreator.CreateNode<Animation_StopAtNode>();
+            stopAtNode.ValueIn(Animation_StopAtNode.IdValueAnimationRef).SetValue(new StaticRefPointer($"/animations/{animationIndex}"));
+            stopAtNode.ValueIn(Animation_StopAtNode.IdValueStopTime).SetValue(stopTime);
+            return stopAtNode;
+        }
+
+        public static GltfInteractivityExportNode CreateDelay(GltfInteractivityExportNodes nodeCreator, float duration)
+        {
+            var delay = nodeCreator.CreateNode<Flow_SetDelayNode>();
+            delay.ValueIn(Flow_SetDelayNode.IdDuration).SetValue(duration);
+            return delay;
+        }
+    }
+
+    /// <summary>
+    /// An animated test object and its clip, created in PrepareObjects and resolved to glTF indices in CreateNodes.
+    /// </summary>
+    public class AnimatedTestObject
+    {
+        public GameObject gameObject;
+        public AnimationClip clip;
+
+        public AnimatedTestObject(Transform parent, string name, Vector3 targetPosition, float duration)
+        {
+            gameObject = AnimationTestHelper.CreateAnimatedObject(parent, name, targetPosition, duration, out clip);
+        }
+
+        public int NodeIndex(TestContext context) => context.interactivityExportContext.Context.exporter.GetTransformIndex(gameObject.transform);
+
+        public int AnimationIndex(TestContext context) => context.interactivityExportContext.Context.exporter.GetAnimationId(clip, gameObject.transform);
+
+        public void Destroy()
+        {
+            if (gameObject != null)
+                Object.DestroyImmediate(gameObject);
+            if (clip != null)
+                Object.DestroyImmediate(clip);
+        }
     }
 }

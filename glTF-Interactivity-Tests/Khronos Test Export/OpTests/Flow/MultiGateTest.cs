@@ -10,6 +10,11 @@ namespace Khronos_Test_Export
         private CheckBox _orderCheckBox;
         private CheckBox _resetCheckBox;
         private CheckBox _invalidConfigCheckBox;
+        private CheckBox _noLoopExhaustedCheckBox;
+        private CheckBox _lastIndexInitialCheckBox;
+        private CheckBox _lastIndexAfterTwoCheckBox;
+        private CheckBox _lastIndexExhaustedCheckBox;
+        private CheckBox _lastIndexResetCheckBox;
 
         public string GetTestName()
         {
@@ -28,6 +33,12 @@ namespace Khronos_Test_Export
             _orderCheckBox = context.AddCheckBox("Order (008, 004, 001) > (001, 004, 008)");
             _resetCheckBox = context.AddCheckBox("Reset Loop");
             _invalidConfigCheckBox = context.AddCheckBox("isRandom \"yes\" uses default configuration (in order)");
+            context.NewRow();
+            _noLoopExhaustedCheckBox = context.AddCheckBox("No loop: 4th [in] fires nothing (3x total)");
+            _lastIndexInitialCheckBox = context.AddCheckBox("[lastIndex] -1 before activation");
+            _lastIndexAfterTwoCheckBox = context.AddCheckBox("[lastIndex] 1 after two activations");
+            _lastIndexExhaustedCheckBox = context.AddCheckBox("[lastIndex] stays 2 when all outputs are used");
+            _lastIndexResetCheckBox = context.AddCheckBox("[lastIndex] -1 after [reset]");
         }
 
         public void CreateNodes(TestContext context)
@@ -169,6 +180,38 @@ namespace Khronos_Test_Export
             context.AddSequence(multiGateResetLoopNode.FlowOut("003"), new FlowInRef[]
             {
             });
+
+            // No loop + lastIndex: three outputs, four activations. The 4th activation finds no unused
+            // output (i = -1) and, without isLoop, activates nothing and leaves lastIndex unchanged.
+            var multiGateLastIndexNode = nodeCreator.CreateNode<Flow_MultiGateNode>();
+            multiGateLastIndexNode.Configuration[Flow_MultiGateNode.IdConfigIsRandom].Value = false;
+            multiGateLastIndexNode.Configuration[Flow_MultiGateNode.IdConfigIsLoop].Value = false;
+            context.NewEntryPoint(_noLoopExhaustedCheckBox.GetText());
+
+            var lastIndexOut = multiGateLastIndexNode.ValueOut(Flow_MultiGateNode.IdLastIndex);
+            _lastIndexInitialCheckBox.SetupCheck(lastIndexOut, out var lastIndexInitialFlow, -1, false);
+            _lastIndexAfterTwoCheckBox.SetupCheck(lastIndexOut, out var lastIndexAfterTwoFlow, 1, false);
+            _lastIndexExhaustedCheckBox.SetupCheck(lastIndexOut, out var lastIndexExhaustedFlow, 2, false);
+            _lastIndexResetCheckBox.SetupCheck(lastIndexOut, out var lastIndexResetFlow, -1, false);
+
+            context.AddToCurrentEntrySequence(
+                new FlowInRef[]
+                {
+                    lastIndexInitialFlow,
+                    multiGateLastIndexNode.FlowIn(Flow_MultiGateNode.IdFlowIn),
+                    multiGateLastIndexNode.FlowIn(Flow_MultiGateNode.IdFlowIn),
+                    lastIndexAfterTwoFlow,
+                    multiGateLastIndexNode.FlowIn(Flow_MultiGateNode.IdFlowIn),
+                    multiGateLastIndexNode.FlowIn(Flow_MultiGateNode.IdFlowIn),
+                    lastIndexExhaustedFlow,
+                    multiGateLastIndexNode.FlowIn(Flow_MultiGateNode.IdFlowInReset),
+                    lastIndexResetFlow,
+                });
+
+            _noLoopExhaustedCheckBox.SetupCheckFlowTimes(out var noLoopCountFlow, 3);
+            multiGateLastIndexNode.FlowOut("0").ConnectToFlowDestination(noLoopCountFlow);
+            multiGateLastIndexNode.FlowOut("1").ConnectToFlowDestination(noLoopCountFlow);
+            multiGateLastIndexNode.FlowOut("2").ConnectToFlowDestination(noLoopCountFlow);
         }
     }
 }

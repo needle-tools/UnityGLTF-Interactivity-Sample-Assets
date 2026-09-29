@@ -83,8 +83,8 @@ namespace Khronos_Test_Export.InvalidGraphs
             sb.AppendLine("# KHR_interactivity — Invalid Graph Test Assets");
             sb.AppendLine();
             sb.AppendLine("Each `.gltf` in this folder breaks exactly one validation rule of the");
-            sb.AppendLine("[`KHR_interactivity` specification](https://github.com/KhronosGroup/glTF/blob/main/extensions/2.0/Khronos/KHR_interactivity/Specification.adoc)");
-            sb.AppendLine("(or, for the `accept` group, looks suspicious but is valid). The files are plain JSON without buffers.");
+            sb.AppendLine("[`KHR_interactivity` specification](https://github.com/KhronosGroup/glTF/blob/main/extensions/2.0/Khronos/KHR_interactivity/Specification.adoc).");
+            sb.AppendLine("The files are plain JSON without buffers. Graphs that look suspicious but are valid are regular test assets (`graph/*`).");
             sb.AppendLine();
             sb.AppendLine("> These files are generated (`Sample Scenes/Export Khronos Invalid Graph Tests` in the Unity sample project). Do not hand-edit them.");
             sb.AppendLine();
@@ -92,12 +92,11 @@ namespace Khronos_Test_Export.InvalidGraphs
             sb.AppendLine();
             sb.AppendLine("Every graph starts with `event/onStart → debug/log → event/send`:");
             sb.AppendLine();
-            sb.AppendLine($"- **Rejection cases** (`rejectGraph`, `rejectExtension`) log `FAILED [<id>] …` and send the custom event `{InvalidGraphBuilder.FailedEventId}`.");
-            sb.AppendLine("  A conformant implementation rejects the graph, so nothing runs. **Pass = the event never arrives** (use a short timeout, one tick is enough).");
-            sb.AppendLine($"- **Accept cases** (`accept`) log `PASSED [<id>] …` and send `{InvalidGraphBuilder.SuccessEventId}`. **Pass = the event arrives.**");
+            sb.AppendLine($"Every case (`rejectGraph`, `rejectExtension`) logs `FAILED [<id>] …` and sends the custom event `{InvalidGraphBuilder.FailedEventId}`.");
+            sb.AppendLine("A conformant implementation rejects the graph, so nothing runs. **Pass = the event never arrives** (use a short timeout, one tick is enough).");
             sb.AppendLine();
             sb.AppendLine("An implementation that does not support `KHR_interactivity` at all passes every rejection case trivially;");
-            sb.AppendLine("run the regular test assets and the `accept` group to make sure the results are meaningful.");
+            sb.AppendLine("run the regular test assets (including `graph/*`) to make sure the results are meaningful.");
             sb.AppendLine();
             sb.AppendLine("`expectedOutcome` is `rejectExtension` for all structural \"assert\" rules of the spec's Validation section (`schemaAssert: true`).");
             sb.AppendLine("For some of them the normative text only requires rejecting the graph; either way no graph may run.");

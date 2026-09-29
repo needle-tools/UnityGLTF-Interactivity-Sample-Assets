@@ -9,14 +9,13 @@ namespace Khronos_Test_Export.InvalidGraphs
     /// one rule afterwards (see <see cref="InvalidGraphCase.Mutate"/>).
     ///
     /// Every graph starts with the result signal chain (nodes 0..2, event 0), which uses no types:
-    /// <c>event/onStart → debug/log → event/send(test/onFailed | test/onSuccess)</c>.
+    /// <c>event/onStart → debug/log → event/send(test/onFailed)</c>.
     /// Subject nodes are appended afterwards, so mutations of node order or types never touch the chain.
     /// Empty arrays and objects are never emitted, as required by the spec.
     /// </summary>
     public class InvalidGraphBuilder
     {
         public const string FailedEventId = "test/onFailed";
-        public const string SuccessEventId = "test/onSuccess";
 
         public readonly JArray Types = new JArray();
         public readonly JArray Variables = new JArray();

@@ -35,7 +35,6 @@ namespace Khronos_Test_Export.InvalidGraphs
             Declarations(cases);
             Nodes(cases);
             Operations(cases);
-            Accepted(cases);
 
             var duplicate = cases.GroupBy(c => c.Id).FirstOrDefault(g => g.Count() > 1);
             if (duplicate != null)
@@ -633,94 +632,6 @@ namespace Khronos_Test_Export.InvalidGraphs
 
         #endregion
 
-        #region I – must be accepted
-
-        private static void Accepted(List<InvalidGraphCase> c)
-        {
-            const string g = "accept";
-            // Accepted cases whose behavior is observable (configuration fallbacks of flow/switch, math/switch,
-            // flow/multiGate and flow/waitAll, duplicate variable/set indices, useSlerp on float4) are sub-tests of the
-            // regular test assets instead. Only cases without observable behavior besides "the graph runs" remain here.
-            const string secConfig = "Nodes › Configuration";
-
-            c.Add(Accept("I01", g, "debug_log_invalid_message_default_config", "debug/log message \"{\" falls back to the default configuration",
-                "Operations › debug/log",
-                b => b.Node("debug/log", config: Config(("severity", 0), ("message", "{")))));
-            c.Add(Accept("I02", g, "configuration_on_non_configurable_op", "math/add with a configuration is ignored", secConfig,
-                b => b.Node("math/add", Values(("a", b.Inline("int", 1)), ("b", b.Inline("int", 2))), Config(("foo", 1)))));
-            c.Add(Accept("I03", g, "unknown_configuration_property", "flow/switch with an additional unknown configuration property", secConfig,
-                b => b.Node("flow/switch", Values(("selection", b.Inline("int", 1))), Config(("cases", new JArray(1)), ("foo", true)))));
-            c.Add(Accept("I04", g, "unknown_extension_op_is_noop", "unknown op declared with an extension becomes a no-op", "Nodes › Unsupported Operations",
-                b => b.AddNode(b.AddDecl(new JObject { ["op"] = "test/unknownOp", ["extension"] = "EXT_interactivity_unknown" }))));
-            c.Add(Accept("I05", g, "flow_to_unknown_input_socket", "output flow to a non-existent input flow socket is unconnected", SecNodes,
-                b =>
-                {
-                    b.Node("flow/sequence", flows: Flows(("0", S + 1, "doesNotExist")));
-                    b.Node("flow/sequence");
-                }));
-            c.Add(Accept("I06", g, "extra_valid_value_socket", "math/add with an additional valid input value \"c\"", SecNodes,
-                b => b.Node("math/add", Values(("a", b.Inline("int", 1)), ("b", b.Inline("int", 2)), ("c", b.Inline("int", 3))))));
-            c.Add(Accept("I07", g, "extra_valid_flow", "flow/branch with an additional forward output flow \"notAFlow\"", SecNodes,
-                b =>
-                {
-                    b.Node("flow/branch", Values(("condition", b.Inline("bool", true))), flows: Flows(("notAFlow", S + 1, null)));
-                    b.Node("flow/sequence");
-                }));
-            c.Add(new InvalidGraphCase
-            {
-                Id = "I08", Group = g, Name = "invalid_non_default_graph",
-                Title = "graph 1 is invalid, the valid default graph 0 still runs", SpecSection = "JSON Syntax › General",
-                Expected = ExpectedOutcome.Accept,
-                Setup = b => AddInts(b),
-                MutateExtension = e =>
-                {
-                    ((JArray)e["graphs"]).Add(InvalidGraphCase.BuildGraph(FailedEventId,
-                        "FAILED [I08] graph 1 (invalid, not the default graph) is running", AddInts,
-                        graph => Decl(graph, "math/add")["op"] = "math/doesNotExist"));
-                    e["graph"] = 0;
-                },
-            });
-            c.Add(Accept("I09", g, "pointer_template_escaped_brackets", "pointer/get with literal (doubled) brackets \"/nodes/0/extras/[[a]]/{{b}}\"",
-                SecPtr,
-                b => b.Node("pointer/get", config: Config(("pointer", "/nodes/0/extras/[[a]]/{{b}}"), ("type", b.Type("float"))))));
-            c.Add(Accept("I10", g, "integers_written_as_float_literals", "indices and int values written as 0.0 / 2.0 are exact integers",
-                "Validation › Validation Glossary (JSON index)",
-                b =>
-                {
-                    b.Variable("int", 0);
-                    b.Node("variable/get", config: Config(("variable", 0.0)));
-                    b.Node("math/add", Values(("a", Ref(S)), ("b", b.Inline("int", 2.0))));
-                }));
-            c.Add(Accept("I11", g, "type_default_and_typed_ref", "type-default input value and a node reference with matching explicit type", SecNodes,
-                b =>
-                {
-                    b.Node("math/isNaN", Values(("a", b.TypeDefault("float"))));
-                    b.Node("math/E");
-                    var typedRef = Ref(S + 1);
-                    typedRef["type"] = b.Type("float");
-                    b.Node("math/abs", Values(("a", typedRef)));
-                }));
-            c.Add(Accept("I12", g, "duplicate_custom_signatures", "two types with signature \"custom\" are allowed", SecTypes,
-                b =>
-                {
-                    AddInts(b);
-                    b.Types.Add(new JObject { ["signature"] = "custom" });
-                    b.Types.Add(new JObject { ["signature"] = "custom" });
-                }));
-            c.Add(Accept("I13", g, "events_without_id", "several internal events without id are allowed", SecEvents,
-                b => { b.Event(); b.Event(); }));
-            c.Add(Accept("I14", g, "duplicate_variable_names", "variable names may be non-unique", SecVars,
-                b =>
-                {
-                    b.Variable("int", 0);
-                    b.Variable("int", 1);
-                    b.Variables[0]["name"] = "sameName";
-                    b.Variables[1]["name"] = "sameName";
-                }));
-        }
-
-        #endregion
-
         #region helpers
 
         private static InvalidGraphCase Make(string id, string group, string name, string title, string section, ExpectedOutcome expected,
@@ -749,10 +660,6 @@ namespace Khronos_Test_Export.InvalidGraphs
             c.MutateExtension = mutateExtension;
             return c;
         }
-
-        private static InvalidGraphCase Accept(string id, string group, string name, string title, string section,
-            Action<InvalidGraphBuilder> setup)
-            => Make(id, group, name, title, section, ExpectedOutcome.Accept, false, setup, null);
 
         /// <summary> S = math/add(a: 1, b: 2) </summary>
         private static void AddInts(InvalidGraphBuilder b)

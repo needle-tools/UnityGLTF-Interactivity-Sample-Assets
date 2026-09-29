@@ -759,6 +759,11 @@ MonoBehaviour:
   testExporter: {fileID: 1481517795}
   testCases:
   - Enabled: 1
+    Name: Extras/Float Precision
+    Description: 'Float values MUST be IEEE-754 double precision: literal and variable
+      deserialization, type conversions, and negative zero.'
+    typeFullName: Khronos_Test_Export.ExtraTests.FloatPrecisionTest
+  - Enabled: 1
     Name: Extras/Loop in Loop Tests
     Description: 
     typeFullName: Khronos_Test_Export.ExtraTests.LoopInLoopTests
@@ -780,16 +785,17 @@ MonoBehaviour:
   - Enabled: 0
     Name: UserInteractions/eventOnHover
     Description: KHR_node_hoverability / event/onHoverIn + event/onHoverOut. Hover
-      the LEFT cube (move onto it and away again, must fire); then hover the MIDDLE
-      cube (hoverable=false) and the small cube on top of the RIGHT cube (inherited
-      hoverable=false) - both must NOT fire.
+      the LEFT cube (move onto it and away again - must fire). Do NOT hover the MIDDLE
+      cube (hoverable=false) or the small cube on top of the RIGHT cube (inherited
+      hoverable=false) - no interaction with them is required, they only fail if
+      you hover them anyway.
     typeFullName: Khronos_Test_Export.OnHoverTests
   - Enabled: 0
     Name: UserInteractions/eventOnSelect
     Description: KHR_node_selectability / event/onSelect. Select the LEFT cube (must
-      fire); then try to select the MIDDLE cube (selectable=false) and the small
-      cube on top of the RIGHT cube (inherited selectable=false) - both must NOT
-      fire.
+      fire event/onSelect). Do NOT select the MIDDLE cube (selectable=false) or the
+      small cube on top of the RIGHT cube (inherited selectable=false) - no interaction
+      with them is required, they only fail if you select them anyway.
     typeFullName: Khronos_Test_Export.OnSelectTests
   - Enabled: 1
     Name: animation/start
@@ -797,10 +803,27 @@ MonoBehaviour:
       position at 50%/100% plus the error flows.
     typeFullName: Khronos_Test_Export.AnimationStartTest
   - Enabled: 1
+    Name: animation/start playback modes
+    Description: Reverse playback, infinite loops in both directions, start/end times
+      outside the clip, startTime == endTime, restarting a playing animation, and
+      starting an animation from another animation's [done].
+    typeFullName: Khronos_Test_Export.AnimationPlaybackModesTest
+  - Enabled: 1
+    Name: animation/state
+    Description: Animation state pointers before, during and after playback, maxTime/minTime
+      with an unused sampler, and animations that are never started.
+    typeFullName: Khronos_Test_Export.AnimationStateTest
+  - Enabled: 1
     Name: animation/stop
     Description: Plays a custom AnimationClip, stops it half-way and checks the object
       position stays frozen.
     typeFullName: Khronos_Test_Export.AnimationStopTest
+  - Enabled: 1
+    Name: animation/stop and stopAt edge cases
+    Description: stop/stopAt on an animation that isn't playing, infinite stopTime,
+      stopTime at or past the end of the playback interval, and stopping an animation
+      from another animation's [done].
+    typeFullName: Khronos_Test_Export.AnimationStopEdgeCasesTest
   - Enabled: 1
     Name: animation/stopAt
     Description: Plays a custom AnimationClip and schedules a stop half-way, checking
@@ -811,6 +834,11 @@ MonoBehaviour:
     Description: Verifies that event/onStart, event/onTick, and event/receive each
       output a valid event ref that resolves through its canonical object-model pointer.
     typeFullName: Khronos_Test_Export.EventRefsTest
+  - Enabled: 1
+    Name: event/activation order and onTick
+    Description: Checks that onStart, onTick and receive nodes are activated in JSON
+      order, and the onTick output values (first tick, same values within a tick).
+    typeFullName: Khronos_Test_Export.EventOrderAndTickTest
   - Enabled: 1
     Name: event/send and receive
     Description: 
@@ -862,6 +890,30 @@ MonoBehaviour:
     Description: 
     typeFullName: Khronos_Test_Export.WhileLoopTest
   - Enabled: 1
+    Name: graph/extra and unknown sockets
+    Description: Flows to unknown input flow sockets, additional input value sockets
+      and output flows, type-default input values and node references with an explicit
+      type.
+    typeFullName: Khronos_Test_Export.GraphExtraSocketsTest
+  - Enabled: 1
+    Name: graph/ignored configuration
+    Description: A debug/log message that is not valid falls back to the default
+      configuration; a configuration on a non-configurable operation and unknown
+      configuration properties are ignored.
+    typeFullName: Khronos_Test_Export.GraphIgnoredConfigurationTest
+  - Enabled: 1
+    Name: graph/json syntax
+    Description: Integers written as float literals, duplicate custom types, internal
+      events without id, variables with the same name and doubled brackets in pointer
+      templates.
+    typeFullName: Khronos_Test_Export.GraphJsonSyntaxTest
+  - Enabled: 1
+    Name: graph/unsupported operations and graphs
+    Description: Operations of an unsupported extension are no-ops, and an invalid
+      graph that is not the default graph doesn't prevent the default graph from
+      running.
+    typeFullName: Khronos_Test_Export.GraphUnsupportedOperationsTest
+  - Enabled: 1
     Name: pointer/AssetCapabilities_GetTests
     Description: "Reads the asset capability and runtime limit virtual pointers (KHR_interactivity
       \xA74.2.1 / \xA74.2.2)."
@@ -883,6 +935,12 @@ MonoBehaviour:
     Name: pointer/set and get
     Description: 
     typeFullName: Khronos_Test_Export.PointerSetGetTest
+  - Enabled: 1
+    Name: pointer/set edge cases
+    Description: pointer/set error flows (invalid index, type mismatch, read-only,
+      weights), invalid values, stopping a running interpolation, and pointer/get
+      isValid for invalid indices.
+    typeFullName: Khronos_Test_Export.PointerSetEdgeCasesTest
   - Enabled: 1
     Name: prerequisites/Tests required operations
     Description: Testing required operations for proper test execution. This tests
@@ -961,6 +1019,11 @@ MonoBehaviour:
   testExporter: {fileID: 1481517795}
   testCases:
   - Enabled: 0
+    Name: Extras/Float Precision
+    Description: 'Float values MUST be IEEE-754 double precision: literal and variable
+      deserialization, type conversions, and negative zero.'
+    typeFullName: Khronos_Test_Export.ExtraTests.FloatPrecisionTest
+  - Enabled: 0
     Name: Extras/Loop in Loop Tests
     Description: 
     typeFullName: Khronos_Test_Export.ExtraTests.LoopInLoopTests
@@ -982,16 +1045,17 @@ MonoBehaviour:
   - Enabled: 1
     Name: UserInteractions/eventOnHover
     Description: KHR_node_hoverability / event/onHoverIn + event/onHoverOut. Hover
-      the LEFT cube (move onto it and away again, must fire); then hover the MIDDLE
-      cube (hoverable=false) and the small cube on top of the RIGHT cube (inherited
-      hoverable=false) - both must NOT fire.
+      the LEFT cube (move onto it and away again - must fire). Do NOT hover the MIDDLE
+      cube (hoverable=false) or the small cube on top of the RIGHT cube (inherited
+      hoverable=false) - no interaction with them is required, they only fail if
+      you hover them anyway.
     typeFullName: Khronos_Test_Export.OnHoverTests
   - Enabled: 1
     Name: UserInteractions/eventOnSelect
     Description: KHR_node_selectability / event/onSelect. Select the LEFT cube (must
-      fire); then try to select the MIDDLE cube (selectable=false) and the small
-      cube on top of the RIGHT cube (inherited selectable=false) - both must NOT
-      fire.
+      fire event/onSelect). Do NOT select the MIDDLE cube (selectable=false) or the
+      small cube on top of the RIGHT cube (inherited selectable=false) - no interaction
+      with them is required, they only fail if you select them anyway.
     typeFullName: Khronos_Test_Export.OnSelectTests
   - Enabled: 0
     Name: animation/start
@@ -999,10 +1063,27 @@ MonoBehaviour:
       position at 50%/100% plus the error flows.
     typeFullName: Khronos_Test_Export.AnimationStartTest
   - Enabled: 0
+    Name: animation/start playback modes
+    Description: Reverse playback, infinite loops in both directions, start/end times
+      outside the clip, startTime == endTime, restarting a playing animation, and
+      starting an animation from another animation's [done].
+    typeFullName: Khronos_Test_Export.AnimationPlaybackModesTest
+  - Enabled: 0
+    Name: animation/state
+    Description: Animation state pointers before, during and after playback, maxTime/minTime
+      with an unused sampler, and animations that are never started.
+    typeFullName: Khronos_Test_Export.AnimationStateTest
+  - Enabled: 0
     Name: animation/stop
     Description: Plays a custom AnimationClip, stops it half-way and checks the object
       position stays frozen.
     typeFullName: Khronos_Test_Export.AnimationStopTest
+  - Enabled: 0
+    Name: animation/stop and stopAt edge cases
+    Description: stop/stopAt on an animation that isn't playing, infinite stopTime,
+      stopTime at or past the end of the playback interval, and stopping an animation
+      from another animation's [done].
+    typeFullName: Khronos_Test_Export.AnimationStopEdgeCasesTest
   - Enabled: 0
     Name: animation/stopAt
     Description: Plays a custom AnimationClip and schedules a stop half-way, checking
@@ -1013,6 +1094,11 @@ MonoBehaviour:
     Description: Verifies that event/onStart, event/onTick, and event/receive each
       output a valid event ref that resolves through its canonical object-model pointer.
     typeFullName: Khronos_Test_Export.EventRefsTest
+  - Enabled: 0
+    Name: event/activation order and onTick
+    Description: Checks that onStart, onTick and receive nodes are activated in JSON
+      order, and the onTick output values (first tick, same values within a tick).
+    typeFullName: Khronos_Test_Export.EventOrderAndTickTest
   - Enabled: 0
     Name: event/send and receive
     Description: 
@@ -1064,6 +1150,30 @@ MonoBehaviour:
     Description: 
     typeFullName: Khronos_Test_Export.WhileLoopTest
   - Enabled: 0
+    Name: graph/extra and unknown sockets
+    Description: Flows to unknown input flow sockets, additional input value sockets
+      and output flows, type-default input values and node references with an explicit
+      type.
+    typeFullName: Khronos_Test_Export.GraphExtraSocketsTest
+  - Enabled: 0
+    Name: graph/ignored configuration
+    Description: A debug/log message that is not valid falls back to the default
+      configuration; a configuration on a non-configurable operation and unknown
+      configuration properties are ignored.
+    typeFullName: Khronos_Test_Export.GraphIgnoredConfigurationTest
+  - Enabled: 0
+    Name: graph/json syntax
+    Description: Integers written as float literals, duplicate custom types, internal
+      events without id, variables with the same name and doubled brackets in pointer
+      templates.
+    typeFullName: Khronos_Test_Export.GraphJsonSyntaxTest
+  - Enabled: 0
+    Name: graph/unsupported operations and graphs
+    Description: Operations of an unsupported extension are no-ops, and an invalid
+      graph that is not the default graph doesn't prevent the default graph from
+      running.
+    typeFullName: Khronos_Test_Export.GraphUnsupportedOperationsTest
+  - Enabled: 0
     Name: pointer/AssetCapabilities_GetTests
     Description: "Reads the asset capability and runtime limit virtual pointers (KHR_interactivity
       \xA74.2.1 / \xA74.2.2)."
@@ -1085,6 +1195,12 @@ MonoBehaviour:
     Name: pointer/set and get
     Description: 
     typeFullName: Khronos_Test_Export.PointerSetGetTest
+  - Enabled: 0
+    Name: pointer/set edge cases
+    Description: pointer/set error flows (invalid index, type mismatch, read-only,
+      weights), invalid values, stopping a running interpolation, and pointer/get
+      isValid for invalid indices.
+    typeFullName: Khronos_Test_Export.PointerSetEdgeCasesTest
   - Enabled: 0
     Name: prerequisites/Tests required operations
     Description: Testing required operations for proper test execution. This tests

@@ -515,6 +515,8 @@ namespace Khronos_Test_Export
         private CheckBox _defaultCheckBox;
         private CheckBox _specialCasesCheckBox;
         private CheckBox _invalidCasesCheckBox;
+        private CheckBox _duplicateCasesCheckBox;
+        private CheckBox _extraSocketCheckBox;
 
         public string GetTestName()
         {
@@ -532,6 +534,8 @@ namespace Khronos_Test_Export
             _defaultCheckBox = context.AddCheckBox("Default");
             _specialCasesCheckBox = context.AddCheckBox("Negative Cases [-2,-1,0]");
             _invalidCasesCheckBox = context.AddCheckBox("Cases [0.5, 1] use default configuration");
+            _duplicateCasesCheckBox = context.AddCheckBox("Duplicate Cases [1, 2, 2] ignored");
+            _extraSocketCheckBox = context.AddCheckBox("Selection 2 not in Cases [1]: default, not extra socket \"2\"");
         }
 
         public void CreateNodes(TestContext context)
@@ -585,6 +589,31 @@ namespace Khronos_Test_Export
             context.NewEntryPoint(_invalidCasesCheckBox.GetText());
             _invalidCasesCheckBox.SetupCheck(switchInvalidCasesNode.FirstValueOut(), out var flowInvalidCases, 99, false);
             context.AddToCurrentEntrySequence(flowInvalidCases);
+
+            // Duplicate case values are ignored: the sockets are "1" and "2", selection 2 picks "2"
+            var switchDuplicateCasesNode = nodeCreator.CreateNode<Math_SwitchNode>();
+            switchDuplicateCasesNode.Configuration[Math_SwitchNode.IdConfigCases].Value = new int[] { 1, 2, 2 };
+            switchDuplicateCasesNode.ValueIn(Math_SwitchNode.IdSelection).SetValue(2);
+            switchDuplicateCasesNode.ValueIn(Math_SwitchNode.IdDefaultValue).SetValue(99);
+            switchDuplicateCasesNode.ValueIn("1").SetValue(11);
+            switchDuplicateCasesNode.ValueIn("2").SetValue(22);
+
+            context.NewEntryPoint(_duplicateCasesCheckBox.GetText());
+            _duplicateCasesCheckBox.SetupCheck(switchDuplicateCasesNode.FirstValueOut(), out var flowDuplicateCases, 22, false);
+            context.AddToCurrentEntrySequence(flowDuplicateCases);
+
+            // Spec example: cases [1], selection 2 -> default, even though the node has an extra
+            // input socket with id "2" (extra sockets don't affect the operation).
+            var switchExtraSocketNode = nodeCreator.CreateNode<Math_SwitchNode>();
+            switchExtraSocketNode.Configuration[Math_SwitchNode.IdConfigCases].Value = new int[] { 1 };
+            switchExtraSocketNode.ValueIn(Math_SwitchNode.IdSelection).SetValue(2);
+            switchExtraSocketNode.ValueIn(Math_SwitchNode.IdDefaultValue).SetValue(99);
+            switchExtraSocketNode.ValueIn("1").SetValue(11);
+            switchExtraSocketNode.ValueIn("2").SetValue(22);
+
+            context.NewEntryPoint(_extraSocketCheckBox.GetText());
+            _extraSocketCheckBox.SetupCheck(switchExtraSocketNode.FirstValueOut(), out var flowExtraSocket, 99, false);
+            context.AddToCurrentEntrySequence(flowExtraSocket);
         }
     }
 
@@ -595,6 +624,7 @@ namespace Khronos_Test_Export
         private CheckBox _randomSameCheckBox;
         private CheckBox _monteCarlo1kCheckBox;
         private CheckBox _monteCarlo10kCheckBox;
+        private CheckBox _randomLoopCheckBox;
 
         public string GetTestName()
         {
@@ -612,6 +642,7 @@ namespace Khronos_Test_Export
             _randomSameCheckBox = context.AddCheckBox("Random (same number in current flow)");
             _monteCarlo1kCheckBox = context.AddCheckBox("Monte Carlo 1k(random number distribution)");
             _monteCarlo10kCheckBox = context.AddCheckBox("Monte Carlo 10k(random number distribution)");
+            _randomLoopCheckBox = context.AddCheckBox("Random (new number in each flow/for iteration, 10x)");
         }
 
         public void CreateNodes(TestContext context)
@@ -718,9 +749,37 @@ namespace Khronos_Test_Export
             
             AddMonteCarloCheckBox(_monteCarlo1kCheckBox, 1000, 0.4f);
             AddMonteCarloCheckBox(_monteCarlo10kCheckBox, 10000, 0.1f);
-            
-            
 
+            // New value on every loop iteration: the self-activation of flow/for counts as a new flow
+            // activation. Each iteration compares the random value with the one stored in the previous
+            // iteration and counts the iterations where it differs (the first compares with -1).
+            var randomLoopNode = nodeCreator.CreateNode<Math_RandomNode>();
+            var previousRandomVarId = nodeCreator.Context.AddVariableWithIdIfNeeded(
+                "PreviousLoopRandomNumber" + Guid.NewGuid().ToString(), -1f, typeof(float));
+            VariablesHelpers.GetVariable(nodeCreator, previousRandomVarId, out var previousRandomValue);
+            VariablesHelpers.SetVariable(nodeCreator, previousRandomVarId, out var setPreviousValue,
+                out var setPreviousFlowIn, out _);
+            setPreviousValue.ConnectToSource(randomLoopNode.FirstValueOut());
+
+            var sameAsPreviousNode = nodeCreator.CreateNode<Math_EqNode>();
+            sameAsPreviousNode.ValueIn(Math_EqNode.IdValueA).ConnectToSource(randomLoopNode.FirstValueOut());
+            sameAsPreviousNode.ValueIn(Math_EqNode.IdValueB).ConnectToSource(previousRandomValue);
+            var differsBranch = nodeCreator.CreateNode<Flow_BranchNode>();
+            differsBranch.ValueIn(Flow_BranchNode.IdCondition).ConnectToSource(sameAsPreviousNode.FirstValueOut());
+            context.AddPlusOneCounter(out var differsCounter, out var differsIncreaseFlowIn);
+            differsBranch.FlowOut(Flow_BranchNode.IdFlowOutFalse).ConnectToFlowDestination(differsIncreaseFlowIn);
+
+            var randomForLoop = nodeCreator.CreateNode<Flow_ForLoopNode>();
+            randomForLoop.ValueIn(Flow_ForLoopNode.IdStartIndex).SetValue(0);
+            randomForLoop.ValueIn(Flow_ForLoopNode.IdEndIndex).SetValue(10);
+            context.AddSequence(randomForLoop.FlowOut(Flow_ForLoopNode.IdLoopBody),
+                differsBranch.FlowIn(Flow_BranchNode.IdFlowIn),
+                setPreviousFlowIn);
+
+            context.NewEntryPoint(_randomLoopCheckBox.GetText());
+            context.AddToCurrentEntrySequence(randomForLoop.FlowIn());
+            _randomLoopCheckBox.SetupCheck(differsCounter, out var randomLoopCheckFlow, 10, false);
+            randomForLoop.FlowOut(Flow_ForLoopNode.IdCompleted).ConnectToFlowDestination(randomLoopCheckFlow);
         }
     }
 

@@ -9,16 +9,14 @@ namespace Khronos_Test_Export.InvalidGraphs
         RejectGraph,
         /// <summary> The whole KHR_interactivity extension object is invalid; no graph may run. </summary>
         RejectExtension,
-        /// <summary> The graph looks suspicious but is valid and MUST run (fallbacks, ignored properties, …). </summary>
-        Accept,
     }
 
     /// <summary>
     /// One test asset: a valid graph (<see cref="Setup"/>) with exactly one rule broken afterwards on JSON level
     /// (<see cref="Mutate"/> / <see cref="MutateExtension"/>). Ids match glTF-Interactivity-Tests/SpecInvalidGraphCases.md.
     ///
-    /// Rejection cases send <c>test/onFailed</c> on start, so an implementation that wrongly runs the graph reports
-    /// a failure. Accept cases send <c>test/onSuccess</c> instead, since wrongly rejecting them is silent.
+    /// Every case sends <c>test/onFailed</c> on start, so an implementation that wrongly runs the graph reports a failure.
+    /// Valid graphs that look suspicious are regular test cases (OpTests/Graph), not part of this set.
     /// </summary>
     public class InvalidGraphCase
     {
@@ -41,13 +39,9 @@ namespace Khronos_Test_Export.InvalidGraphs
 
         public string FileName => $"{Id}_{Name}.gltf";
 
-        public string SignalEventId => Expected == ExpectedOutcome.Accept
-            ? InvalidGraphBuilder.SuccessEventId
-            : InvalidGraphBuilder.FailedEventId;
+        public string SignalEventId => InvalidGraphBuilder.FailedEventId;
 
-        public string LogMessage => Expected == ExpectedOutcome.Accept
-            ? $"PASSED [{Id}] {Title}: the graph was correctly accepted."
-            : $"FAILED [{Id}] {Title}: this graph MUST be rejected (spec: {SpecSection}).";
+        public string LogMessage => $"FAILED [{Id}] {Title}: this graph MUST be rejected (spec: {SpecSection}).";
 
         /// <param name="applyMutation">false builds the unbroken base graph, used to verify the generator itself.</param>
         public JObject BuildGltf(bool applyMutation = true)
@@ -83,13 +77,10 @@ namespace Khronos_Test_Export.InvalidGraphs
             };
         }
 
-        public string ExpectedOutcomeString =>
-            Expected == ExpectedOutcome.RejectGraph ? "rejectGraph" :
-            Expected == ExpectedOutcome.RejectExtension ? "rejectExtension" : "accept";
+        public string ExpectedOutcomeString => Expected == ExpectedOutcome.RejectGraph ? "rejectGraph" : "rejectExtension";
 
-        public string PassCondition => Expected == ExpectedOutcome.Accept
-            ? $"the graph runs and sends the custom event '{InvalidGraphBuilder.SuccessEventId}'"
-            : $"the graph is rejected: no node runs and the custom event '{InvalidGraphBuilder.FailedEventId}' is never sent";
+        public string PassCondition =>
+            $"the graph is rejected: no node runs and the custom event '{InvalidGraphBuilder.FailedEventId}' is never sent";
 
         public static JObject BuildGraph(string signalEventId, string logMessage, Action<InvalidGraphBuilder> setup, Action<JObject> mutate)
         {

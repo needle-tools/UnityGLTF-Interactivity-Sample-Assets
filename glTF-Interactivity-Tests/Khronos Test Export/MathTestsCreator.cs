@@ -234,6 +234,45 @@ namespace Khronos_Test_Export
                 a = -8923448.234f,
                 operation = (a) => -a,
             },
+            // math/round - half-way cases MUST be rounded away from zero, so the expected values come
+            // from SpecRound, not from Mathf.Round (which rounds half to even: 2.5 -> 2, 0.5 -> 0).
+            new OneArg<Math_RoundNode, float, float>()
+            {
+                autoCreateTestsForAllSupportedInputs = false,
+                a = 2.5f,
+                operation = (a) => SpecRound(a), // 3
+            },
+            new OneArg<Math_RoundNode, float, float>()
+            {
+                autoCreateTestsForAllSupportedInputs = false,
+                a = -2.5f,
+                operation = (a) => SpecRound(a), // -3
+            },
+            new OneArg<Math_RoundNode, float, float>()
+            {
+                autoCreateTestsForAllSupportedInputs = false,
+                a = 0.5f,
+                operation = (a) => SpecRound(a), // 1
+            },
+            new OneArg<Math_RoundNode, float, float>()
+            {
+                autoCreateTestsForAllSupportedInputs = false,
+                a = 1.5f,
+                operation = (a) => SpecRound(a), // 2
+            },
+            // math/round - infinity is returned unchanged
+            new OneArg<Math_RoundNode, float, float>()
+            {
+                autoCreateTestsForAllSupportedInputs = false,
+                a = float.PositiveInfinity,
+                operation = (a) => float.PositiveInfinity,
+            },
+            new OneArg<Math_RoundNode, float, float>()
+            {
+                autoCreateTestsForAllSupportedInputs = false,
+                a = float.NegativeInfinity,
+                operation = (a) => float.NegativeInfinity,
+            },
             // math/round - non-half values chosen so the tie-breaking rule is irrelevant
             new OneArg<Math_RoundNode, float, float>()
             {
@@ -2055,6 +2094,53 @@ namespace Khronos_Test_Export
             // They coincide only when a=0, b=1 (normalization is identity and lerp(0,1,x)=x),
             // which is why edge=0..1 cases alone don't distinguish them. The vec3 case below
             // (a=0, b=2, c=1) diverges: spec -> 0.5, Unity-style -> 2.0.
+            //
+            // Edge cases: c below / above the edges saturates to 0 / 1.
+            new ThreeArg<Math_SmoothStep, float, float, float, float>()
+            {
+                autoCreateTestsForAllSupportedInputs = false,
+                a = 0f,
+                b = 1f,
+                c = -1f,
+                operation = (a, b, c) => SpecSmoothStep(a, b, c), // 0
+            },
+            new ThreeArg<Math_SmoothStep, float, float, float, float>()
+            {
+                autoCreateTestsForAllSupportedInputs = false,
+                a = 0f,
+                b = 1f,
+                c = 2f,
+                operation = (a, b, c) => SpecSmoothStep(a, b, c), // 1
+            },
+            // Swapped edges: the spec normalizes against min(a, b) and |b - a|, so the result is
+            // the same as with a < b (0.15625). GLSL smoothstep(1, 0, 0.25) would return 0.84375.
+            new ThreeArg<Math_SmoothStep, float, float, float, float>()
+            {
+                autoCreateTestsForAllSupportedInputs = false,
+                a = 1f,
+                b = 0f,
+                c = 0.25f,
+                approximate = true,
+                operation = (a, b, c) => SpecSmoothStep(a, b, c), // 0.15625
+            },
+            // Equal edges: (c - a) / 0 is +Inf or -Inf, which saturates to 1 or 0. c == a == b is
+            // left out: 0 / 0 is NaN and saturate(NaN) depends on the undefined min/max NaN rule.
+            new ThreeArg<Math_SmoothStep, float, float, float, float>()
+            {
+                autoCreateTestsForAllSupportedInputs = false,
+                a = 0.5f,
+                b = 0.5f,
+                c = 0.75f,
+                operation = (a, b, c) => 1f,
+            },
+            new ThreeArg<Math_SmoothStep, float, float, float, float>()
+            {
+                autoCreateTestsForAllSupportedInputs = false,
+                a = 0.5f,
+                b = 0.5f,
+                c = 0.25f,
+                operation = (a, b, c) => 0f,
+            },
             new ThreeArg<Math_SmoothStep, float, float, float, float>()
             {
                 a = 0f,
@@ -2088,6 +2174,13 @@ namespace Khronos_Test_Export
                 operation = (a, b, c) => new Vector4(SpecSmoothStep(a.x, b.x, c.x), SpecSmoothStep(a.y, b.y, c.y), SpecSmoothStep(a.z, b.z, c.z), SpecSmoothStep(a.w, b.w, c.w)),
             }
         };
+
+        // Spec-accurate math/round: half-way cases are rounded away from zero
+        // (ECMAScript: a < 0 ? -Math.round(-a) : Math.round(a)).
+        private static float SpecRound(float a)
+        {
+            return (float)Math.Round(a, MidpointRounding.AwayFromZero);
+        }
 
         // Spec-accurate math/smoothStep for a single component:
         // t = saturate((c - min(a, b)) / |b - a|); result = t * t * (3 - 2t).

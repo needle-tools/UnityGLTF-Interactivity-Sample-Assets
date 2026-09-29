@@ -1,4 +1,7 @@
+using System;
+using System.Collections.Generic;
 using GLTF.Schema;
+using Newtonsoft.Json.Linq;
 using UnityEngine;
 using UnityGLTF;
 using UnityGLTF.Interactivity.Export;
@@ -85,6 +88,51 @@ namespace Khronos_Test_Export
 
                 TriggerOnBeforeSerialization();
                 ApplyInteractivityExtension();
+
+                if (_extensionJsonPatches.Count > 0)
+                {
+                    var extensions = gltfRoot.Extensions;
+                    extensions[GltfInteractivityExtension.ExtensionName] =
+                        new PatchedExtension(extensions[GltfInteractivityExtension.ExtensionName], _extensionJsonPatches.ToArray());
+                    _extensionJsonPatches.Clear();
+                }
+            }
+
+            private readonly List<Action<JObject>> _extensionJsonPatches = new List<Action<JObject>>();
+
+            /// <summary>
+            /// Changes the serialized KHR_interactivity extension object after the graph was sorted and validated.
+            /// For valid JSON the exporter can't produce, e.g. unknown configuration properties or events without id.
+            /// Node indices (<see cref="GltfInteractivityNode.Index"/>) are final when the patch runs.
+            /// </summary>
+            public void AddExtensionJsonPatch(Action<JObject> patch)
+            {
+                _extensionJsonPatches.Add(patch);
+            }
+
+            private class PatchedExtension : IExtension
+            {
+                private readonly IExtension _extension;
+                private readonly Action<JObject>[] _patches;
+
+                public PatchedExtension(IExtension extension, Action<JObject>[] patches)
+                {
+                    _extension = extension;
+                    _patches = patches;
+                }
+
+                public JProperty Serialize()
+                {
+                    var property = _extension.Serialize();
+                    foreach (var patch in _patches)
+                        patch((JObject)property.Value);
+                    return property;
+                }
+
+                public IExtension Clone(GLTFRoot root)
+                {
+                    return new PatchedExtension(_extension.Clone(root), _patches);
+                }
             }
         }
     }

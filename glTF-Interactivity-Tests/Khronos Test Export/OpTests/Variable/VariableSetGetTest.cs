@@ -7,12 +7,12 @@ namespace Khronos_Test_Export
 {
     public class VariableSetGetTest : ITestCase
     {
-        // private CheckBox checkFloatSet;
-        // private CheckBox checkVector2Set;
-        // private CheckBox checkVector3Set;
-        // private CheckBox checkVector4Set;
-        // private CheckBox checkBoolSet;
-        // private CheckBox checkIntSet;
+        private CheckBox checkFloatSet;
+        private CheckBox checkVector2Set;
+        private CheckBox checkVector3Set;
+        private CheckBox checkVector4Set;
+        private CheckBox checkBoolSet;
+        private CheckBox checkIntSet;
 
         private CheckBox checkStaticFloatSet;
         private CheckBox checkStaticVector2Set;
@@ -41,14 +41,13 @@ namespace Khronos_Test_Export
         
         public void PrepareObjects(TestContext context)
         {
-            // checkBoolSet = context.AddCheckBox("bool");
-            // checkIntSet = context.AddCheckBox("int");
-            // checkFloatSet = context.AddCheckBox("float");
-            // checkVector2Set = context.AddCheckBox("float2");
-            // checkVector3Set = context.AddCheckBox("float3");
-            // checkVector4Set = context.AddCheckBox("float4");
-            //
-            // context.NewRow();
+            checkBoolSet = context.AddCheckBox("connected bool");
+            checkIntSet = context.AddCheckBox("connected int");
+            checkFloatSet = context.AddCheckBox("connected float");
+            checkVector2Set = context.AddCheckBox("connected float2");
+            checkVector3Set = context.AddCheckBox("connected float3");
+            checkVector4Set = context.AddCheckBox("connected float4");
+            context.NewRow();
             checkStaticBoolSet = context.AddCheckBox("static bool");
             checkStaticIntSet = context.AddCheckBox("static int");
             checkStaticFloatSet = context.AddCheckBox("static float");
@@ -68,52 +67,26 @@ namespace Khronos_Test_Export
         {
             var nodeCreator = context.interactivityExportContext;
 
-            // void AddSubTestInput(Type type, CheckBox checkBox, object valueToSet)
-            // {
-            //     var gltfType = GltfTypes.TypeIndex(type);
-            //     var nullValue = GltfTypes.GetNullByType(gltfType);
-            //     var varId = nodeCreator.Context.AddVariableWithIdIfNeeded("VarSetTest_"+GltfTypes.allTypes[gltfType], nullValue, gltfType);
-            //
-            //     ValueOutRef valueOutRef;
-            //     switch (type)
-            //     {
-            //         case Type boolType when boolType == typeof(bool):
-            //             
-            //             
-            //             
-            //             valueOutRef = new ValueOutRef<bool>(boolType);
-            //             break;
-            //         case Type intType when intType == typeof(int):
-            //             valueOutRef = new ValueOutRef<int>(intType);
-            //             break;
-            //         case Type floatType when floatType == typeof(float):
-            //             valueOutRef = new ValueOutRef<float>(floatType);
-            //             break;
-            //         case Type vector2Type when vector2Type == typeof(Vector2):
-            //             valueOutRef = new ValueOutRef<Vector2>(vector2Type);
-            //             break;
-            //         case Type vector3Type when vector3Type == typeof(Vector3):
-            //             valueOutRef = new ValueOutRef<Vector3>(vector3Type);
-            //             break;
-            //         case Type vector4Type when vector4Type == typeof(Vector4):
-            //             valueOutRef = new ValueOutRef<Vector4>(vector4Type);
-            //             break;
-            //         default:
-            //             throw new ArgumentException("Unsupported type: " + type);
-            //     }
-            //     
-            //     var setVarNode = VariablesHelpers.SetVariable(nodeCreator, varId);
-            //     
-            //     
-            //     context.SetEntryPoint(setVarNode.FlowIn(Variable_SetNode.IdFlowIn), "Set Variable " + GltfTypes.allTypes[gltfType]);
-            //   
-            //     VariablesHelpers.GetVariable(nodeCreator, varId, out var getVar);
-            //     
-            //     checkBox.SetupCheck(context, getVar, out var checkFlow, valueToSet, false);
-            //     setVarNode.FlowOut(Variable_SetNode.IdFlowOut).ConnectToFlowDestination(checkFlow);
-            //     
-            // }
-            //
+            // The value input of variable/set is connected to another node's output instead of a literal.
+            // The source is a second variable holding the value, read with variable/get.
+            void AddSubTestInput(Type type, CheckBox checkBox, object valueToSet)
+            {
+                var gltfType = GltfTypes.TypeIndex(type);
+                var nullValue = GltfTypes.GetNullByType(gltfType);
+                var sourceVarId = nodeCreator.Context.AddVariableWithIdIfNeeded("VarSetTestSource_"+GltfTypes.allTypes[gltfType]+Guid.NewGuid().ToString(), valueToSet, gltfType);
+                var targetVarId = nodeCreator.Context.AddVariableWithIdIfNeeded("VarSetTestTarget_"+GltfTypes.allTypes[gltfType]+Guid.NewGuid().ToString(), nullValue, gltfType);
+
+                VariablesHelpers.GetVariable(nodeCreator, sourceVarId, out var sourceValue);
+                VariablesHelpers.SetVariable(nodeCreator, targetVarId, out var setValue, out var setFlow, out var setOutFlow);
+                setValue.ConnectToSource(sourceValue);
+                context.NewEntryPoint(setFlow, "Set Variable (connected) " + GltfTypes.allTypes[gltfType]);
+
+                VariablesHelpers.GetVariable(nodeCreator, targetVarId, out var getVar);
+
+                checkBox.SetupCheck(getVar, out var checkFlow, valueToSet, false);
+                setOutFlow.ConnectToFlowDestination(checkFlow);
+            }
+
             void AddSubTestStaticInput(Type type, CheckBox checkBox, object valueToSet)
             {
                 var gltfType = GltfTypes.TypeIndex(type);
@@ -141,12 +114,12 @@ namespace Khronos_Test_Export
                 context.AddToCurrentEntrySequence(checkFlow);
             }     
             
-            // AddSubTestInput(typeof(bool), checkBoolSet, true);
-            // AddSubTestInput(typeof(int), checkIntSet, 1);
-            // AddSubTestInput(typeof(float), checkFloatSet, 1f);
-            // AddSubTestInput(typeof(Vector2), checkVector2Set, Vector2.one);
-            // AddSubTestInput(typeof(Vector3), checkVector3Set, Vector3.one);
-            // AddSubTestInput(typeof(Vector4), checkVector4Set, Vector4.one);
+            AddSubTestInput(typeof(bool), checkBoolSet, true);
+            AddSubTestInput(typeof(int), checkIntSet, 1);
+            AddSubTestInput(typeof(float), checkFloatSet, 1f);
+            AddSubTestInput(typeof(Vector2), checkVector2Set, Vector2.one);
+            AddSubTestInput(typeof(Vector3), checkVector3Set, Vector3.one);
+            AddSubTestInput(typeof(Vector4), checkVector4Set, Vector4.one);
             
             AddSubTestStaticInput(typeof(bool), checkStaticBoolSet, true);
             AddSubTestStaticInput(typeof(int), checkStaticIntSet, 1);

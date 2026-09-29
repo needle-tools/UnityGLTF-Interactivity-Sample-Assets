@@ -11,6 +11,9 @@ namespace Khronos_Test_Export
         private CheckBox _resetCheckBox;
         private CheckBox _resetCompletedCheckBox;
         private CheckBox _invalidConfigCheckBox;
+        private CheckBox _outFlowCheckBox;
+        private CheckBox _reactivatedOutCheckBox;
+        private CheckBox _reactivatedRemainingCheckBox;
 
         public string GetTestName()
         {
@@ -30,6 +33,10 @@ namespace Khronos_Test_Export
             _resetCheckBox = context.AddCheckBox("[reset]");
             _resetCompletedCheckBox = context.AddCheckBox("[reset] [completed]");
             _invalidConfigCheckBox = context.AddCheckBox("[inputFlows] 65 uses default configuration");
+            context.NewRow();
+            _outFlowCheckBox = context.AddCheckBox("[out] on every non-final input (2x)");
+            _reactivatedOutCheckBox = context.AddCheckBox("Re-activated input fires [out] again (2x)");
+            _reactivatedRemainingCheckBox = context.AddCheckBox("Re-activated input keeps [remainingInputs] (2)");
         }
 
         public void CreateNodes(TestContext context)
@@ -131,6 +138,41 @@ namespace Khronos_Test_Export
                 out var invalidConfigCheckFlow, 0, false);
             context.AddToCurrentEntrySequence(invalidConfigCheckFlow);
 
+            // [out] fires after every input activation except the last missing one (which fires [completed])
+            var waitAllNodeOut = nodeCreator.CreateNode<Flow_WaitAllNode>();
+            waitAllNodeOut.Configuration[Flow_WaitAllNode.IdConfigInputFlows].Value = 3;
+
+            context.NewEntryPoint(_outFlowCheckBox.GetText());
+            context.AddToCurrentEntrySequence(
+                new FlowInRef[]
+                {
+                    waitAllNodeOut.FlowIn("0"),
+                    waitAllNodeOut.FlowIn("1"),
+                    waitAllNodeOut.FlowIn("2"),
+                });
+            _outFlowCheckBox.SetupCheckFlowTimes(out var outFlowTimes, 2);
+            waitAllNodeOut.FlowOut(Flow_WaitAllNode.IdFlowOutNotCompleted).ConnectToFlowDestination(outFlowTimes);
+
+            // Activating an already activated input does not decrement remainingInputs, but still fires [out]
+            var waitAllNodeReactivated = nodeCreator.CreateNode<Flow_WaitAllNode>();
+            waitAllNodeReactivated.Configuration[Flow_WaitAllNode.IdConfigInputFlows].Value = 3;
+
+            context.NewEntryPoint(_reactivatedOutCheckBox.GetText());
+            _reactivatedRemainingCheckBox.SetupCheck(waitAllNodeReactivated.ValueOut(Flow_WaitAllNode.IdOutRemainingInputs),
+                out var reactivatedRemainingCheckFlow, 2, false);
+            context.AddToCurrentEntrySequence(
+                new FlowInRef[]
+                {
+                    waitAllNodeReactivated.FlowIn("0"),
+                    waitAllNodeReactivated.FlowIn("0"),
+                    reactivatedRemainingCheckFlow,
+                });
+            _reactivatedOutCheckBox.SetupCheckFlowTimes(out var reactivatedOutFlowTimes, 2);
+            waitAllNodeReactivated.FlowOut(Flow_WaitAllNode.IdFlowOutNotCompleted).ConnectToFlowDestination(reactivatedOutFlowTimes);
+            // Inputs 1 and 2 are never activated, but must exist on the node
+            var dummySequenceReactivated = nodeCreator.CreateNode<Flow_SequenceNode>();
+            dummySequenceReactivated.FlowOut("0").ConnectToFlowDestination(waitAllNodeReactivated.FlowIn("1"));
+            dummySequenceReactivated.FlowOut("1").ConnectToFlowDestination(waitAllNodeReactivated.FlowIn("2"));
         }
     }
 }

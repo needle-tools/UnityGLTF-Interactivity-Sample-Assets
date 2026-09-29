@@ -1,3 +1,4 @@
+using UnityGLTF.Interactivity;
 using UnityGLTF.Interactivity.Export;
 using UnityGLTF.Interactivity.Schema;
 
@@ -10,7 +11,9 @@ namespace Khronos_Test_Export
         private CheckBox _currentCountCheck;
         private CheckBox _resetCheck;
         private CheckBox _limitCheck;
-        
+        private CheckBox _zeroNCheck;
+        private CheckBox _raisedNCheck;
+
         public string GetTestName()
         {
             return "flow/doN";
@@ -28,6 +31,10 @@ namespace Khronos_Test_Export
             _currentCountCheck = context.AddCheckBox("[currentCount]");
             _resetCheck = context.AddCheckBox("[reset] flow (N = 2, out/out/out/reset/out/out)");
             _limitCheck = context.AddCheckBox("Max Iteration flow");
+            context.NewRow();
+            _zeroNCheck = context.AddCheckBox("N = 0: [out] never fires");
+            _zeroNCheck.Negate();
+            _raisedNCheck = context.AddCheckBox("[n] re-evaluated (raised 1 -> 3 at runtime, 3x)");
         }
 
         public void CreateNodes(TestContext context)
@@ -117,6 +124,41 @@ namespace Khronos_Test_Export
                     doN3Node.FlowIn(Flow_DoNNode.IdFlowIn),
                     checkCountFlow2
                 });
+
+            // N = 0: currentCount (0) is never less than n, so [out] must never fire
+            var doNZeroNode = nodeCreator.CreateNode<Flow_DoNNode>();
+            doNZeroNode.ValueIn(Flow_DoNNode.IdN).SetValue(0);
+            context.NewEntryPoint(_zeroNCheck.GetText());
+            context.AddToCurrentEntrySequence(
+                new FlowInRef[]
+                {
+                    doNZeroNode.FlowIn(Flow_DoNNode.IdFlowIn),
+                    doNZeroNode.FlowIn(Flow_DoNNode.IdFlowIn),
+                    doNZeroNode.FlowIn(Flow_DoNNode.IdFlowIn),
+                });
+            _zeroNCheck.SetupNegateCheck(doNZeroNode.FlowOut(Flow_DoNNode.IdOut));
+
+            // n is evaluated on every activation: raising it from 1 to 3 re-opens the gate.
+            // in (out #1), in (blocked), n = 3, in (out #2), in (out #3), in (blocked)
+            var nVarId = nodeCreator.Context.AddVariableWithIdIfNeeded("DoN_n_" + System.Guid.NewGuid(), 1, GltfTypes.Int);
+            VariablesHelpers.GetVariable(nodeCreator, nVarId, out var nVarRef);
+            VariablesHelpers.SetVariableStaticValue(nodeCreator, nVarId, 3, out var setNFlowIn, out _);
+
+            var doNRaisedNode = nodeCreator.CreateNode<Flow_DoNNode>();
+            doNRaisedNode.ValueIn(Flow_DoNNode.IdN).ConnectToSource(nVarRef);
+            context.NewEntryPoint(_raisedNCheck.GetText());
+            context.AddToCurrentEntrySequence(
+                new FlowInRef[]
+                {
+                    doNRaisedNode.FlowIn(Flow_DoNNode.IdFlowIn),
+                    doNRaisedNode.FlowIn(Flow_DoNNode.IdFlowIn),
+                    setNFlowIn,
+                    doNRaisedNode.FlowIn(Flow_DoNNode.IdFlowIn),
+                    doNRaisedNode.FlowIn(Flow_DoNNode.IdFlowIn),
+                    doNRaisedNode.FlowIn(Flow_DoNNode.IdFlowIn),
+                });
+            _raisedNCheck.SetupCheckFlowTimes(out var raisedNCheckFlow, 3);
+            doNRaisedNode.FlowOut(Flow_DoNNode.IdOut).ConnectToFlowDestination(raisedNCheckFlow);
         }
     }
 }

@@ -11,7 +11,12 @@ namespace Khronos_Test_Export
         private CheckBox _errFlowCheckBox;
         private CheckBox _errFlowOutCheckBox;
         private CheckBox _resetCheckBox;
-        
+        private CheckBox _errNaNCheckBox;
+        private CheckBox _errInfCheckBox;
+        private CheckBox _zeroDurationCheckBox;
+        private CheckBox _remainingNaNInitialCheckBox;
+        private CheckBox _remainingNaNAfterResetCheckBox;
+
         public string GetTestName()
         {
             return "flow/throttle";
@@ -32,6 +37,12 @@ namespace Khronos_Test_Export
             _errFlowOutCheckBox = context.AddCheckBox("Ignore [out] when error");
             _errFlowOutCheckBox.Negate();
             _resetCheckBox = context.AddCheckBox("[reset]");
+            context.NewRow();
+            _errNaNCheckBox = context.AddCheckBox("[err] Flow on NaN Duration");
+            _errInfCheckBox = context.AddCheckBox("[err] Flow on +Inf Duration");
+            _zeroDurationCheckBox = context.AddCheckBox("Duration 0: every [in] passes (3x)");
+            _remainingNaNInitialCheckBox = context.AddCheckBox("[lastRemainingTime] NaN before first [in]");
+            _remainingNaNAfterResetCheckBox = context.AddCheckBox("[lastRemainingTime] NaN after [reset]");
         }
 
         public void CreateNodes(TestContext context)
@@ -110,6 +121,51 @@ namespace Khronos_Test_Export
             });
             _resetCheckBox.SetupCheckFlowTimes(out var resetCheckFlow, 3);
             throttleNode4.FlowOut(Flow_ThrottleNode.IdFlowOut).ConnectToFlowDestination(resetCheckFlow);
+
+            // Error flow for NaN and +Inf durations (spec: negative, infinite or NaN -> err)
+            void AddErrorCheck(CheckBox checkBox, float duration)
+            {
+                var errNode = nodeCreator.CreateNode<Flow_ThrottleNode>();
+                context.NewEntryPoint(errNode.FlowIn(Flow_ThrottleNode.IdFlowIn), checkBox.GetText());
+                errNode.ValueIn(Flow_ThrottleNode.IdInputDuration).SetValue(duration);
+                checkBox.SetupCheck(errNode.FlowOut(Flow_ThrottleNode.IdFlowOutError));
+            }
+            AddErrorCheck(_errNaNCheckBox, float.NaN);
+            AddErrorCheck(_errInfCheckBox, float.PositiveInfinity);
+
+            // Duration 0 is valid: the elapsed time is always >= 0, so every activation passes
+            var throttleZeroNode = nodeCreator.CreateNode<Flow_ThrottleNode>();
+            throttleZeroNode.ValueIn(Flow_ThrottleNode.IdInputDuration).SetValue(0f);
+            context.NewEntryPoint(_zeroDurationCheckBox.GetText());
+            context.AddToCurrentEntrySequence(new []
+            {
+                throttleZeroNode.FlowIn(Flow_ThrottleNode.IdFlowIn),
+                throttleZeroNode.FlowIn(Flow_ThrottleNode.IdFlowIn),
+                throttleZeroNode.FlowIn(Flow_ThrottleNode.IdFlowIn),
+            });
+            _zeroDurationCheckBox.SetupCheckFlowTimes(out var zeroDurationCheckFlow, 3);
+            throttleZeroNode.FlowOut(Flow_ThrottleNode.IdFlowOut).ConnectToFlowDestination(zeroDurationCheckFlow);
+
+            // lastRemainingTime is NaN until the first valid activation
+            var throttleInitialNode = nodeCreator.CreateNode<Flow_ThrottleNode>();
+            throttleInitialNode.ValueIn(Flow_ThrottleNode.IdInputDuration).SetValue(1f);
+            context.NewEntryPoint(_remainingNaNInitialCheckBox.GetText());
+            _remainingNaNInitialCheckBox.SetupCheck(throttleInitialNode.ValueOut(Flow_ThrottleNode.IdOutElapsedTime),
+                out var remainingNaNInitialCheckFlow, float.NaN);
+            context.AddToCurrentEntrySequence(remainingNaNInitialCheckFlow);
+
+            // ... and [reset] sets it back to NaN
+            var throttleResetNaNNode = nodeCreator.CreateNode<Flow_ThrottleNode>();
+            throttleResetNaNNode.ValueIn(Flow_ThrottleNode.IdInputDuration).SetValue(1f);
+            context.NewEntryPoint(_remainingNaNAfterResetCheckBox.GetText());
+            _remainingNaNAfterResetCheckBox.SetupCheck(throttleResetNaNNode.ValueOut(Flow_ThrottleNode.IdOutElapsedTime),
+                out var remainingNaNAfterResetCheckFlow, float.NaN);
+            context.AddToCurrentEntrySequence(new []
+            {
+                throttleResetNaNNode.FlowIn(Flow_ThrottleNode.IdFlowIn),
+                throttleResetNaNNode.FlowIn(Flow_ThrottleNode.IdFlowReset),
+                remainingNaNAfterResetCheckFlow,
+            });
         }
     }
 }
