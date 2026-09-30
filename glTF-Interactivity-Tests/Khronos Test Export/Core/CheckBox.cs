@@ -17,7 +17,9 @@ namespace Khronos_Test_Export
         [SerializeField] private Vector3 positionWhenValid;
         [SerializeField] private Vector2 size;
 
-        public string logText => $"<{_testCase.CaseName} - {text.text}>";
+        // Used as the start of debug/log message templates: literal braces must be doubled, otherwise
+        // e.g. "/nodes/{}/weights" makes the template invalid and the message falls back to empty
+        public string logText => $"<{_testCase.CaseName} - {text.text}>".Replace("{", "{{").Replace("}", "}}");
         public Vector2 CheckBoxSize => size;
         
         private int validIndex;
