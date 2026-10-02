@@ -58,7 +58,7 @@ namespace Chess.Editor
             }
         }
 
-        [MenuItem("Chess/Build Chess Interactivity Scene")]
+        [MenuItem("glTF Interactivity/Create Chess Scene")]
         public static void Build()
         {
             var modelAsset = AssetDatabase.LoadAssetAtPath<GameObject>(GlbPath);

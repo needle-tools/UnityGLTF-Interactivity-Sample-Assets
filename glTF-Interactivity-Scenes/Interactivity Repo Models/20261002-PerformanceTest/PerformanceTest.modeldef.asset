@@ -1,0 +1,35 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3f2a1c9d84be4a1d9c7e5b0f6a2d8e41, type: 3}
+  m_Name: PerformanceTest.modeldef
+  m_EditorClassIdentifier: 
+  scene: {fileID: 102900000, guid: 6a9090c6a439b164ebc777cf2f4e32c0, type: 3}
+  modelFolderName: PerformanceTest
+  fileName: PerformanceTest
+  label: Performance Test
+  description: Measures graph execution cost. Pick a workload (math, value evaluation,
+    variables, pointers, flow, events or mixed) and a load level (1-9, 50 * 2^(level-1)
+    loop iterations per tick); the FPS counter and bar show the result. AUTO RUN
+    measures every workload, logs the results and shows a summary.
+  tags:
+  - interactivity
+  - test
+  - performance
+  exportGlb: 1
+  exportGltf: 1
+  includeInIndex: 1
+  source: 
+  licenseInformation: Donated by Needle for glTF testing.
+  licenseStatement: This model is licensed under a Creative Commons Attribution 4.0
+    International License.
+  cachedScenePath: Packages/com.needle.gltf-interactivity-scenes/Interactivity Repo
+    Models/20261002-PerformanceTest/PerformanceTest.unity
