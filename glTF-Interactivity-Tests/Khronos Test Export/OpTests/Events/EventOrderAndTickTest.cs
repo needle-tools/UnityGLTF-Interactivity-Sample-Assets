@@ -120,10 +120,12 @@ namespace Khronos_Test_Export
             // ── onTick ─────────────────────────────────────────────────────────────
             context.NewEntryPoint(_firstTickTimeSinceStartCheckBox.GetText(), 1f);
 
-            // Set by this entry point's onStart; must already be true on the very first tick.
+            // Set by an own onStart node (not the entry point, which may start later in the all-in-one
+            // export); must already be true on the very first tick.
             var onStartDoneVarId = nodeCreator.Context.AddVariableWithIdIfNeeded("OnStartBeforeTick_" + Guid.NewGuid(), false, GltfTypes.Bool);
             VariablesHelpers.SetVariableStaticValue(nodeCreator, onStartDoneVarId, true, out var setOnStartDoneFlowIn, out _);
-            context.AddToCurrentEntrySequence(setOnStartDoneFlowIn);
+            var onStartForTick = nodeCreator.CreateNode<Event_OnStartNode>();
+            onStartForTick.FlowOut(Event_OnStartNode.IdFlowOut).ConnectToFlowDestination(setOnStartDoneFlowIn);
             VariablesHelpers.GetVariable(nodeCreator, onStartDoneVarId, out var onStartDoneValue);
 
             // timeSinceStart of the first onTick node in the current tick, read by the second one.

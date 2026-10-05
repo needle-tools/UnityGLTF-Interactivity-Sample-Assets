@@ -410,6 +410,11 @@ namespace Khronos_Test_Export
                         totalSubTestCount += _testCase[testCase].checkBoxes.Count;
                     }
 
+                    // Starting all tests at once makes the first frame slow enough to break time based
+                    // checks, so the cases run one after another, with an arrow at the running one.
+                    currentTestContext.runCasesSequentially = true;
+                    currentTestContext.AddRunningCaseArrow(new Color(0.965f, 0.565f, 0.071f));
+
                     string glbFileName = allInOneName + ".glb";
                     export.SaveGLB(path, glbFileName);
                     // foreach (var testCase in cases)

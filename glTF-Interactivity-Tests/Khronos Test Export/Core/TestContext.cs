@@ -20,7 +20,18 @@ namespace Khronos_Test_Export
         private TextMeshPro _labelPrefab;
         public int maxRows = 15;
 
+        /// <summary>
+        /// When set, the test cases don't all start on onStart, but one after another: each case starts
+        /// once the previous one has finished (its longest delayedExecutionTime plus a buffer). Used for
+        /// the all-in-one export, where starting everything at once makes the first frame so slow that
+        /// time based checks (interpolate, setDelay, ...) would measure against a jumping clock.
+        /// </summary>
+        public bool runCasesSequentially = false;
+        /// <summary> Extra wait between two cases, so each case starts in a new frame (seconds). </summary>
+        public float sequentialCaseGap = 0.1f;
+
         private Transform _root;
+        private GameObject _runningCaseArrow;
 
         public Transform Root => _root;
 
@@ -34,6 +45,8 @@ namespace Khronos_Test_Export
         {
             public string name = "";
             public GltfInteractivityExportNode node = null;
+            /// <summary> The flow that starts this entry: onStart [out], or the starter's first output when the cases run sequentially. </summary>
+            public FlowOutRef startFlow = null;
             public float? delayedExecutionTime = null;
             public bool requiresUserInteraction = false;
         }
@@ -54,6 +67,13 @@ namespace Khronos_Test_Export
             public List<GameObject> arrows = new List<GameObject>();
 
             public List<Entry> entryNodes = new List<Entry>();
+
+            /// <summary> Sequential run only: fires all entry points of this case. </summary>
+            public GltfInteractivityExportNode startFanOut = null;
+            public List<GltfInteractivityExportNode> earlyCompletionTriggers = new List<GltfInteractivityExportNode>();
+
+            /// <summary> How long this case needs until all its checks are done (seconds). </summary>
+            public float ExecutionTime => entryNodes.Select(e => e.delayedExecutionTime ?? 0f).DefaultIfEmpty(0f).Max();
         }
         
         public List<Case> cases = new List<Case>();
@@ -74,6 +94,8 @@ namespace Khronos_Test_Export
             var allCheckBoxes = cases.SelectMany(c => c.checkBoxes).Where( c => c.ResultPassValueVarId != -1);
             if (maxExecutionTime > 0)
                 maxExecutionTime += 0.5f; // Add some buffer time to ensure all checks are done
+            if (runCasesSequentially)
+                maxExecutionTime = cases.Sum(SequentialCaseRunTime);
 
             var start = interactivityExportContext.CreateNode<Event_OnStartNode>();
             var startEvent = interactivityExportContext.CreateNode<Event_SendNode>();
@@ -90,7 +112,12 @@ namespace Khronos_Test_Export
 
             FlowOutRef startFlowToResult = null;
             GltfInteractivityExportNode delayNode = null;
-            if (maxExecutionTime == 0)
+            if (runCasesSequentially)
+            {
+                // Early completion triggers are handled per case in the sequential run
+                startFlowToResult = AddSequentialCaseRun(startEvent.FlowOut());
+            }
+            else if (maxExecutionTime == 0)
             {
                 startFlowToResult = startEvent.FlowOut();
             }
@@ -133,7 +160,7 @@ namespace Khronos_Test_Export
             // Let test cases that already know their result (e.g. a UserInteraction test whose
             // required gesture just completed) skip the rest of the wait instead of sitting through
             // the full delayedExecutionTime window before test/onSuccess or test/onFailed fires.
-            foreach (var trigger in _earlyCompletionTriggers)
+            foreach (var trigger in runCasesSequentially ? Enumerable.Empty<GltfInteractivityExportNode>() : _earlyCompletionTriggers)
             {
                 var triggerFlowOut = trigger.FlowOut("000");
                 if (delayNode != null)
@@ -159,6 +186,105 @@ namespace Khronos_Test_Export
             branch.FlowOut(Flow_BranchNode.IdFlowOutFalse).ConnectToFlowDestination(failEvent.FlowIn());
 
         }
+
+        /// <summary> Time a case gets in the sequential run before the next case starts (seconds). </summary>
+        private float SequentialCaseRunTime(Case testCase)
+        {
+            var executionTime = testCase.ExecutionTime;
+            if (executionTime > 0)
+                executionTime += 0.5f; // Same buffer as for the overall result, so all fallback checks are done
+            return executionTime + sequentialCaseGap;
+        }
+
+        private GltfInteractivityExportNode GetCaseStartFanOut(Case testCase)
+        {
+            if (testCase.startFanOut == null)
+                testCase.startFanOut = interactivityExportContext.CreateNode<Flow_SequenceNode>();
+            return testCase.startFanOut;
+        }
+
+        /// <summary>
+        /// Chains all cases: moves the running case arrow to the case, starts all its entry points and
+        /// continues with the next case after <see cref="SequentialCaseRunTime"/>, or as soon as one of
+        /// the case's early completion triggers fired. Returns the flow that fires after the last case.
+        /// </summary>
+        private FlowOutRef AddSequentialCaseRun(FlowOutRef startFlow)
+        {
+            var nodeCreator = interactivityExportContext;
+            var flow = startFlow;
+            var arrowIndex = _runningCaseArrow ? nodeCreator.Context.exporter.GetTransformIndex(_runningCaseArrow.transform) : -1;
+
+            foreach (var testCase in cases)
+            {
+                if (arrowIndex != -1)
+                {
+                    var moveArrow = nodeCreator.CreateNode<Pointer_SetNode>();
+                    PointersHelper.SetupPointerTemplateAndTargetInput(moveArrow, PointersHelper.IdPointerNodeIndex, "/nodes/[" + PointersHelper.IdPointerNodeIndex + "]/translation", GltfTypes.Float3);
+                    moveArrow.ValueIn(Pointer_SetNode.IdValue).SetValue(AnimationTestHelper.ToGltf(RunningCaseArrowPosition(testCase)));
+                    moveArrow.ValueIn(PointersHelper.IdPointerNodeIndex).SetValue(arrowIndex);
+                    flow.ConnectToFlowDestination(moveArrow.FlowIn(Pointer_SetNode.IdFlowIn));
+                    flow = moveArrow.FlowOut(Pointer_SetNode.IdFlowOut);
+                }
+
+                var fanOut = GetCaseStartFanOut(testCase);
+                flow.ConnectToFlowDestination(fanOut.FlowIn(Flow_SequenceNode.IdFlowIn));
+
+                // Runs after all entry points of the case were started
+                var caseDone = nodeCreator.CreateNode<Flow_SetDelayNode>();
+                caseDone.ValueIn(Flow_SetDelayNode.IdDuration).SetValue(SequentialCaseRunTime(testCase));
+                fanOut.FlowOut(fanOut.FlowConnections.Count.ToString("D3")).ConnectToFlowDestination(caseDone.FlowIn(Flow_SetDelayNode.IdFlowIn));
+
+                // Continue only once, either after the case's time or when it completed early
+                var continueOnce = nodeCreator.CreateNode<Flow_DoNNode>();
+                continueOnce.ValueIn(Flow_DoNNode.IdN).SetValue(1);
+                caseDone.FlowOut(Flow_SetDelayNode.IdFlowDone).ConnectToFlowDestination(continueOnce.FlowIn(Flow_DoNNode.IdFlowIn));
+
+                foreach (var trigger in testCase.earlyCompletionTriggers)
+                {
+                    var cancelDelay = nodeCreator.CreateNode<Flow_CancelDelayNode>();
+                    cancelDelay.ValueIn(Flow_CancelDelayNode.IdDelay).ConnectToSource(caseDone.ValueOut(Flow_SetDelayNode.IdOutLastDelay));
+                    trigger.FlowOut("000").ConnectToFlowDestination(cancelDelay.FlowIn());
+                    cancelDelay.FlowOut().ConnectToFlowDestination(continueOnce.FlowIn(Flow_DoNNode.IdFlowIn));
+                }
+
+                flow = continueOnce.FlowOut(Flow_DoNNode.IdOut);
+            }
+
+            if (arrowIndex != -1)
+            {
+                HideOnFlow(_runningCaseArrow.transform, out var hideArrow, out var afterHideArrow);
+                flow.ConnectToFlowDestination(hideArrow);
+                flow = afterHideArrow;
+            }
+
+            return flow;
+        }
+
+        /// <summary>
+        /// Adds the arrow that shows which case is currently running in the sequential run
+        /// (see <see cref="runCasesSequentially"/>). It points at the case label from the left and
+        /// is moved from case to case by the graph. Call after all cases were prepared.
+        /// </summary>
+        public void AddRunningCaseArrow(Color color)
+        {
+            if (_runningCaseArrow || cases.Count == 0)
+                return;
+
+            _runningCaseArrow = CreateArrow("RunningCaseArrow", RunningCaseArrowPosition(cases[0]), color);
+            // The arrow's tip points down (-Y), turn it towards the label
+            _runningCaseArrow.transform.rotation = Quaternion.FromToRotation(Vector3.down, cases[0].caseLabel.rectTransform.right);
+            _runningCaseArrow.transform.localScale = Vector3.one * 0.4f;
+        }
+
+        /// <summary> Local position (in Root space) of the running case arrow's tip for the given case: left of its label. </summary>
+        private Vector3 RunningCaseArrowPosition(Case testCase)
+        {
+            const float gap = 0.15f;
+            var labelTransform = testCase.caseLabel.rectTransform;
+            var rect = labelTransform.rect;
+            var labelLeft = labelTransform.TransformPoint(new Vector3(rect.xMin, rect.center.y, 0f));
+            return _root.InverseTransformPoint(labelLeft - labelTransform.right * gap);
+        }
         
         public TestContext(CheckBox defaultCheckBox, TextMeshPro caseLabelPrefab, TextMeshPro labelPrefab, Transform root)
         {
@@ -181,7 +307,7 @@ namespace Khronos_Test_Export
                         _lastDelayedFallback.ValueIn(Flow_SetDelayNode.IdDuration).SetValue(_lastEntryPoint.delayedExecutionTime.Value);
                     }
                     
-                    _lastEntryPoint.node.FlowOut(Event_OnStartNode.IdFlowOut).ConnectToFlowDestination(_lastDelayedFallback.FlowIn(Flow_SequenceNode.IdFlowIn));
+                    _lastEntryPoint.startFlow.ConnectToFlowDestination(_lastDelayedFallback.FlowIn(Flow_SequenceNode.IdFlowIn));
                 }
                 
                 if (_lastEntryPointFallbackSequence == null && (_currentFallbackFlows.Count > 1 || _lastDelayedFallback == null))
@@ -212,7 +338,7 @@ namespace Khronos_Test_Export
             }
             
             
-            var startFlow = _lastEntryPoint.node.FlowOut(Event_OnStartNode.IdFlowOut);
+            var startFlow = _lastEntryPoint.startFlow;
 
             if (_lastEntryPointFallbackSequence != null)
             {
@@ -258,10 +384,23 @@ namespace Khronos_Test_Export
         public void NewEntryPoint(string name, float? delayedExecutionTime = null, bool requiresUserInteraction = false)
         {
             var nodeCreator = interactivityExportContext;
-            var startNode = nodeCreator.CreateNode<Event_OnStartNode>();
-            
+
             var newEntry = new Entry();
-            newEntry.node = startNode;
+            if (runCasesSequentially)
+            {
+                // Started by the case's fan-out, see AddSequentialCaseRun
+                var caseFanOut = GetCaseStartFanOut(currentCase);
+                var starter = nodeCreator.CreateNode<Flow_SequenceNode>();
+                caseFanOut.FlowOut(caseFanOut.FlowConnections.Count.ToString("D3")).ConnectToFlowDestination(starter.FlowIn(Flow_SequenceNode.IdFlowIn));
+                newEntry.node = starter;
+                newEntry.startFlow = starter.FlowOut("000");
+            }
+            else
+            {
+                var startNode = nodeCreator.CreateNode<Event_OnStartNode>();
+                newEntry.node = startNode;
+                newEntry.startFlow = startNode.FlowOut(Event_OnStartNode.IdFlowOut);
+            }
             newEntry.name = name;
             newEntry.delayedExecutionTime = delayedExecutionTime;
             newEntry.requiresUserInteraction = requiresUserInteraction;
@@ -286,6 +425,7 @@ namespace Khronos_Test_Export
             var proxy = interactivityExportContext.CreateNode<Flow_SequenceNode>();
             flowIn = proxy.FlowIn(Flow_SequenceNode.IdFlowIn);
             _earlyCompletionTriggers.Add(proxy);
+            currentCase.earlyCompletionTriggers.Add(proxy);
         }
 
         /// <summary>
@@ -463,6 +603,11 @@ namespace Khronos_Test_Export
         /// </summary>
         public void HideOnFlow(Transform target, out FlowInRef flowIn)
         {
+            HideOnFlow(target, out flowIn, out _);
+        }
+
+        public void HideOnFlow(Transform target, out FlowInRef flowIn, out FlowOutRef flowOut)
+        {
             var targetIndex = interactivityExportContext.Context.exporter.GetTransformIndex(target);
 
             var setScale = interactivityExportContext.CreateNode<Pointer_SetNode>();
@@ -471,6 +616,7 @@ namespace Khronos_Test_Export
             setScale.ValueIn(PointersHelper.IdPointerNodeIndex).SetValue(targetIndex);
 
             flowIn = setScale.FlowIn(Pointer_SetNode.IdFlowIn);
+            flowOut = setScale.FlowOut(Pointer_SetNode.IdFlowOut);
         }
 
         /// <summary>
@@ -503,11 +649,19 @@ namespace Khronos_Test_Export
         /// </summary>
         public GameObject AddPointerArrow(Vector3 localPosition, Color color)
         {
+            var arrow = CreateArrow("PointerArrow_" + currentCase.CaseName, localPosition, color);
+            currentCase.arrows.Add(arrow);
+            return arrow;
+        }
+
+        /// <summary> Builds the arrow object (tip at its origin, pointing down) under <see cref="Root"/>. </summary>
+        private GameObject CreateArrow(string name, Vector3 localPosition, Color color)
+        {
             const float coneHeight = 0.7f;
             const float coneRadius = 0.5f;
             const int segments = 12;
 
-            var root = new GameObject("PointerArrow_" + currentCase.CaseName);
+            var root = new GameObject(name);
             root.transform.SetParent(_root, false);
             root.transform.localPosition = localPosition;
 
@@ -549,7 +703,6 @@ namespace Khronos_Test_Export
             shaft.transform.localScale = new Vector3(0.18f, 0.6f, 0.18f);
             shaft.GetComponent<MeshRenderer>().material = mat;
 
-            currentCase.arrows.Add(root);
             return root;
         }
 
@@ -585,6 +738,10 @@ namespace Khronos_Test_Export
 
             foreach (var arrow in Arrows)
                 GameObject.DestroyImmediate(arrow);
+
+            if (_runningCaseArrow)
+                GameObject.DestroyImmediate(_runningCaseArrow);
+            _runningCaseArrow = null;
 
             cases.Clear();
         }
