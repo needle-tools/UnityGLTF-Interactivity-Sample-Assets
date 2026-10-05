@@ -12,8 +12,12 @@ namespace Khronos_Test_Export
     ///
     /// - asset/majorVersion and asset/minorVersion have deterministic values (2 / 0) that are asserted.
     /// - asset/extensions/&lt;EXT&gt;/enabled resolves to true for an extension that is used by the
-    ///   exported asset (KHR_interactivity is always present in an interactivity graph) and to false
-    ///   for an extension that is not present. Both queries are valid.
+    ///   exported asset (KHR_interactivity is always present in an interactivity graph).
+    ///   The virtual object only exists for extensions that are listed in extensionsUsed AND supported
+    ///   by the implementation. Two made-up extensions cover both halves of that rule: one is listed in
+    ///   extensionsUsed (not extensionsRequired) but unsupported, the other is not listed at all. In both
+    ///   cases the pointer cannot be resolved: pointer/get returns isValid = false and the bool default
+    ///   value (false).
     /// - limits/* are implementation-specific (a runtime may report int.MaxValue), so their exact
     ///   value is not asserted. The spec requires every limit to be at least 1, so we assert
     ///   value &gt;= 1 (in addition to isValid).
@@ -29,10 +33,15 @@ namespace Khronos_Test_Export
             public object expectedValue;
             // When true, the value output is only asserted to be >= 1 (spec requires limits >= 1).
             public bool atLeastOne;
+            // Expected isValid output of the pointer/get node.
+            public bool expectedIsValid = true;
         }
 
         private static readonly string EnabledExtension = "KHR_interactivity";
-        private static readonly string DisabledExtension = "KHR_this_extension_does_not_exist";
+        // Listed in extensionsUsed, but no implementation supports it.
+        private static readonly string UnsupportedExtension = "KHR_this_extension_does_not_exist";
+        // Not listed in extensionsUsed at all.
+        private static readonly string UnlistedExtension = "KHR_this_extension_is_not_used";
 
         private PointerCase[] pointerCases = new PointerCase[]
         {
@@ -59,10 +68,19 @@ namespace Khronos_Test_Export
             },
             new PointerCase
             {
-                label = "asset/extensions/" + DisabledExtension + "/enabled",
-                pointer = string.Format(AssetHelpers.AssetExtensionEnabledPointerFormat, DisabledExtension),
+                label = "asset/extensions/" + UnsupportedExtension + "/enabled",
+                pointer = string.Format(AssetHelpers.AssetExtensionEnabledPointerFormat, UnsupportedExtension),
                 gltfType = GltfTypes.TypeIndex(typeof(bool)),
                 expectedValue = false,
+                expectedIsValid = false,
+            },
+            new PointerCase
+            {
+                label = "asset/extensions/" + UnlistedExtension + "/enabled",
+                pointer = string.Format(AssetHelpers.AssetExtensionEnabledPointerFormat, UnlistedExtension),
+                gltfType = GltfTypes.TypeIndex(typeof(bool)),
+                expectedValue = false,
+                expectedIsValid = false,
             },
             new PointerCase
             {
@@ -132,6 +150,7 @@ namespace Khronos_Test_Export
         public void CreateNodes(TestContext context)
         {
             var nodeCreator = context.interactivityExportContext;
+            nodeCreator.Context.exporter.DeclareExtensionUsage(UnsupportedExtension);
 
             for (int i = 0; i < pointerCases.Length; i++)
             {
@@ -142,7 +161,7 @@ namespace Khronos_Test_Export
                 PointersHelper.AddPointerConfig(pointerGet, pointerCase.pointer, pointerCase.gltfType);
 
                 var isValidCheckBox = isValidCheckBoxes[i];
-                isValidCheckBox.SetupCheck(pointerGet.ValueOut(Pointer_GetNode.IdIsValid), out var isValidFlowIn, true);
+                isValidCheckBox.SetupCheck(pointerGet.ValueOut(Pointer_GetNode.IdIsValid), out var isValidFlowIn, pointerCase.expectedIsValid);
 
                 var valueCheckBox = valueCheckBoxes[i];
                 if (valueCheckBox != null)
