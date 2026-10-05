@@ -19,7 +19,7 @@ namespace Khronos_Test_Export
 
         // Used as the start of debug/log message templates: literal braces must be doubled, otherwise
         // e.g. "/nodes/{}/weights" makes the template invalid and the message falls back to empty
-        public string logText => $"<{_testCase.CaseName} - {text.text}>".Replace("{", "{{").Replace("}", "}}");
+        public string logText => $"<{_testCase.CaseName} - {GetText()}>".Replace("{", "{{").Replace("}", "}}");
         public Vector2 CheckBoxSize => size;
         
         private int validIndex;
@@ -36,6 +36,15 @@ namespace Khronos_Test_Export
         public TestContext context;
         private bool proximityCheck = false;
         public bool flowOnce = false;
+
+        /// <summary> Max characters per line of the displayed label, see <see cref="WrapLabelText"/>. </summary>
+        public const int MaxLabelLineLength = 25;
+
+        // Characters after which a long label line may be broken (the space itself is dropped at the break)
+        private static readonly char[] LabelBreakCharacters = { ' ', '/', '\\', '_' };
+
+        // The text as given to SetText. The displayed text is wrapped, names and json use this one.
+        private string _rawText;
 
         /// <summary>
         /// When set, a Quaternion proximity check treats q and -q as equal (compares |dot| instead of
@@ -81,12 +90,58 @@ namespace Khronos_Test_Export
         
         public void SetText(string text)
         {
-            this.text.text = text;
+            _rawText = text;
+            this.text.text = WrapLabelText(text, MaxLabelLineLength);
         }
         
         public string GetText()
         {
-            return text.text;
+            return _rawText ?? text.text;
+        }
+
+        /// <summary>
+        /// Breaks lines longer than <paramref name="maxLineLength"/>, since the TextMeshPro word wrapping
+        /// only breaks at spaces and long words like pointer templates overflow the label. Breaks only
+        /// after a space, '/', '\\' or '_', so words are never cut in half; a single word without such a
+        /// character stays longer than the limit. Existing line breaks are kept.
+        /// </summary>
+        public static string WrapLabelText(string text, int maxLineLength)
+        {
+            if (string.IsNullOrEmpty(text))
+                return text;
+
+            var wrappedLines = new System.Collections.Generic.List<string>();
+            foreach (var line in text.Split('\n'))
+            {
+                var current = "";
+                foreach (var token in SplitAfterBreakCharacters(line))
+                {
+                    if (current.Length > 0 && (current + token).TrimEnd().Length > maxLineLength)
+                    {
+                        wrappedLines.Add(current.TrimEnd());
+                        current = token.TrimStart();
+                    }
+                    else
+                        current += token;
+                }
+                wrappedLines.Add(current.TrimEnd());
+            }
+            return string.Join("\n", wrappedLines);
+        }
+
+        // "/nodes/{} abc" -> "/", "nodes/", "{} ", "abc"
+        private static System.Collections.Generic.IEnumerable<string> SplitAfterBreakCharacters(string line)
+        {
+            var start = 0;
+            for (int i = 0; i < line.Length; i++)
+            {
+                if (Array.IndexOf(LabelBreakCharacters, line[i]) < 0)
+                    continue;
+                yield return line.Substring(start, i + 1 - start);
+                start = i + 1;
+            }
+            if (start < line.Length)
+                yield return line.Substring(start);
         }
 
         public string GetResultVariableName()
@@ -94,7 +149,7 @@ namespace Khronos_Test_Export
             if (resultVarName != null)
                 return resultVarName;
             
-            var name = "TestResult_" + _testCase.CaseName + "_" + text.text;
+            var name = "TestResult_" + _testCase.CaseName + "_" + GetText();
             
             if (context.interactivityExportContext.Context.variables.Exists(v => v.Name == name))
             {
@@ -110,7 +165,7 @@ namespace Khronos_Test_Export
             if (resultPassVarName != null)
                 return resultPassVarName;
             
-            var name = "TestResult_HasPassed_" + _testCase.CaseName + "_" + text.text;
+            var name = "TestResult_HasPassed_" + _testCase.CaseName + "_" + GetText();
             
             if (context.interactivityExportContext.Context.variables.Exists(v => v.Name == name))
             {
