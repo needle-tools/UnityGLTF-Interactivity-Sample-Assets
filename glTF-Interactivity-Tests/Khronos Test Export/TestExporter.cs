@@ -341,6 +341,8 @@ namespace Khronos_Test_Export
                         currentTestCases = new[] { testCase };
                         var newCase = currentTestContext.NewTestCase(testCase.GetTestName());
                         testCase.PrepareObjects(currentTestContext);
+                        // A single test starts right away, nothing to wait for
+                        currentTestContext.RemoveWaitForStartObjects();
                         _testCase.Add(testCase, newCase);
 
                         totalSubTestCount += _testCase[testCase].checkBoxes.Count;

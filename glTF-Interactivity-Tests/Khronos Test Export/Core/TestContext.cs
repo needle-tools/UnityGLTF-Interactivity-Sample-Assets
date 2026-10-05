@@ -226,6 +226,16 @@ namespace Khronos_Test_Export
                     flow = moveArrow.FlowOut(Pointer_SetNode.IdFlowOut);
                 }
 
+                // Hide the "wait for start" objects of the case's check boxes
+                foreach (var checkBox in testCase.checkBoxes.Concat(testCase.markers))
+                {
+                    if (!checkBox.WaitForStart)
+                        continue;
+                    HideOnFlow(checkBox.WaitForStart, out var hideWaitForStart, out var afterHideWaitForStart);
+                    flow.ConnectToFlowDestination(hideWaitForStart);
+                    flow = afterHideWaitForStart;
+                }
+
                 var fanOut = GetCaseStartFanOut(testCase);
                 flow.ConnectToFlowDestination(fanOut.FlowIn(Flow_SequenceNode.IdFlowIn));
 
@@ -274,6 +284,16 @@ namespace Khronos_Test_Export
             // The arrow's tip points down (-Y), turn it towards the label
             _runningCaseArrow.transform.rotation = Quaternion.FromToRotation(Vector3.down, cases[0].caseLabel.rectTransform.right);
             _runningCaseArrow.transform.localScale = Vector3.one * 0.4f;
+        }
+
+        /// <summary>
+        /// Removes the "wait for start" objects of all check boxes and markers. They are only needed
+        /// when the cases run one after another, so the single-file export doesn't contain them.
+        /// </summary>
+        public void RemoveWaitForStartObjects()
+        {
+            foreach (var checkBox in CheckBoxes.Concat(Markers))
+                checkBox.RemoveWaitForStart();
         }
 
         /// <summary> Local position (in Root space) of the running case arrow's tip for the given case: left of its label. </summary>

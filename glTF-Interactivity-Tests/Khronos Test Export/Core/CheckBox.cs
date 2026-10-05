@@ -14,6 +14,7 @@ namespace Khronos_Test_Export
         [SerializeField] private Transform valid;
         [SerializeField] private Transform invalid;
         [SerializeField] private Transform waiting;
+        [SerializeField] private Transform waitForStart;
         [SerializeField] private Vector3 positionWhenValid;
         [SerializeField] private Vector2 size;
 
@@ -21,6 +22,20 @@ namespace Khronos_Test_Export
         // e.g. "/nodes/{}/weights" makes the template invalid and the message falls back to empty
         public string logText => $"<{_testCase.CaseName} - {GetText()}>".Replace("{", "{{").Replace("}", "}}");
         public Vector2 CheckBoxSize => size;
+
+        /// <summary>
+        /// Shown until the test case of this check box starts. Only used by the all-in-one export,
+        /// where the cases run one after another (see <see cref="TestContext.runCasesSequentially"/>).
+        /// </summary>
+        public Transform WaitForStart => waitForStart;
+
+        /// <summary> Removes the <see cref="WaitForStart"/> object, so it doesn't get exported. </summary>
+        public void RemoveWaitForStart()
+        {
+            if (waitForStart)
+                DestroyImmediate(waitForStart.gameObject);
+            waitForStart = null;
+        }
         
         private int validIndex;
         public object expectedValue = null;
