@@ -286,6 +286,19 @@ MonoBehaviour:
   m_Name: InteractivityExportPlugin
   m_EditorClassIdentifier: 
   enabled: 1
+--- !u!114 &-2859270312445822161
+MonoBehaviour:
+  m_ObjectHideFlags: 3
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3a044d60c551f3340a71a051a5561507, type: 3}
+  m_Name: InteractivityExportOptionsPlugin
+  m_EditorClassIdentifier: 
+  enabled: 1
 --- !u!114 &-2728185602778602881
 MonoBehaviour:
   m_ObjectHideFlags: 3
@@ -297,6 +310,19 @@ MonoBehaviour:
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: d48839dd2db84f9f94ec4e3bb77e9f9e, type: 3}
   m_Name: LightsPunctualImport
+  m_EditorClassIdentifier: 
+  enabled: 1
+--- !u!114 &-2307036200551043743
+MonoBehaviour:
+  m_ObjectHideFlags: 3
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: de1f726221454139bfcce49d994d9d05, type: 3}
+  m_Name: ExrImport
   m_EditorClassIdentifier: 
   enabled: 1
 --- !u!114 &-2142469313196315917
@@ -429,6 +455,8 @@ MonoBehaviour:
   - {fileID: 7051131831910677672}
   - {fileID: -3393203447235478603}
   - {fileID: -7246424600921421742}
+  - {fileID: -2307036200551043743}
+  - {fileID: 2128779330577507749}
   ExportPlugins:
   - {fileID: 2872263056974072544}
   - {fileID: -8275798409290171459}
@@ -446,6 +474,7 @@ MonoBehaviour:
   - {fileID: 37378829403605725}
   - {fileID: -6241126470837733124}
   - {fileID: -7046409634226795050}
+  - {fileID: -2859270312445822161}
   exportNames: 1
   exportFullPath: 0
   EditorExportTransformMode: 1
@@ -500,6 +529,19 @@ MonoBehaviour:
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 3d9fe28b7eb945fd891714c55c74f44b, type: 3}
   m_Name: CanvasExport
+  m_EditorClassIdentifier: 
+  enabled: 1
+--- !u!114 &2128779330577507749
+MonoBehaviour:
+  m_ObjectHideFlags: 3
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a5d73111d7b6493da937accca1adfe6a, type: 3}
+  m_Name: WebpImport
   m_EditorClassIdentifier: 
   enabled: 1
 --- !u!114 &2336965232733242534

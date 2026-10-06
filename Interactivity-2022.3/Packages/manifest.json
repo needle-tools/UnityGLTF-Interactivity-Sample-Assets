@@ -2,6 +2,8 @@
   "dependencies": {
     "com.needle.gltf-interactivity-scenes": "file:../../glTF-Interactivity-Scenes",
     "com.needle.gltf-interactivity-tests": "file:../../glTF-Interactivity-Tests",
+    "com.needle.shadergraph-markdown": "1.5.3",
+    "com.netpyoung.webp": "https://github.com/netpyoung/unity.webp.git?path=unity_project/Assets/unity.webp#0.3.22",
     "com.unity.2d.sprite": "1.0.0",
     "com.unity.cloud.draco": "5.1.8",
     "com.unity.cloud.ktx": "3.4.5",
@@ -42,8 +44,7 @@
     "com.unity.modules.video": "1.0.0",
     "com.unity.modules.vr": "1.0.0",
     "com.unity.modules.wind": "1.0.0",
-    "com.unity.modules.xr": "1.0.0",
-    "com.needle.shadergraph-markdown": "1.5.3"
+    "com.unity.modules.xr": "1.0.0"
   },
   "scopedRegistries": [
     {

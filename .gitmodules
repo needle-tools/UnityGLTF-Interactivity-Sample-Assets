@@ -1,6 +1,6 @@
 [submodule "UnityGLTF"]
 	path = UnityGLTF
 	url = git@github.com:KhronosGroup/UnityGLTF.git
-[submodule "glTF-Interactivity-Sample-Assets"]
-	path = glTF-Interactivity-Sample-Assets
-	url = git@github.com:needle-tools/glTF-Interactivity-Sample-Assets.git
+[submodule "glTF-Test-Assets-Interactivity"]
+	path = glTF-Test-Assets-Interactivity
+	url = git@github.com:KhronosGroup/glTF-Test-Assets-Interactivity.git
