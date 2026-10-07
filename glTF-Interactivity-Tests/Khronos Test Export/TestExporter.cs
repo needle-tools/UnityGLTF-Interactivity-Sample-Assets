@@ -236,27 +236,7 @@ namespace Khronos_Test_Export
             Debug.Log("Test case json file created at: " + filename);
         }
 
-        private string ValueToStr(object v)
-        {
-            if (v is float f)
-                return f.ToString("F5", CultureInfo.InvariantCulture);
-            else if (v is bool b)
-                return b.ToString(CultureInfo.InvariantCulture);
-            else if (v is double d)
-                return d.ToString("F5", CultureInfo.InvariantCulture);
-            else if (v is Vector2 v2)
-                return v2.ToString("F5");
-            else if (v is Vector3 v3)
-                return v3.ToString("F5");
-            else if (v is Vector4 v4)
-                return v4.ToString("F5");
-            else if (v is Quaternion q)
-                return q.ToString("F5");
-            else if (v is Matrix4x4 m)
-                return m.ToString("F5");      
-            else
-                return v.ToString();
-        }
+        private string ValueToStr(object v) => TestValueFormat.ToStr(v);
         
         private void CreateTestCaseReadmeFile(ITestCase testCase, string filename)
         {
@@ -294,6 +274,22 @@ namespace Khronos_Test_Export
         }
         
         public void ExportTest(ITestCase[] cases, bool batchExport, string allInOneName, string indexFileName)
+        {
+            // Labels, log messages and names must not depend on the exporting machine's locale
+            // (e.g. "0,0001" on a German system), so export with the invariant culture.
+            var previousCulture = CultureInfo.CurrentCulture;
+            CultureInfo.CurrentCulture = CultureInfo.InvariantCulture;
+            try
+            {
+                ExportTestInvariant(cases, batchExport, allInOneName, indexFileName);
+            }
+            finally
+            {
+                CultureInfo.CurrentCulture = previousCulture;
+            }
+        }
+
+        private void ExportTestInvariant(ITestCase[] cases, bool batchExport, string allInOneName, string indexFileName)
         {
             var settings = GLTFSettings.GetDefaultSettings();
             settings.UseCaching = false;

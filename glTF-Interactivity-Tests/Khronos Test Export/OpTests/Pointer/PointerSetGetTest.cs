@@ -591,7 +591,7 @@ namespace Khronos_Test_Export
                         pointerString = pointerString.Replace("{"+PointersHelper.IdPointerLightRef+"}", lightIndex.ToString());
                     }
                     
-                    context.AddLog("ERROR! Flow-[err] on Set pointer: " + pointerString + " with " + sub.value+ " can't be set.", out var logErrFlowIn, out _);
+                    context.AddLog("ERROR! Flow-[err] on Set pointer: " + pointerString + " with " + TestValueFormat.ToStr(sub.value) + " can't be set.", out var logErrFlowIn, out _);
                     
                     pSet.FlowOut(Pointer_SetNode.IdFlowOutError).ConnectToFlowDestination(logErrFlowIn);
                     

@@ -726,13 +726,14 @@ namespace Khronos_Test_Export
             return root;
         }
 
-        public CheckBox AddCheckBox(string name, bool asWaiting = false, bool flowOnce = false)
+        /// <param name="labelText">Optional shorter text for the 3D label only; <paramref name="name"/> is still used for all exported names.</param>
+        public CheckBox AddCheckBox(string name, bool asWaiting = false, bool flowOnce = false, string labelText = null)
         {
             var newCheckBox = GameObject.Instantiate(_checkBoxPrefab, _root);
             newCheckBox.transform.localPosition = _layout.ReserveSpace(newCheckBox.CheckBoxSize);
             newCheckBox.gameObject.SetActive(true);
             newCheckBox.gameObject.name = "CheckBox_" + name;
-            newCheckBox.SetText(name);
+            newCheckBox.SetText(name, labelText);
             newCheckBox.SetCase(currentCase);
             newCheckBox.context = this;
             newCheckBox.flowOnce = flowOnce;

@@ -63,49 +63,19 @@ namespace Khronos_Test_Export
 
         public void PrepareObjects(TestContext context)
         {
-            var invariantCulture = System.Globalization.CultureInfo.InvariantCulture;
-
-            string ValueToStr(object v)
-            {
-                if (v is float f)
-                    return f.ToString("F2", invariantCulture);
-                else if (v is bool b)
-                    return b.ToString(invariantCulture);
-                else if (v is double d)
-                    return d.ToString("F2", invariantCulture);
-                else if (v is Vector2 v2)
-                    return v2.ToString("F2");
-                else if (v is Vector3 v3)
-                    return v3.ToString("F2");
-                else if (v is Vector4 v4)
-                    return v4.ToString("F2");
-                else if (v is Quaternion q)
-                    return q.ToString("F2");
-                else if (v is Matrix4x4 m)
-                {
-                    var format = "F1";
-                    var formatProvider = (IFormatProvider) CultureInfo.InvariantCulture.NumberFormat;
-                    return string.Format("[{0},{1},{2},{3},{4},{5},{6},{7},{8},{9},{10},{11},{12},{13},{14},{15}]",
-                        (object) m.m00.ToString(format, formatProvider), (object) m.m01.ToString(format, formatProvider), (object) m.m02.ToString(format, formatProvider), (object) m.m03.ToString(format, formatProvider), 
-                        (object) m.m10.ToString(format, formatProvider), (object) m.m11.ToString(format, formatProvider), (object) m.m12.ToString(format, formatProvider), (object) m.m13.ToString(format, formatProvider), 
-                        (object) m.m20.ToString(format, formatProvider), (object) m.m21.ToString(format, formatProvider), (object) m.m22.ToString(format, formatProvider), (object) m.m23.ToString(format, formatProvider),
-                        (object) m.m30.ToString(format, formatProvider), (object) m.m31.ToString(format, formatProvider), (object) m.m32.ToString(format, formatProvider), (object) m.m33.ToString(format, formatProvider));
-                }
-                else
-                    return v.ToString();
-            }
-            
             _checkBoxes = new CheckBox[subTests.Count];
             var schemaInstance = GltfInteractivityNodeSchema.GetSchema(schemaType);
-            int index = 0;
-            foreach (var subTest in subTests)
+
+            // Full precision for the exported names (entry points, variables, readme),
+            // compact matrices for the space-limited 3D label only
+            string BuildName(SubMathTest subTest, bool compactMatrices)
             {
-                if (subTest.newRow)
-                    context.NewRow();
+                string ValueToStr(object v) => TestValueFormat.ToStr(v, compactMatrices);
+
                 var testName = "";
                 if (subTest is IsValidSubTest)
                     testName += "Invalid:";
-                
+
                 if (schemaInstance.InputValueSockets.ContainsKey(subTest.socketNames[0]))
                     testName += $"[{subTest.socketNames[0]}] " + ValueToStr(subTest.a) + " ";
                 if (schemaInstance.InputValueSockets.ContainsKey(subTest.socketNames[1]))
@@ -117,8 +87,16 @@ namespace Khronos_Test_Export
 
                 if (subTest.expected != null)
                     testName += "= " + ValueToStr(subTest.expected);
-                
-                _checkBoxes[index] = context.AddCheckBox(testName);
+                return testName;
+            }
+
+            int index = 0;
+            foreach (var subTest in subTests)
+            {
+                if (subTest.newRow)
+                    context.NewRow();
+
+                _checkBoxes[index] = context.AddCheckBox(BuildName(subTest, false), labelText: BuildName(subTest, true));
                 
                 index++;
             }

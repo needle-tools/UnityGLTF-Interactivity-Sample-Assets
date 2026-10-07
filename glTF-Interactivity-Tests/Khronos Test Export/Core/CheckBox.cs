@@ -103,10 +103,12 @@ namespace Khronos_Test_Export
             isNegated = true;
         }
         
-        public void SetText(string text)
+        /// <param name="text">Full text, used for entry point, variable and readme names (see <see cref="GetText"/>).</param>
+        /// <param name="labelText">Optional shorter text shown on the 3D label only. Falls back to <paramref name="text"/>.</param>
+        public void SetText(string text, string labelText = null)
         {
             _rawText = text;
-            this.text.text = WrapLabelText(text, MaxLabelLineLength);
+            this.text.text = WrapLabelText(labelText ?? text, MaxLabelLineLength);
         }
         
         public string GetText()
@@ -204,22 +206,6 @@ namespace Khronos_Test_Export
             flowOut = setPosition.FlowOut(Pointer_SetNode.IdFlowOut);
         }
 
-        private string ExpectedValueToString()
-        {
-            var invariantCulture = System.Globalization.CultureInfo.InvariantCulture;
-            
-            if (expectedValue is float floatValue)
-                return floatValue.ToString(invariantCulture);
-
-            if (expectedValue is double doubleValue)
-                return doubleValue.ToString(invariantCulture);
-            
-            if (expectedValue is bool boolValue)
-                return boolValue.ToString(invariantCulture);
-            
-            return expectedValue.ToString();
-        }
-        
         private void SavePassResult(out ValueInRef boolValue, out FlowInRef flowIn, out FlowOutRef flowOut)
         {
             if (ResultPassValueVarId == -1)
@@ -951,7 +937,7 @@ namespace Khronos_Test_Export
                 .ConnectToFlowDestination(setPosition);
             
             expectedValue = valueToCompare;
-            context.AddLog(logText+ ": Value is {0}, should be {1} " + (proximityCheck ? $"(Proximity range: {proximityCheckDistance})" : ""), out var logFlowIn, out var logFlowOut, 2, out var logValueRef);
+            context.AddLog(logText+ ": Value is {0}, should be {1} " + (proximityCheck ? $"(Proximity range: {TestValueFormat.ToStr(proximityCheckDistance)})" : ""), out var logFlowIn, out var logFlowOut, 2, out var logValueRef);
             inputValue = inputValue.Link(logValueRef[0]);
             logValueRef[1].SetValue(expectedValue);
             validNode.FlowOut(Flow_BranchNode.IdFlowOutFalse).ConnectToFlowDestination(logFlowIn);
