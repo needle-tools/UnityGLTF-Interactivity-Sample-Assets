@@ -18,6 +18,16 @@ namespace Khronos_Test_Export
         private CheckBox _negativeRangeIndexCheck;
         private CheckBox _endIndexReevaluatedCheck;
 
+        // Invalid initialIndex values (not an int32): the default configuration is used, so [index] starts at 0
+        private static readonly (object value, string label)[] InvalidInitialIndices =
+        {
+            (1.5, "1.5"),
+            (2147483648L, "2147483648"),
+            ("3", "\"3\""),
+            (true, "true"),
+        };
+        private CheckBox[] _invalidInitialIndexChecks;
+
         public string GetTestName()
         {
             return "flow/for";
@@ -43,6 +53,10 @@ namespace Khronos_Test_Export
             _negativeRangeCheck = context.AddCheckBox("Negative range (-3..0): 3 iterations");
             _negativeRangeIndexCheck = context.AddCheckBox("Negative range (-3..0): [index] 0 when completed");
             _endIndexReevaluatedCheck = context.AddCheckBox("[endIndex] re-evaluated (10 -> 3 in body): 3 iterations");
+            context.NewRow();
+            _invalidInitialIndexChecks = new CheckBox[InvalidInitialIndices.Length];
+            for (int i = 0; i < InvalidInitialIndices.Length; i++)
+                _invalidInitialIndexChecks[i] = context.AddCheckBox($"Invalid initialIndex {InvalidInitialIndices[i].label}: initial [index] 0");
         }
 
         public void CreateNodes(TestContext context)
@@ -124,6 +138,20 @@ namespace Khronos_Test_Export
             context.AddSequence(reevaluatedLoop.FlowOut(Flow_ForLoopNode.IdLoopBody), setEndIndexFlowIn, reevaluatedIncreaseFlowIn);
             _endIndexReevaluatedCheck.SetupCheck(reevaluatedCounter, out var reevaluatedCountFlowIn, 3);
             reevaluatedLoop.FlowOut(Flow_ForLoopNode.IdCompleted).ConnectToFlowDestination(reevaluatedCountFlowIn);
+
+            // An initialIndex that is not an int32 selects the default configuration (initialIndex 0).
+            // [index] is read before the node runs, so it still holds the initial value.
+            for (int i = 0; i < InvalidInitialIndices.Length; i++)
+            {
+                var invalidLoop = nodeCreator.CreateNode<Flow_ForLoopNode>();
+                invalidLoop.Configuration[Flow_ForLoopNode.IdConfigInitialIndex].Value = InvalidInitialIndices[i].value;
+                invalidLoop.ValueIn(Flow_ForLoopNode.IdStartIndex).SetValue(0);
+                invalidLoop.ValueIn(Flow_ForLoopNode.IdEndIndex).SetValue(1);
+
+                context.NewEntryPoint($"Invalid initialIndex {InvalidInitialIndices[i].label}");
+                _invalidInitialIndexChecks[i].SetupCheck(invalidLoop.ValueOut(Flow_ForLoopNode.IdIndex), out var invalidIndexCheckFlow, 0);
+                context.AddToCurrentEntrySequence(invalidIndexCheckFlow);
+            }
         }
     }
 }

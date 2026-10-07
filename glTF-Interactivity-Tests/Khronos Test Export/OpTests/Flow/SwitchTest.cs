@@ -10,7 +10,12 @@ namespace Khronos_Test_Export
         private CheckBox _negateCasesFlowCheck;
         private CheckBox _fractionalCasesDefaultConfigCheck;
         private CheckBox _outOfRangeCasesDefaultConfigCheck;
+        private CheckBox _fractionalCasesNoCaseFlowCheck;
+        private CheckBox _outOfRangeCasesNoCaseFlowCheck;
         private CheckBox _duplicateCasesFlowCheck;
+        private CheckBox _duplicateCasesNoOtherFlowCheck;
+        private CheckBox _selectionNotInCasesDefaultFlowCheck;
+        private CheckBox _selectionNotInCasesNoExtraFlowCheck;
         //private CheckBox _floatNumberCasesFlowCheck;
         public string GetTestName()
         {
@@ -29,8 +34,19 @@ namespace Khronos_Test_Export
             _noCasesDefaultFlowCheck = context.AddCheckBox("Empty cases default flow");
             _negateCasesFlowCheck = context.AddCheckBox("Negate cases flow");
             _fractionalCasesDefaultConfigCheck = context.AddCheckBox("Cases [0.5, 1] use default configuration");
+            _fractionalCasesNoCaseFlowCheck = context.AddCheckBox("Cases [0.5, 1], selection 1: [1] not activated");
+            _fractionalCasesNoCaseFlowCheck.Negate();
+            context.NewRow();
             _outOfRangeCasesDefaultConfigCheck = context.AddCheckBox("Cases [-2147483649, 0] use default configuration");
+            _outOfRangeCasesNoCaseFlowCheck = context.AddCheckBox("Cases [-2147483649, 0], selection 0: [0] and [1] not activated");
+            _outOfRangeCasesNoCaseFlowCheck.Negate();
             _duplicateCasesFlowCheck = context.AddCheckBox("Duplicate cases [1, 2, 2]");
+            _duplicateCasesNoOtherFlowCheck = context.AddCheckBox("Duplicate cases [1, 2, 2], selection 2: [1] and [3] not activated");
+            _duplicateCasesNoOtherFlowCheck.Negate();
+            context.NewRow();
+            _selectionNotInCasesDefaultFlowCheck = context.AddCheckBox("Selection 2 not in cases [1]: [default] activated");
+            _selectionNotInCasesNoExtraFlowCheck = context.AddCheckBox("Selection 2 not in cases [1]: [1] and extra output [2] not activated");
+            _selectionNotInCasesNoExtraFlowCheck.Negate();
             //_floatNumberCasesFlowCheck = context.AddCheckBox("Float number cases flow");
         }
 
@@ -80,21 +96,40 @@ namespace Khronos_Test_Export
             switchFractionalNode.Configuration[Flow_SwitchNode.IdConfigurationCases].Value = new object[] {0.5, 1};
             switchFractionalNode.ValueIn(Flow_SwitchNode.IdSelection).SetValue(1);
             _fractionalCasesDefaultConfigCheck.SetupCheck(switchFractionalNode.FlowOut(Flow_SwitchNode.IdFDefaultFlowOut));
+            // Output "1" is connected, so an engine that ignores the invalid cases and routes by the selection fails
+            _fractionalCasesNoCaseFlowCheck.SetupNegateCheck(switchFractionalNode.FlowOut("1"));
 
             var switchOutOfRangeNode = noteCreator.CreateNode<Flow_SwitchNode>();
             context.NewEntryPoint(switchOutOfRangeNode.FlowIn(Flow_SwitchNode.IdFlowIn), "Switch out of int32 range cases default configuration");
             switchOutOfRangeNode.Configuration[Flow_SwitchNode.IdConfigurationCases].Value = new object[] {-2147483649L, 0};
             switchOutOfRangeNode.ValueIn(Flow_SwitchNode.IdSelection).SetValue(0);
             _outOfRangeCasesDefaultConfigCheck.SetupCheck(switchOutOfRangeNode.FlowOut(Flow_SwitchNode.IdFDefaultFlowOut));
+            _outOfRangeCasesNoCaseFlowCheck.SetupNegateCheck(out var outOfRangeNoCaseFlowIn);
+            switchOutOfRangeNode.FlowOut("0").ConnectToFlowDestination(outOfRangeNoCaseFlowIn);
+            switchOutOfRangeNode.FlowOut("1").ConnectToFlowDestination(outOfRangeNoCaseFlowIn);
 
             // Duplicate cases are ignored.
             var switchDuplicateNode = noteCreator.CreateNode<Flow_SwitchNode>();
             context.NewEntryPoint(switchDuplicateNode.FlowIn(Flow_SwitchNode.IdFlowIn), "Switch duplicate cases flow");
             switchDuplicateNode.Configuration[Flow_SwitchNode.IdConfigurationCases].Value = new int[] {1, 2, 2};
-            switchDuplicateNode.FlowOut("1");
             switchDuplicateNode.ValueIn(Flow_SwitchNode.IdSelection).SetValue(2);
             _duplicateCasesFlowCheck.SetupCheck(switchDuplicateNode.FlowOut("2"));
-            
+            // "1" is another case, "3" is an extra output that is not in cases: neither may be activated
+            _duplicateCasesNoOtherFlowCheck.SetupNegateCheck(out var duplicateNoOtherFlowIn);
+            switchDuplicateNode.FlowOut("1").ConnectToFlowDestination(duplicateNoOtherFlowIn);
+            switchDuplicateNode.FlowOut("3").ConnectToFlowDestination(duplicateNoOtherFlowIn);
+
+            // Spec: the case output is only used if the cases array contains the selection. Output "2" exists and is
+            // connected, but 2 is not in cases, so the default output must be activated.
+            var switchNotInCasesNode = noteCreator.CreateNode<Flow_SwitchNode>();
+            context.NewEntryPoint(switchNotInCasesNode.FlowIn(Flow_SwitchNode.IdFlowIn), "Switch selection not in cases");
+            switchNotInCasesNode.Configuration[Flow_SwitchNode.IdConfigurationCases].Value = new int[] {1};
+            switchNotInCasesNode.ValueIn(Flow_SwitchNode.IdSelection).SetValue(2);
+            _selectionNotInCasesDefaultFlowCheck.SetupCheck(switchNotInCasesNode.FlowOut(Flow_SwitchNode.IdFDefaultFlowOut));
+            _selectionNotInCasesNoExtraFlowCheck.SetupNegateCheck(out var notInCasesNoExtraFlowIn);
+            switchNotInCasesNode.FlowOut("1").ConnectToFlowDestination(notInCasesNoExtraFlowIn);
+            switchNotInCasesNode.FlowOut("2").ConnectToFlowDestination(notInCasesNoExtraFlowIn);
+
             // var switch5Node = noteCreator.CreateNode(new Flow_SwitchNode());
             // context.SetEntryPoint(switch5Node.FlowIn(Flow_SwitchNode.IdFlowIn), "Switch float number cases flow");
             // switch5Node.Configuration[Flow_SwitchNode.IdConfigurationCases].Value = new int[] {0.1e1, 2, 3};

@@ -391,6 +391,18 @@ namespace Khronos_Test_Export
         private static readonly string[] Orders = { "xyz", "xzy", "yxz", "yzx", "zxy", "zyx" };
         private CheckBox[] _checkBoxes;
 
+        // Invalid orders select the default configuration (yxz) without an error. null = order omitted.
+        private static readonly (object value, string label)[] InvalidOrders =
+        {
+            ("XYZ", "\"XYZ\""),
+            ("xxy", "\"xxy\""),
+            ("xy", "\"xy\""),
+            ("xyzx", "\"xyzx\""),
+            (1, "1 (number)"),
+            (null, "omitted"),
+        };
+        private CheckBox[] _invalidOrderCheckBoxes;
+
         public string GetTestName() => "math/quatFromAngles";
         public string GetTestDescription() => "";
 
@@ -399,6 +411,11 @@ namespace Khronos_Test_Export
             _checkBoxes = new CheckBox[Orders.Length];
             for (int i = 0; i < Orders.Length; i++)
                 _checkBoxes[i] = context.AddCheckBox($"order {Orders[i]}");
+
+            context.NewRow();
+            _invalidOrderCheckBoxes = new CheckBox[InvalidOrders.Length];
+            for (int i = 0; i < InvalidOrders.Length; i++)
+                _invalidOrderCheckBoxes[i] = context.AddCheckBox($"invalid order {InvalidOrders[i].label} uses yxz");
         }
 
         public void CreateNodes(TestContext context)
@@ -420,6 +437,24 @@ namespace Khronos_Test_Export
                 context.NewEntryPoint($"quatFromAngles-{order}");
                 _checkBoxes[i].proximityCheckDistance = 0.001f;
                 _checkBoxes[i].SetupCheck(node.FirstValueOut(), out var flow, expected, true);
+                context.AddToCurrentEntrySequence(flow);
+            }
+
+            var expectedDefault = ExpectedQuat("yxz", X, Y, Z);
+            for (int i = 0; i < InvalidOrders.Length; i++)
+            {
+                var node = nc.CreateNode<Math_QuatFromAnglesNode>();
+                if (InvalidOrders[i].value == null)
+                    node.Configuration.Remove(Math_QuatFromAnglesNode.IdConfigOrder);
+                else
+                    node.Configuration[Math_QuatFromAnglesNode.IdConfigOrder].Value = InvalidOrders[i].value;
+                node.ValueIn(Math_QuatFromAnglesNode.IdX).SetValue(X);
+                node.ValueIn(Math_QuatFromAnglesNode.IdY).SetValue(Y);
+                node.ValueIn(Math_QuatFromAnglesNode.IdZ).SetValue(Z);
+
+                context.NewEntryPoint($"quatFromAngles-invalid-{InvalidOrders[i].label}");
+                _invalidOrderCheckBoxes[i].proximityCheckDistance = 0.001f;
+                _invalidOrderCheckBoxes[i].SetupCheck(node.FirstValueOut(), out var flow, expectedDefault, true);
                 context.AddToCurrentEntrySequence(flow);
             }
         }

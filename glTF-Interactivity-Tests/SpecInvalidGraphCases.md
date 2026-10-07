@@ -139,8 +139,11 @@ The group I rules are regular test cases, so their result is checked and not onl
 
 | Rule | Test | Sub-test |
 |---|---|---|
-| Fractional / out-of-int32 `cases` → default configuration | `flow/switch` | Cases [0.5, 1] / [-2147483649, 0] use default configuration |
-| Duplicate `cases` are ignored | `flow/switch` | Duplicate cases [1, 2, 2] |
+| Fractional / out-of-int32 `cases` → default configuration | `flow/switch` | Cases [0.5, 1] / [-2147483649, 0] use default configuration; the outputs named after the selection are connected and must not be activated |
+| Duplicate `cases` are ignored | `flow/switch` | Duplicate cases [1, 2, 2]; [1] and the extra output [3] not activated |
+| Selection not in `cases` → default, even with a matching connected output | `flow/switch` | Selection 2 not in cases [1] |
+| Non-int32 `initialIndex` (1.5, 2147483648, "3", true) → default configuration | `flow/for` | Invalid initialIndex …: initial [index] 0 |
+| Invalid `order` ("XYZ", "xxy", "xy", "xyzx", number, omitted) → default yxz | `math/quatFromAngles` | invalid order … uses yxz |
 | Fractional `cases` → default configuration | `math/switch` | Cases [0.5, 1] use default configuration |
 | Non-boolean `isRandom` → default configuration | `flow/multiGate` | isRandom "yes" uses default configuration (in order) |
 | `inputFlows` > 64 → default configuration | `flow/waitAll` | [inputFlows] 65 uses default configuration |
