@@ -384,7 +384,8 @@ namespace Khronos_Test_Export
                 }
                 string fullIndexFilePath = Path.Combine(path, indexFileName + ".json");
                 CreateIndexJsonFile(fullIndexFilePath, tests);
-                
+                ReadmeCoverageWriter.Update(path);
+
                 Debug.Log("Batch exported " + totalTestCount + " test cases with a total of " + totalSubTestCount + " sub-tests to: " + path);
 
             }

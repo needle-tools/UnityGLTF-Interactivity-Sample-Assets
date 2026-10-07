@@ -77,8 +77,8 @@ namespace Khronos_Test_Export.ExtraTests
         {
             _literal2Pow24 = context.AddCheckBox("literal 16777217 - 16777216 == 1");
             _literal2Pow53 = context.AddCheckBox("literal (2^53-1) - (2^53-2) == 1");
-            _literalDecimalSum = context.AddCheckBox("0.1 + 0.2 != 0.3");
-            _literalDoubleMax = context.AddCheckBox("literal 1.79e308 is finite");
+            _literalDecimalSum = context.AddCheckBox("(0.1 + 0.2 == 0.3) == false");
+            _literalDoubleMax = context.AddCheckBox("isInf(literal 1.79e308) == false");
             _literalSubnormal = context.AddCheckBox("literal 5e-324 > 0");
             _literalNegZero = context.AddCheckBox("literal -0.0 is -0");
             context.NewRow();
@@ -88,7 +88,7 @@ namespace Khronos_Test_Export.ExtraTests
             context.NewRow();
             _arithmeticSmallAdd = context.AddCheckBox("(1 + 1e-10) - 1 > 0");
             _arithmeticPi = context.AddCheckBox("Pi - 3 == 0.14159265358979312");
-            _arithmeticRange = context.AddCheckBox("1e30 * 1e30 is finite");
+            _arithmeticRange = context.AddCheckBox("isInf(1e30 * 1e30) == false");
             _arithmeticRound = context.AddCheckBox("round(0.49999999999999994) == 0");
             context.NewRow();
             _intToFloatMax = context.AddCheckBox("intToFloat(2147483647) - 2147483646 == 1");

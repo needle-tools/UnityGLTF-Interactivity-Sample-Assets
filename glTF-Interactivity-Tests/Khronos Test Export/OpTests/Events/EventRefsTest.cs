@@ -32,11 +32,11 @@ namespace Khronos_Test_Export
 
         public void PrepareObjects(TestContext context)
         {
-            _onStartRefCheckBox = context.AddCheckBox("event/onStart\n ref not null", true);
-            _onTickRefCheckBox  = context.AddCheckBox("event/onTick\n ref not null", true, flowOnce: true);
-            _receiveRefCheckBox = context.AddCheckBox("event/receive\n ref not null", true);
+            _onStartRefCheckBox = context.AddCheckBox("event/onStart\n (ref == null) == false", true);
+            _onTickRefCheckBox  = context.AddCheckBox("event/onTick\n (ref == null) == false", true, flowOnce: true);
+            _receiveRefCheckBox = context.AddCheckBox("event/receive\n (ref == null) == false", true);
             _onStartSameRefCheckBox = context.AddCheckBox("event/onStart\n two nodes same ref", true);
-            _onTickSameRefCheckBox  = context.AddCheckBox("event/onTick\nt wo nodes same ref", true, flowOnce: true);
+            _onTickSameRefCheckBox  = context.AddCheckBox("event/onTick\n two nodes same ref", true, flowOnce: true);
             _eventPointerRefCheckBox  = context.AddCheckBox("event/onStart\n pointer/get isValid", true);
             _onTickPointerRefCheckBox  = context.AddCheckBox("event/onTick\n pointer/get isValid", true, flowOnce: true);
             _receivePointerRefCheckBox = context.AddCheckBox("event/receive\n pointer/get isValid", true);

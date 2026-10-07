@@ -30,6 +30,19 @@ namespace Khronos_Test_Export.InvalidGraphs
             var folder = Path.Combine(path, InvalidGraphWriter.FolderName);
             var count = InvalidGraphWriter.Write(folder, InvalidGraphCases.All());
             Debug.Log($"<color=#00FF00><b>Exported {count} invalid graph test cases</b></color> to: {folder}");
+            ReadmeCoverageWriter.Update(path);
+        }
+
+        [MenuItem("Sample Scenes/Update Khronos Test README Coverage")]
+        public static void UpdateReadmeCoverage()
+        {
+            var path = EditorPrefs.GetString(ExportPathPrefsKey, "");
+            if (string.IsNullOrEmpty(path))
+            {
+                Debug.LogWarning("No Khronos test export path set yet. Export the tests first.");
+                return;
+            }
+            ReadmeCoverageWriter.Update(path);
         }
     }
 }

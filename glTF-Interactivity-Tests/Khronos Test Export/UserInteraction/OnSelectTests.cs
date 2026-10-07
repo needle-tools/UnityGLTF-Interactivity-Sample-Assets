@@ -89,7 +89,7 @@ namespace Khronos_Test_Export
             _flowFiredCheckBox = context.AddCheckBox("onSelect: flow fired", asWaiting: true);
             _selectedNodeCheckBox = context.AddCheckBox("onSelect: selectedNode == target", asWaiting: true);
             _controllerIndexCheckBox = context.AddCheckBox("onSelect: controllerIndex >= 0", asWaiting: true);
-            _rayOriginFiniteCheckBox = context.AddCheckBox("onSelect: selectionRayOrigin finite", asWaiting: true);
+            _rayOriginFiniteCheckBox = context.AddCheckBox("onSelect: selectionRayOrigin\nisNaN == false", asWaiting: true);
 
             // These show a checkmark (success) instantly and only flip to a failure mark if the
             // forbidden event actually fires - instead of showing a misleading fail state for the

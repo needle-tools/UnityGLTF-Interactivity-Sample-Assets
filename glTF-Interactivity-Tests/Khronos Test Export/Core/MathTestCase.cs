@@ -96,7 +96,9 @@ namespace Khronos_Test_Export
                 if (subTest.newRow)
                     context.NewRow();
 
-                _checkBoxes[index] = context.AddCheckBox(BuildName(subTest, false), labelText: BuildName(subTest, true));
+                // Matrix grids put their rows on separate lines, so trim the spaces left around them
+                var labelText = string.Join("\n", BuildName(subTest, true).Split('\n').Select(line => line.Trim())).Trim();
+                _checkBoxes[index] = context.AddCheckBox(BuildName(subTest, false), labelText: labelText);
                 
                 index++;
             }

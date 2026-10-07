@@ -120,7 +120,8 @@ namespace Khronos_Test_Export
         /// Breaks lines longer than <paramref name="maxLineLength"/>, since the TextMeshPro word wrapping
         /// only breaks at spaces and long words like pointer templates overflow the label. Breaks only
         /// after a space, '/', '\\' or '_', so words are never cut in half; a single word without such a
-        /// character stays longer than the limit. Existing line breaks are kept.
+        /// character stays longer than the limit. Existing line breaks are kept, and lines marked with
+        /// &lt;nobr&gt; (e.g. matrix grid rows) are kept as they are.
         /// </summary>
         public static string WrapLabelText(string text, int maxLineLength)
         {
@@ -130,6 +131,12 @@ namespace Khronos_Test_Export
             var wrappedLines = new System.Collections.Generic.List<string>();
             foreach (var line in text.Split('\n'))
             {
+                if (line.Contains("<nobr>"))
+                {
+                    wrappedLines.Add(line);
+                    continue;
+                }
+
                 var current = "";
                 foreach (var token in SplitAfterBreakCharacters(line))
                 {
@@ -179,6 +186,10 @@ namespace Khronos_Test_Export
 
         public string GetResultPassVariableName()
         {
+            // Result and pass state share one variable (see SaveResult)
+            if (ResultPassValueVarId != -1 && ResultPassValueVarId == ResultValueVarId)
+                return GetResultVariableName();
+
             if (resultPassVarName != null)
                 return resultPassVarName;
             
@@ -214,26 +225,20 @@ namespace Khronos_Test_Export
             VariablesHelpers.SetVariable(context.interactivityExportContext, ResultPassValueVarId, out boolValue, out flowIn, out flowOut);
         }
         
+        /// <summary>
+        /// Stores the result of a flow check in a bool variable, which is also the pass variable.
+        /// Normal check: starts false, set to true when the flow is triggered.
+        /// Negated check: starts true ("did not trigger"), set to false when the (error) flow is triggered,
+        /// so the expected value is true for both and matches the positive label.
+        /// </summary>
         private void SaveResult(FlowOutRef flow)
         {
             if (ResultValueVarId == -1)
-                ResultValueVarId = context.interactivityExportContext.Context.AddVariableWithIdIfNeeded(GetResultVariableName(), false, GltfTypes.Bool);
-             
-            VariablesHelpers.SetVariableStaticValue(context.interactivityExportContext, ResultValueVarId, true, out var setResultFlow, out var setResultFlowOut);
+                ResultValueVarId = context.interactivityExportContext.Context.AddVariableWithIdIfNeeded(GetResultVariableName(), isNegated, GltfTypes.Bool);
+
+            VariablesHelpers.SetVariableStaticValue(context.interactivityExportContext, ResultValueVarId, !isNegated, out var setResultFlow, out _);
             flow.ConnectToFlowDestination(setResultFlow);
-
-            if (isNegated)
-            {
-                if (ResultPassValueVarId == -1)
-                    ResultPassValueVarId = context.interactivityExportContext.Context.AddVariableWithIdIfNeeded(GetResultPassVariableName(), true, GltfTypes.Bool);
-
-                VariablesHelpers.SetVariableStaticValue(context.interactivityExportContext, ResultPassValueVarId, false, out var setPassFlow, out _);
-                setResultFlowOut.ConnectToFlowDestination(setPassFlow);
-            }
-            else
-            {
-                ResultPassValueVarId = ResultValueVarId;
-            }
+            ResultPassValueVarId = ResultValueVarId;
         }
         
         private object GetDefaultValue(Type type)
@@ -595,7 +600,7 @@ namespace Khronos_Test_Export
             SetFailed(out var flowSetValid, out var flowOutSetValid);
 
             flow = flowSetValid;
-            expectedValue = false;
+            expectedValue = true;
             context.AddLog("ERROR! "+logText+ ": Flow triggered! This should not happened!", out var logFlowIn, out var logFlowOut);
             flowOutSetValid.ConnectToFlowDestination(logFlowIn);
             SaveResult(logFlowOut);

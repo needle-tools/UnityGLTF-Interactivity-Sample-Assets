@@ -44,7 +44,7 @@ namespace Khronos_Test_Export
             context.NewRow();
             _sameNameFirstVariableCheckBox = context.AddCheckBox("same variable name:\nfirst unchanged");
             _sameNameSecondVariableCheckBox = context.AddCheckBox("same variable name:\nsecond set");
-            _escapedBracketsCheckBox = context.AddCheckBox("pointer with doubled\nbrackets: isValid");
+            _escapedBracketsCheckBox = context.AddCheckBox("pointer with doubled\nbrackets: isValid == false");
         }
 
         public void CreateNodes(TestContext context)
