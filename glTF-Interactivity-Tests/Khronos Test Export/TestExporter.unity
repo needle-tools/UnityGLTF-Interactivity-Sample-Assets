@@ -1006,6 +1006,13 @@ MonoBehaviour:
     Description: 
     typeFullName: Khronos_Test_Export.ReadOnlyPointersGetTests
   - Enabled: 1
+    Name: pointer/activeCamera
+    Description: 'Read-only activeCamera pointers: pointer/get isValid, two reads
+      in the same flow return the same value, pointer/set and pointer/interpolate
+      fire [err] and don''t change the value, and sanity checks of the values (assumes
+      the viewer renders with an active camera, otherwise all values are NaN).'
+    typeFullName: Khronos_Test_Export.ActiveCameraPointersTest
+  - Enabled: 1
     Name: pointer/get_set_morphtargets
     Description: 
     typeFullName: Khronos_Test_Export.PointerMorphTargetsTest
@@ -1265,6 +1272,13 @@ MonoBehaviour:
     Name: pointer/CoreReadOnlyPointers_GetTests
     Description: 
     typeFullName: Khronos_Test_Export.ReadOnlyPointersGetTests
+  - Enabled: 0
+    Name: pointer/activeCamera
+    Description: 'Read-only activeCamera pointers: pointer/get isValid, two reads
+      in the same flow return the same value, pointer/set and pointer/interpolate
+      fire [err] and don''t change the value, and sanity checks of the values (assumes
+      the viewer renders with an active camera, otherwise all values are NaN).'
+    typeFullName: Khronos_Test_Export.ActiveCameraPointersTest
   - Enabled: 0
     Name: pointer/get_set_morphtargets
     Description: 
