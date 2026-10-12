@@ -20,9 +20,10 @@ namespace GltfInteractivityScenes
 
         private class Context : GLTFExportPluginContext
         {
-            // Field of the Visual Scripting export context. Set via reflection: that context lives in an editor-only
+            // Fields of the Visual Scripting export context. Set via reflection: that context lives in an editor-only
             // UnityGLTF assembly this package does not reference.
             private const string CleanUpField = "cleanUpAndOptimizeExportedGraph";
+            private const string SpaceConversionField = "addUnityGltfSpaceConversion";
 
             public override void BeforeSceneExport(GLTFSceneExporter exporter, GLTFRoot gltfRoot)
             {
@@ -38,10 +39,16 @@ namespace GltfInteractivityScenes
 
                 foreach (var plugin in exporter.Plugins)
                 {
-                    var field = plugin?.GetType().GetField(CleanUpField, BindingFlags.Public | BindingFlags.Instance);
-                    if (field != null && field.FieldType == typeof(bool))
-                        field.SetValue(plugin, options.cleanUpAndOptimizeExportedGraph);
+                    SetBool(plugin, CleanUpField, options.cleanUpAndOptimizeExportedGraph);
+                    SetBool(plugin, SpaceConversionField, options.addUnityGltfSpaceConversion);
                 }
+            }
+
+            private static void SetBool(object plugin, string fieldName, bool value)
+            {
+                var field = plugin?.GetType().GetField(fieldName, BindingFlags.Public | BindingFlags.Instance);
+                if (field != null && field.FieldType == typeof(bool))
+                    field.SetValue(plugin, value);
             }
         }
     }

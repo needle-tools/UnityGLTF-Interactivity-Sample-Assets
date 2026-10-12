@@ -1,0 +1,37 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3f2a1c9d84be4a1d9c7e5b0f6a2d8e41, type: 3}
+  m_Name: ActiveCamera.modeldef
+  m_EditorClassIdentifier: 
+  scene: {fileID: 102900000, guid: e1d792711ec92c9419f8e48af805293c, type: 3}
+  modelFolderName: ActiveCamera
+  fileName: ActiveCamera
+  label: Active Camera
+  description: Visualizes the read-only activeCamera pointers. A crosshair and squares
+    are placed in front of the camera every tick and must stay centered and steady
+    while the camera moves; an orange square shows the camera of the previous tick
+    for comparison. Billboards use only the camera rotation, arrows only the camera
+    position. A panel shows position, rotation, the origin in camera space and the
+    projection values.
+  tags:
+  - interactivity
+  - test
+  - camera
+  exportGlb: 1
+  exportGltf: 1
+  includeInIndex: 1
+  source: 
+  licenseInformation: Donated by Needle for glTF testing.
+  licenseStatement: This model is licensed under a Creative Commons Attribution 4.0
+    International License.
+  cachedScenePath: Packages/com.needle.gltf-interactivity-scenes/Interactivity Repo
+    Models/20261012-ActiveCamera/ActiveCamera.unity

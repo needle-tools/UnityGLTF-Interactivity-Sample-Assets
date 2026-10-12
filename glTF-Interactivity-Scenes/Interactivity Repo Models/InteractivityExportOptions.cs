@@ -15,5 +15,10 @@ namespace GltfInteractivityScenes
                  "removal of unused sequences, ...). Disable it to export the graph exactly as authored, " +
                  "e.g. for benchmark scenes.")]
         public bool cleanUpAndOptimizeExportedGraph = false;
+
+        [Tooltip("Convert values between Unity and glTF space in the exported graph (mirrored X, camera looking " +
+                 "along +Z). Disable it for graphs authored in glTF space, so the graph reads and writes the glTF " +
+                 "values directly, e.g. to show the raw activeCamera pointer values.")]
+        public bool addUnityGltfSpaceConversion = true;
     }
 }

@@ -518,7 +518,7 @@ namespace Tests.Editor
         }
 
         // 5x7 pixel font: A-Z, 0-9 and the punctuation used by the labels.
-        private static readonly Dictionary<char, string[]> Glyphs = new Dictionary<char, string[]>
+        internal static readonly Dictionary<char, string[]> Glyphs = new Dictionary<char, string[]>
         {
             ['A'] = new[] { ".###.", "#...#", "#...#", "#####", "#...#", "#...#", "#...#" },
             ['B'] = new[] { "####.", "#...#", "#...#", "####.", "#...#", "#...#", "####." },
@@ -649,7 +649,7 @@ namespace Tests.Editor
         #region Graph
 
         /// <summary>Small helper that adds units in a readable grid and wires ports.</summary>
-        private class GraphBuilder
+        internal class GraphBuilder
         {
             public readonly FlowGraph graph = new FlowGraph();
             private float rowY;
