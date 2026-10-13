@@ -665,11 +665,7 @@ namespace Tests.Editor
                 return unit;
             }
 
-            public void Declare<T>(string name, T value)
-            {
-                graph.variables.Set(name, value);
-                graph.variables.GetDeclaration(name).typeHandle = new SerializableType(typeof(T).FullName);
-            }
+            public void Declare<T>(string name, T value) => DeclareBoxed(name, value);
 
             public static void Flow(ControlOutput from, ControlInput to) => from.ConnectToValid(to);
 
@@ -925,7 +921,9 @@ namespace Tests.Editor
             public void DeclareBoxed(string name, object value)
             {
                 graph.variables.Set(name, value);
-                graph.variables.GetDeclaration(name).typeHandle = new SerializableType(value.GetType().FullName);
+                // VS resolves the handle with Type.GetType, so it needs the assembly qualified name: with only the
+                // full name, Unity types (Vector3, Color, ...) resolve to Unknown and the blackboard replaces the value
+                graph.variables.GetDeclaration(name).typeHandle = new SerializableType(value.GetType().AssemblyQualifiedName);
             }
 
             public ValueOutput GenericMul(ValueOutput a, ValueOutput b)
@@ -1054,12 +1052,6 @@ namespace Tests.Editor
                 public ControlOutput exit;
             }
 
-            public class Branches
-            {
-                public ControlInput enter;
-                public readonly List<ControlOutput> exits = new List<ControlOutput>();
-            }
-
             /// <summary>Entry that runs <paramref name="action"/> only while no benchmark is running (benchKind == 0).</summary>
             public ControlInput WhenIdle(ControlInput action)
             {
@@ -1102,38 +1094,22 @@ namespace Tests.Editor
                 return unit;
             }
 
-            /// <summary>One log per mode ("PERF &lt;mode id&gt;" + message), selected by the "mode" variable.</summary>
-            public Branches LogPerMode(string message, params ValueOutput[] args) =>
-                LogPerMode("mode", i => "PERF " + Modes[i].id + message, args);
+            // The per-mode helpers below end in their branches; callers continue through a Sequence instead.
+            // Merging the branch exits into one input again would multiply the number of control paths, and
+            // the Visual Scripting editor walks every path back to the event when it analyses a unit
+            // (ControlInput.IsPredictable), which makes the graph window hang.
 
             /// <summary>One log per mode, selected by the int variable <paramref name="selector"/>.</summary>
-            public Branches LogPerMode(string selector, Func<int, string> message, params ValueOutput[] args)
-            {
-                var select = Switch(Get(selector), AllModes());
-                var result = new Branches { enter = select.enter };
-                for (int i = 0; i < Modes.Length; i++)
-                {
-                    var log = Log(message(i), args);
-                    Flow(Branch(select, i), log.enter);
-                    result.exits.Add(log.exit);
-                }
-                result.exits.Add(select.@default);
-                return result;
-            }
+            public ControlInput LogPerMode(string selector, Func<int, string> message, params ValueOutput[] args) =>
+                PerMode(selector, i => Log(message(i), args).enter);
 
             /// <summary>Runs one action per mode, selected by the int variable <paramref name="selector"/>.</summary>
-            public Branches PerMode(string selector, Func<int, (ControlInput enter, ControlOutput exit)> action)
+            public ControlInput PerMode(string selector, Func<int, ControlInput> action)
             {
                 var select = Switch(Get(selector), AllModes());
-                var result = new Branches { enter = select.enter };
                 for (int i = 0; i < Modes.Length; i++)
-                {
-                    var (enter, exit) = action(i);
-                    Flow(Branch(select, i), enter);
-                    result.exits.Add(exit);
-                }
-                result.exits.Add(select.@default);
-                return result;
+                    Flow(Branch(select, i), action(i));
+                return select.enter;
             }
 
             private static int[] AllModes()
@@ -1311,27 +1287,24 @@ namespace Tests.Editor
             // a benchmark runs, the running benchmark and the measured mode stay highlighted), shows the
             // description, recomputes loopCount, shows the load digit and resets the statistics.
             g.Row(-2000f);
+            // one sequence step per part; the branches inside a step end there (see GraphBuilder.PerMode)
+            var refresh = g.Sequence(5);
+            var refreshEntry = refresh.enter;
             var buttonMaterials = new List<Material>(refs.modeButtonMaterials)
             {
                 refs.autoButtonMaterial, refs.resetButtonMaterial, refs.loadButtonMaterial,
             };
             var benchIdle = g.Switch(g.Get("benchKind"), 0);
-            var refreshEntry = benchIdle.enter;
             var normalColors = g.SetColors(buttonMaterials, ButtonColor);
             var disabledColors = g.SetColors(buttonMaterials, ButtonDisabledColor);
+            GraphBuilder.Flow(refresh.multiOutputs[0], benchIdle.enter);
             GraphBuilder.Flow(g.Branch(benchIdle, 0), normalColors.enter);
             GraphBuilder.Flow(benchIdle.@default, disabledColors.enter);
 
             var benchHighlight = g.Switch(g.Get("benchKind"), 1);
-            GraphBuilder.Flow(normalColors.exit, benchHighlight.enter);
-            GraphBuilder.Flow(disabledColors.exit, benchHighlight.enter);
-            var allModes = new int[Modes.Length];
-            for (int i = 0; i < allModes.Length; i++) allModes[i] = i;
-            var highlightSwitch = g.Switch(g.Get("mode"), allModes);
             var autoActive = g.SetMaterialColor(refs.autoButtonMaterial, ButtonActiveColor);
+            GraphBuilder.Flow(refresh.multiOutputs[1], benchHighlight.enter);
             GraphBuilder.Flow(g.Branch(benchHighlight, 1), autoActive.assign);
-            GraphBuilder.Flow(autoActive.assigned, highlightSwitch.enter);
-            GraphBuilder.Flow(benchHighlight.@default, highlightSwitch.enter);
 
             // every mode between idle and mixed is one workload; Mixed splits the load over the workloads in it
             var mixedCount = 0;
@@ -1341,12 +1314,12 @@ namespace Tests.Editor
             var loopSwitch = g.Switch(g.Get("mode"), MixedMode);
             var setShare = g.Set("loopCount", g.RoundToInt(g.Mathf2(nameof(Mathf.Max), g.Mul(iterations, 1f / mixedCount), g.Literal(1f))));
             var setFull = g.Set("loopCount", g.RoundToInt(iterations));
+            GraphBuilder.Flow(refresh.multiOutputs[3], loopSwitch.enter);
             GraphBuilder.Flow(g.Branch(loopSwitch, MixedMode), setShare.assign);
             GraphBuilder.Flow(loopSwitch.@default, setFull.assign);
 
             var showLoad = g.SetDigit(refs.loadDigit, g.Get("load"));
-            GraphBuilder.Flow(setShare.assigned, showLoad.enter);
-            GraphBuilder.Flow(setFull.assigned, showLoad.enter);
+            GraphBuilder.Flow(refresh.multiOutputs[4], showLoad.enter);
             var refreshResetStats = g.SetMany(new List<(string, ValueOutput)>
             {
                 ("sessionFrames", g.Literal(0f)), ("sessionTime", g.Literal(0f)), ("sessionMaxDelta", g.Literal(0f)),
@@ -1354,16 +1327,16 @@ namespace Tests.Editor
             });
             GraphBuilder.Flow(showLoad.exit, refreshResetStats.assign);
 
+            // highlight the active mode and show its description
             g.Row(-1700f);
-            for (int i = 0; i < Modes.Length; i++)
+            var highlightMode = g.PerMode("mode", i =>
             {
                 var highlight = g.SetMaterialColor(refs.modeButtonMaterials[i], ButtonActiveColor);
                 var describe = g.SetTextureOffset(refs.description, DescriptionOffset(i));
-                GraphBuilder.Flow(g.Branch(highlightSwitch, i), highlight.assign);
                 GraphBuilder.Flow(highlight.assigned, describe.enter);
-                GraphBuilder.Flow(describe.exit, loopSwitch.enter);
-            }
-            GraphBuilder.Flow(highlightSwitch.@default, loopSwitch.enter);
+                return highlight.assign;
+            });
+            GraphBuilder.Flow(refresh.multiOutputs[2], highlightMode);
 
             // ---------------------------------------------------------------- Menu input
             g.Row(-1300f);
@@ -1489,8 +1462,52 @@ namespace Tests.Editor
 
             BuildBenchmarkStep(g, refs, tick.multiOutputs[3], refreshEntry, restartStep.assign, resetStats.assign);
 
+            CheckControlPaths(g.graph);
             var machine = refs.graphObject.AddComponent<ScriptMachine>();
             machine.nest.SwitchToEmbed(g.graph);
+        }
+
+        /// <summary>
+        /// Warns when a unit can be reached over very many control paths. The Visual Scripting editor walks all
+        /// of them when it analyses a unit (ControlInput.IsPredictable), so the graph window hangs on open.
+        /// See <see cref="GraphBuilder.PerMode"/> for how to avoid them.
+        /// </summary>
+        private static void CheckControlPaths(FlowGraph graph)
+        {
+            const long limit = 1000;
+            var incoming = new Dictionary<IUnit, List<IUnit>>();
+            foreach (var connection in graph.controlConnections)
+            {
+                if (!incoming.TryGetValue(connection.destination.unit, out var sources))
+                    incoming[connection.destination.unit] = sources = new List<IUnit>();
+                sources.Add(connection.source.unit);
+            }
+
+            var paths = new Dictionary<IUnit, long>();
+            long Count(IUnit unit)
+            {
+                if (paths.TryGetValue(unit, out var known))
+                    return Math.Max(known, 0); // -1: on the current path (cycle)
+                if (!incoming.TryGetValue(unit, out var sources))
+                    return paths[unit] = 1; // event
+                paths[unit] = -1;
+                long sum = 0;
+                foreach (var source in sources)
+                    sum = Math.Min(sum + Count(source), long.MaxValue / 2);
+                return paths[unit] = sum;
+            }
+
+            IUnit worst = null;
+            long worstPaths = 0;
+            foreach (var unit in graph.units)
+            {
+                var count = Count(unit);
+                if (count > worstPaths) (worst, worstPaths) = (unit, count);
+            }
+            if (worstPaths > limit)
+                Debug.LogWarning($"Performance test graph: {worst} at {worst.position} is reachable over {worstPaths} control " +
+                                 "paths, the Visual Scripting window will hang when opening the graph. Continue after " +
+                                 "branches with a Sequence instead of merging their exits.");
         }
 
         private static ValueOutput SessionAverageFps(GraphBuilder g) =>
@@ -1540,33 +1557,28 @@ namespace Tests.Editor
             GraphBuilder.Flow(startMeasuring.assigned, resetStats);
 
 
-            // AUTO: log this mode, color its result strip, add it to the summary, then continue with the next mode
+            // AUTO: log this mode, color its result strip, add it to the summary, then continue with the next mode.
+            // One sequence step per part; the branches inside a step end there (see GraphBuilder.PerMode).
             g.Row(5100f);
+            var finishStep = g.Sequence(4);
+            GraphBuilder.Flow(stepDone.ifTrue, finishStep.enter);
             var avgFps = SessionAverageFps(g);
             var autoLog = g.LogPerMode("mode",
                 i => $"PERF [{i + 1}/{Modes.Length}] {Modes[i].id}{(InSummary(i) ? "" : " (baseline)")}: " +
                      "load {0}, avg fps {1}, avg ms {2}, worst ms {3}, frames {4}",
                 g.Get("load"), avgFps, SessionAverageMs(g), SessionWorstMs(g), g.Get("sessionFrames"));
-            GraphBuilder.Flow(stepDone.ifTrue, autoLog.enter);
+            GraphBuilder.Flow(finishStep.multiOutputs[0], autoLog);
 
             var resultColor = FpsColor(g, avgFps);
-            var showResult = g.PerMode("mode", i =>
-            {
-                var set = g.SetMaterialColor(refs.resultStrips[i], resultColor);
-                return (set.assign, set.assigned);
-            });
-            foreach (var exit in autoLog.exits)
-                GraphBuilder.Flow(exit, showResult.enter);
+            var showResult = g.PerMode("mode", i => g.SetMaterialColor(refs.resultStrips[i], resultColor).assign);
+            GraphBuilder.Flow(finishStep.multiOutputs[1], showResult);
 
-            var nextMode = g.Set("mode", g.GenericAdd(g.Get("mode"), g.Literal(1)));
+            // baselines are left out of the summary
             var baselines = new List<int>();
             for (int i = 0; i < Modes.Length; i++)
                 if (!InSummary(i)) baselines.Add(i);
             var summarize = g.Switch(g.Get("mode"), baselines.ToArray());
-            foreach (var exit in showResult.exits)
-                GraphBuilder.Flow(exit, summarize.enter);
-            foreach (var baseline in baselines)
-                GraphBuilder.Flow(g.Branch(summarize, baseline), nextMode.assign);
+            GraphBuilder.Flow(finishStep.multiOutputs[2], summarize.enter);
 
             var accumulate = g.SetMany(new List<(string, ValueOutput)>
             {
@@ -1574,20 +1586,21 @@ namespace Tests.Editor
                 ("runCount", g.Sum(g.Get("runCount"), 1f)),
             });
             GraphBuilder.Flow(summarize.@default, accumulate.assign);
+            var extremes = g.Sequence(2);
+            GraphBuilder.Flow(accumulate.assigned, extremes.enter);
             var isSlowest = g.Add(new If());
             GraphBuilder.Value(g.Less(avgFps, g.Get("runMinFps")), isSlowest.condition);
-            GraphBuilder.Flow(accumulate.assigned, isSlowest.enter);
+            GraphBuilder.Flow(extremes.multiOutputs[0], isSlowest.enter);
             var rememberSlowest = g.SetMany(new List<(string, ValueOutput)> { ("runMinFps", avgFps), ("runMinMode", g.Get("mode")) });
             GraphBuilder.Flow(isSlowest.ifTrue, rememberSlowest.assign);
             var isFastest = g.Add(new If());
             GraphBuilder.Value(g.Greater(avgFps, g.Get("runMaxFps")), isFastest.condition);
-            GraphBuilder.Flow(isSlowest.ifFalse, isFastest.enter);
-            GraphBuilder.Flow(rememberSlowest.assigned, isFastest.enter);
+            GraphBuilder.Flow(extremes.multiOutputs[1], isFastest.enter);
             var rememberFastest = g.SetMany(new List<(string, ValueOutput)> { ("runMaxFps", avgFps), ("runMaxMode", g.Get("mode")) });
             GraphBuilder.Flow(isFastest.ifTrue, rememberFastest.assign);
-            GraphBuilder.Flow(isFastest.ifFalse, nextMode.assign);
-            GraphBuilder.Flow(rememberFastest.assigned, nextMode.assign);
 
+            var nextMode = g.Set("mode", g.GenericAdd(g.Get("mode"), g.Literal(1)));
+            GraphBuilder.Flow(finishStep.multiOutputs[3], nextMode.assign);
             var allDone = g.Switch(g.Get("mode"), Modes.Length);
             GraphBuilder.Flow(nextMode.assigned, allDone.enter);
             GraphBuilder.Flow(allDone.@default, restartStep);
@@ -1600,31 +1613,25 @@ namespace Tests.Editor
                                    "min fps {3}, max fps {4}, total time {5} s",
                 g.Get("load"), g.Get("runCount"), meanFps, g.Get("runMinFps"), g.Get("runMaxFps"), g.Sub(now, g.Get("runStartTime")));
             GraphBuilder.Flow(g.Branch(allDone, Modes.Length), summaryLog.enter);
+            var summary = g.Sequence(4);
+            GraphBuilder.Flow(summaryLog.exit, summary.enter);
             var slowestLog = g.LogPerMode("runMinMode", i => $"PERF SLOWEST: {Modes[i].id} ({Modes[i].description}) with {{0}} fps", g.Get("runMinFps"));
-            GraphBuilder.Flow(summaryLog.exit, slowestLog.enter);
+            GraphBuilder.Flow(summary.multiOutputs[0], slowestLog);
             var fastestLog = g.LogPerMode("runMaxMode", i => $"PERF FASTEST: {Modes[i].id} ({Modes[i].description}) with {{0}} fps", g.Get("runMaxFps"));
-            foreach (var exit in slowestLog.exits)
-                GraphBuilder.Flow(exit, fastestLog.enter);
+            GraphBuilder.Flow(summary.multiOutputs[1], fastestLog);
 
             var showMean = g.ShowNumber(refs.summaryMeanDigits, meanFps);
-            foreach (var exit in fastestLog.exits)
-                GraphBuilder.Flow(exit, showMean.enter);
+            GraphBuilder.Flow(summary.multiOutputs[2], showMean.enter);
             var showMin = g.ShowNumber(refs.summaryMinDigits, g.Get("runMinFps"));
             GraphBuilder.Flow(showMean.exit, showMin.enter);
-            var showSlowest = g.PerMode("runMinMode", i =>
-            {
-                var set = g.SetTextureOffset(refs.slowestDescription, DescriptionOffset(i));
-                return (set.enter, set.exit);
-            });
-            GraphBuilder.Flow(showMin.exit, showSlowest.enter);
+            var showSlowest = g.PerMode("runMinMode", i => g.SetTextureOffset(refs.slowestDescription, DescriptionOffset(i)).enter);
+            GraphBuilder.Flow(showMin.exit, showSlowest);
 
             var finishAuto = g.SetMany(new List<(string, ValueOutput)> { ("benchKind", g.Literal(0)), ("mode", g.Literal(0)) });
-            foreach (var exit in showSlowest.exits)
-                GraphBuilder.Flow(exit, finishAuto.assign);
+            GraphBuilder.Flow(summary.multiOutputs[3], finishAuto.assign);
             var autoDoneLog = g.Log("PERF AUTO RUN DONE");
             GraphBuilder.Flow(finishAuto.assigned, autoDoneLog.enter);
             GraphBuilder.Flow(autoDoneLog.exit, refresh);
-
         }
 
         /// <summary>Basic math: a dependent chain of float math per iteration (sin, cos, sqrt, pow, abs, modulo).</summary>
