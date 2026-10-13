@@ -247,6 +247,56 @@ namespace Khronos_Test_Export.InvalidGraphs
                 }));
             c.Add(Assert("E6", g, "extension_not_string", "declaration extension is a number", SecGraph, extOp,
                 gr => extDecl(gr)["extension"] = 5));
+
+            // The value sockets of an extension op are exactly the ones its declaration defines ("If the
+            // outputValueSockets object is undefined, the operation has no output value sockets"), so a reference to an
+            // output the declaration leaves out names a non-existent socket (F4). Uses the real event/onSelect op.
+            // S = event/onSelect(nodeIndex: 0) declaring all its outputs,
+            // S + 1 = ref/eq(a: S.event, b: S.selectedNode), S + 2 = math/extract3(a: S.selectionPoint)
+            Action<InvalidGraphBuilder> onSelect = b =>
+            {
+                var decl = b.AddDecl(new JObject
+                {
+                    ["op"] = "event/onSelect",
+                    ["extension"] = "KHR_node_selectability",
+                    ["outputValueSockets"] = new JObject
+                    {
+                        ["selectedNode"] = new JObject { ["type"] = b.Type("ref") },
+                        ["controllerIndex"] = new JObject { ["type"] = b.Type("int") },
+                        ["selectionPoint"] = new JObject { ["type"] = b.Type("float3") },
+                        ["selectionRayOrigin"] = new JObject { ["type"] = b.Type("float3") },
+                        ["event"] = new JObject { ["type"] = b.Type("ref") },
+                    },
+                });
+                b.AddNode(decl, config: Config(("nodeIndex", 0)));
+                b.Node("ref/eq", Values(("a", Ref(S, "event")), ("b", Ref(S, "selectedNode"))));
+                b.Node("math/extract3", Values(("a", Ref(S, "selectionPoint"))));
+                b.Type("float");
+            };
+            Func<JObject, JObject> onSelectOutputs = gr => (JObject)Decl(gr, "event/onSelect")["outputValueSockets"];
+
+            c.Add(Reject("E7a", g, "ext_output_sockets_missing",
+                "event/onSelect declared without outputValueSockets, but its outputs are read", SecDecl, onSelect,
+                gr => Decl(gr, "event/onSelect").Remove("outputValueSockets")));
+            c.Add(Reject("E7b", g, "ext_output_socket_not_declared",
+                "event/onSelect declaration without the \"event\" output, but event is read", SecDecl, onSelect,
+                gr => onSelectOutputs(gr).Remove("event")));
+            c.Add(Reject("E7c", g, "ext_output_socket_wrong_case",
+                "event/onSelect declares \"SelectedNode\", but selectedNode is read (case-sensitive)", SecDecl, onSelect,
+                gr => RenameProperty(onSelectOutputs(gr), "selectedNode", "SelectedNode")));
+            c.Add(Reject("E7d", g, "ext_output_socket_implicit_value",
+                "input value omits socket, but event/onSelect declares no \"value\" output", SecDecl, onSelect,
+                gr => Value(gr, S + 2, "a").Remove("socket")));
+            c.Add(Reject("E7e", g, "ext_output_socket_declared_wrong_type",
+                "event/onSelect declares selectionPoint as float, read by math/extract3 (float3 input)", SecDecl, onSelect,
+                gr => onSelectOutputs(gr)["selectionPoint"]["type"] = TypeIndex(gr, "float")));
+
+            // Declared input value sockets of an extension op are required and typed like the ones of spec ops.
+            Action<InvalidGraphBuilder> extOpFloat = b => { extOp(b); b.Type("float"); };
+            c.Add(Reject("E8a", g, "ext_input_socket_missing", "extension op node without its declared input a", SecDecl, extOpFloat,
+                gr => Node(gr, S).Remove("values")));
+            c.Add(Reject("E8b", g, "ext_input_socket_type_differs", "extension op node with float input a, declared as int", SecDecl, extOpFloat,
+                gr => Node(gr, S)["values"]["a"] = InlineJson(gr, "float", 1.0)));
         }
 
         #endregion

@@ -19,7 +19,8 @@ namespace Khronos_Test_Export
     /// The tester has to hover the cubes (move the pointer/controller onto them and away again)
     /// while the test is running. Results are evaluated after the interaction time window:
     ///   - hovering the HOVERABLE cube must fire event/onHoverIn (on enter) and event/onHoverOut
-    ///     (on leave), both reporting the correct hoveredNode ref and a valid controllerIndex.
+    ///     (on leave), both reporting the correct hoveredNode ref and a non-null event ref;
+    ///     onHoverIn also a valid controllerIndex.
     ///   - the NON-HOVERABLE cube (hoverable = false) must NOT fire event/onHoverIn.
     ///   - a cube whose ancestor is non-hoverable must NOT fire either (hoverability is inherited:
     ///     "a node is hoverable if and only if there is no node at or above it in the hierarchy
@@ -38,8 +39,10 @@ namespace Khronos_Test_Export
         private CheckBox _hoverInFiredCheckBox;
         private CheckBox _hoverInNodeCheckBox;
         private CheckBox _hoverInControllerCheckBox;
+        private CheckBox _hoverInEventCheckBox;
         private CheckBox _hoverOutFiredCheckBox;
         private CheckBox _hoverOutNodeCheckBox;
+        private CheckBox _hoverOutEventCheckBox;
         private CheckBox _nonHoverableCheckBox;
         private CheckBox _inheritedCheckBox;
 
@@ -90,8 +93,10 @@ namespace Khronos_Test_Export
             _hoverInFiredCheckBox = context.AddCheckBox("onHoverIn: flow fired", asWaiting: true);
             _hoverInNodeCheckBox = context.AddCheckBox("onHoverIn: hoveredNode == target", asWaiting: true);
             _hoverInControllerCheckBox = context.AddCheckBox("onHoverIn: controllerIndex >= 0", asWaiting: true);
+            _hoverInEventCheckBox = context.AddCheckBox("onHoverIn: event != null", asWaiting: true);
             _hoverOutFiredCheckBox = context.AddCheckBox("onHoverOut: flow fired", asWaiting: true);
             _hoverOutNodeCheckBox = context.AddCheckBox("onHoverOut: hoveredNode == target", asWaiting: true);
+            _hoverOutEventCheckBox = context.AddCheckBox("onHoverOut: event != null", asWaiting: true);
 
             // These show a checkmark (success) instantly and only flip to a failure mark if the
             // forbidden event actually fires - instead of showing a misleading fail state for the
@@ -137,12 +142,18 @@ namespace Khronos_Test_Export
             ge.ValueIn(Math_GeNode.IdValueB).SetValue(0);
             _hoverInControllerCheckBox.SetupCheck(ge.ValueOut(Math_GeNode.IdOut), out var hoverInControllerFlow, true);
 
+            // The event ref (e.g. for event/stopPropagation) is implementation-defined, so we only
+            // verify that it is not the null ref.
+            _hoverInEventCheckBox.SetupCheck(IsNullRef(nodeCreator, onHoverIn.ValueOut(Event_OnHoverInNode.IdEvent)),
+                out var hoverInEventFlow, false);
+
             context.HideOnFlow(_instructionLabel.transform, out var hideLabelFlow);
             context.HideOnFlow(_arrow.transform, out var hideArrowFlow);
             _hoverMarker.SetupCheck(out var markerFlow);
 
             context.AddSequence(onHoverIn.FlowOut(Event_OnHoverInNode.IdFlowOut),
-                hoverInFiredFlow, hoverInNodeFlow, hoverInControllerFlow, hideLabelFlow, hideArrowFlow, markerFlow);
+                hoverInFiredFlow, hoverInNodeFlow, hoverInControllerFlow, hoverInEventFlow, hideLabelFlow, hideArrowFlow,
+                markerFlow);
 
             // ── Positive case: hovering out on the hoverable cube ────────────────────
             var onHoverOut = nodeCreator.CreateNode<Event_OnHoverOutNode>();
@@ -155,13 +166,16 @@ namespace Khronos_Test_Export
                 out var hoverOutNodeFlow,
                 new StaticRefPointer("/nodes/"+hoverableIndex));
 
+            _hoverOutEventCheckBox.SetupCheck(IsNullRef(nodeCreator, onHoverOut.ValueOut(Event_OnHoverOutNode.IdEvent)),
+                out var hoverOutEventFlow, false);
+
             // The negative-case checks already pass instantly (see .Negate() above), so once the
             // tester has both entered and left the hoverable cube, every check in this test is
             // resolved - no need to wait out the rest of the interaction window to report the result.
             context.AddEarlyCompletionTrigger(out var earlyCompletionFlow);
 
             context.AddSequence(onHoverOut.FlowOut(Event_OnHoverOutNode.IdFlowOut),
-                hoverOutFiredFlow, hoverOutNodeFlow, earlyCompletionFlow);
+                hoverOutFiredFlow, hoverOutNodeFlow, hoverOutEventFlow, earlyCompletionFlow);
 
             // ── Negative case: non-hoverable cube must never fire onHoverIn ──────────
             // Negated check: shows a checkmark immediately and only flips to failed the instant
@@ -176,6 +190,17 @@ namespace Khronos_Test_Export
             onHoverInChild.Configuration[Event_OnHoverInNode.IdConfigNodeIndex].Value = childIndex;
             _inheritedCheckBox.SetupNegateCheck(out var inheritedFiredFlow);
             onHoverInChild.FlowOut(Event_OnHoverInNode.IdFlowOut).ConnectToFlowDestination(inheritedFiredFlow);
+        }
+
+        /// <summary>
+        /// Builds a bool that is true if the given ref equals the null ref.
+        /// </summary>
+        private static ValueOutRef IsNullRef(GltfInteractivityExportNodes nodeCreator, ValueOutRef refValue)
+        {
+            var eq = nodeCreator.CreateNode<Ref_EqNode>();
+            eq.ValueIn(Ref_EqNode.IdValueA).ConnectToSource(refValue);
+            eq.ValueIn(Ref_EqNode.IdValueB).SetValue(new StaticRefPointer()).SetType(TypeRestriction.LimitToRef);
+            return eq.ValueOut(Ref_EqNode.IdOutValue);
         }
 
         /// <summary>

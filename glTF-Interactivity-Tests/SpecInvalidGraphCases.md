@@ -62,6 +62,8 @@ Source: `Specification.adoc` on `main`, retrieved 2026-09-28. Section names refe
 | E3 | Spec op (no `extension`) defines `inputValueSockets` / `outputValueSockets` |
 | E4 | Extension op socket `type` out of range († if missing, or `{}`) |
 | E5 | Equal declarations, e.g. `{op:"math/add"}` twice – all duplicates are invalid |
+| E7 | Extension op output read that its declaration doesn't define (F4/F9 with the sockets taken from the declaration): `event/onSelect` without `outputValueSockets`, without `event`, with `SelectedNode` instead of `selectedNode`, implicit `"value"` socket, `selectionPoint` declared as `float` but read as `float3` |
+| E8 | Extension op node without a declared input socket, or with a type other than the declared one (F8/F9) |
 
 ## F. Nodes – structure & wiring
 
@@ -166,7 +168,7 @@ The group I rules are regular test cases, so their result is checked and not onl
 
 ## Exporter validation
 
-`UnityGLTF/Runtime/Scripts/Interactivity/Export/Helpers/GraphSpecValidator.cs` checks the serialized extension object on every export (`Validator.ValidateSpecification`) and logs the violations grouped by rule. It covers the structural rules (A–F) and the configuration-dependent rules of `variable/*`, `pointer/*`, `event/receive` and `event/send` (G). Not covered: rules that need the socket and type definitions of each operation (unknown ops, output socket names, input types, math/switch and flow/switch sockets, debug/log placeholders).
+`UnityGLTF/Runtime/Scripts/Interactivity/Export/Helpers/GraphSpecValidator.cs` checks the serialized extension object on every export (`Validator.ValidateSpecification`) and logs the violations grouped by rule. It covers the structural rules (A–F) and the configuration-dependent rules of `variable/*`, `pointer/*`, `event/receive` and `event/send` (G). F4 is only checked for extension ops, whose output sockets come from their declaration (e.g. reading `event` from an `event/onSelect` declaration without it). Not covered: rules that need the socket and type definitions of each operation (unknown ops, output socket names of spec ops, input types, math/switch and flow/switch sockets, debug/log placeholders).
 
 ## Existing test assets violate the current spec
 

@@ -19,7 +19,8 @@ namespace Khronos_Test_Export
     /// The tester has to select (click/tap/point-and-trigger) the cubes while the test is
     /// running. All checks are evaluated once the interaction time window elapses:
     ///   - selecting the SELECTABLE cube must fire event/onSelect and report the correct
-    ///     selectedNode ref, a valid controllerIndex and finite selectionPoint / selectionRayOrigin.
+    ///     selectedNode ref, a valid controllerIndex, finite selectionPoint / selectionRayOrigin,
+    ///     a selectionPoint that lies on the selected cube, and a non-null event ref.
     ///   - the NON-SELECTABLE cube (selectable = false) must NOT fire event/onSelect.
     ///   - a cube whose ancestor is non-selectable must NOT fire either (selectability is
     ///     inherited: "a node is selectable if and only if there is no node at or above it in
@@ -39,6 +40,9 @@ namespace Khronos_Test_Export
         private CheckBox _selectedNodeCheckBox;
         private CheckBox _controllerIndexCheckBox;
         private CheckBox _rayOriginFiniteCheckBox;
+        private CheckBox _selectionPointFiniteCheckBox;
+        private CheckBox _selectionPointOnTargetCheckBox;
+        private CheckBox _eventRefCheckBox;
         private CheckBox _nonSelectableCheckBox;
         private CheckBox _inheritedCheckBox;
 
@@ -90,6 +94,9 @@ namespace Khronos_Test_Export
             _selectedNodeCheckBox = context.AddCheckBox("onSelect: selectedNode == target", asWaiting: true);
             _controllerIndexCheckBox = context.AddCheckBox("onSelect: controllerIndex >= 0", asWaiting: true);
             _rayOriginFiniteCheckBox = context.AddCheckBox("onSelect: selectionRayOrigin\nisNaN == false", asWaiting: true);
+            _selectionPointFiniteCheckBox = context.AddCheckBox("onSelect: selectionPoint\nisNaN == false", asWaiting: true);
+            _selectionPointOnTargetCheckBox = context.AddCheckBox("onSelect: selectionPoint\non target cube", asWaiting: true);
+            _eventRefCheckBox = context.AddCheckBox("onSelect: event != null", asWaiting: true);
 
             // These show a checkmark (success) instantly and only flip to a failure mark if the
             // forbidden event actually fires - instead of showing a misleading fail state for the
@@ -140,6 +147,38 @@ namespace Khronos_Test_Export
             var rayNaN = AnyComponentIsNaN(nodeCreator, onSelect.ValueOut(Event_OnSelectNode.IdValueSelectionRayOrigin));
             _rayOriginFiniteCheckBox.SetupCheck(rayNaN, out var rayFiniteFlow, false);
 
+            // selectionPoint must be finite (not NaN) as well - a pointer hit on a mesh always has one.
+            var selectionPoint = onSelect.ValueOut(Event_OnSelectNode.IdValueLocalHitLocation);
+            var pointNaN = AnyComponentIsNaN(nodeCreator, selectionPoint);
+            _selectionPointFiniteCheckBox.SetupCheck(pointNaN, out var pointFiniteFlow, false);
+
+            // selectionPoint is in the global coordinate system and must lie on the selected cube:
+            // its distance to the cube's global position may not exceed the cube's half diagonal
+            // (bounding sphere - independent of any rotation).
+            var cubeMatrix = nodeCreator.CreateNode<Pointer_GetNode>();
+            PointersHelper.AddPointerConfig(cubeMatrix, $"/nodes/{selectableIndex}/globalMatrix", GltfTypes.Float4x4);
+            var cubeDecompose = nodeCreator.CreateNode<Math_MatDecomposeNode>();
+            cubeDecompose.ValueIn(Math_MatDecomposeNode.IdInput).ConnectToSource(cubeMatrix.FirstValueOut());
+
+            var toCenter = nodeCreator.CreateNode<Math_SubNode>();
+            toCenter.ValueIn(Math_SubNode.IdValueA).ConnectToSource(selectionPoint);
+            toCenter.ValueIn(Math_SubNode.IdValueB).ConnectToSource(cubeDecompose.ValueOut(Math_MatDecomposeNode.IdOutputTranslation));
+            var distance = nodeCreator.CreateNode<Math_LengthNode>();
+            distance.ValueIn(Math_LengthNode.IdValueA).ConnectToSource(toCenter.ValueOut(Math_SubNode.IdOut));
+
+            var cubeHalfDiagonal = (_selectableObj.transform.lossyScale * 0.5f).magnitude;
+            var withinCube = nodeCreator.CreateNode<Math_LeNode>();
+            withinCube.ValueIn(Math_LeNode.IdValueA).ConnectToSource(distance.ValueOut(Math_LengthNode.IdOut));
+            withinCube.ValueIn(Math_LeNode.IdValueB).SetValue(cubeHalfDiagonal + 0.01f);
+            _selectionPointOnTargetCheckBox.SetupCheck(withinCube.ValueOut(Math_LeNode.IdOut), out var pointOnTargetFlow, true);
+
+            // The event ref (e.g. for event/stopPropagation) is implementation-defined, so we only
+            // verify that it is not the null ref.
+            var eventIsNull = nodeCreator.CreateNode<Ref_EqNode>();
+            eventIsNull.ValueIn(Ref_EqNode.IdValueA).ConnectToSource(onSelect.ValueOut(Event_OnSelectNode.IdEvent));
+            eventIsNull.ValueIn(Ref_EqNode.IdValueB).SetValue(new StaticRefPointer()).SetType(TypeRestriction.LimitToRef);
+            _eventRefCheckBox.SetupCheck(eventIsNull.ValueOut(Ref_EqNode.IdOutValue), out var eventRefFlow, false);
+
             context.HideOnFlow(_instructionLabel.transform, out var hideLabelFlow);
             context.HideOnFlow(_arrow.transform, out var hideArrowFlow);
             _selectMarker.SetupCheck(out var markerFlow);
@@ -150,8 +189,8 @@ namespace Khronos_Test_Export
             context.AddEarlyCompletionTrigger(out var earlyCompletionFlow);
 
             context.AddSequence(onSelect.FlowOut(Event_OnSelectNode.IdFlowOut),
-                firedFlow, selectedNodeFlow, controllerFlow, rayFiniteFlow, hideLabelFlow, hideArrowFlow, markerFlow,
-                earlyCompletionFlow);
+                firedFlow, selectedNodeFlow, controllerFlow, rayFiniteFlow, pointFiniteFlow, pointOnTargetFlow,
+                eventRefFlow, hideLabelFlow, hideArrowFlow, markerFlow, earlyCompletionFlow);
 
             // ── Negative case: non-selectable cube must never fire onSelect ──────────
             // Negated check: shows a checkmark immediately and only flips to failed the instant
