@@ -319,7 +319,11 @@ public class SetVertexColor : MonoBehaviour
         
         if (meshFilter?.sharedMesh)
         {
+#if UNITY_6000_4_OR_NEWER
+            Debug.Log("Current sharedMesh ID: " + meshFilter.sharedMesh.GetEntityId());
+#else
             Debug.Log("Current sharedMesh ID: " + meshFilter.sharedMesh.GetInstanceID());
+#endif
             Debug.Log("Vertex count: " + meshFilter.sharedMesh.vertexCount);
             Debug.Log("Has vertex colors: " + (meshFilter.sharedMesh.colors.Length > 0));
         }
