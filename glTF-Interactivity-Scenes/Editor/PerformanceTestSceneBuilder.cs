@@ -1472,7 +1472,7 @@ namespace Tests.Editor
         /// of them when it analyses a unit (ControlInput.IsPredictable), so the graph window hangs on open.
         /// See <see cref="GraphBuilder.PerMode"/> for how to avoid them.
         /// </summary>
-        private static void CheckControlPaths(FlowGraph graph)
+        internal static void CheckControlPaths(FlowGraph graph)
         {
             const long limit = 1000;
             var incoming = new Dictionary<IUnit, List<IUnit>>();
@@ -1505,7 +1505,7 @@ namespace Tests.Editor
                 if (count > worstPaths) (worst, worstPaths) = (unit, count);
             }
             if (worstPaths > limit)
-                Debug.LogWarning($"Performance test graph: {worst} at {worst.position} is reachable over {worstPaths} control " +
+                Debug.LogWarning($"Graph: {worst} at {worst.position} is reachable over {worstPaths} control " +
                                  "paths, the Visual Scripting window will hang when opening the graph. Continue after " +
                                  "branches with a Sequence instead of merging their exits.");
         }
