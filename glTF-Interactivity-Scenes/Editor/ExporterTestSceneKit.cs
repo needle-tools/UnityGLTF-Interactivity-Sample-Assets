@@ -27,6 +27,7 @@ namespace Tests.Editor
             UpdateEventsTestSceneBuilder.Create(false);
             StatefulUnitsTestSceneBuilder.Create(false);
             CoroutinesTestSceneBuilder.Create(false);
+            StaticMembersTestSceneBuilder.Create(false);
         }
     }
 
@@ -588,7 +589,8 @@ namespace Tests.Editor
             return SaveMaterial(material, name);
         }
 
-        private Material SaveMaterial(Material material, string name) => SaveMaterial(material, MaterialFolder, name);
+        // names come from row and cell names, which can hold characters that aren't valid in file names (e.g. "R > 0.5")
+        private Material SaveMaterial(Material material, string name) => SaveMaterial(material, MaterialFolder, SafeName(name));
 
         private static Material SaveMaterial(Material material, string folder, string name)
         {
