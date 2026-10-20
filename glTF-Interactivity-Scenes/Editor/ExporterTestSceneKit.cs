@@ -28,6 +28,7 @@ namespace Tests.Editor
             StatefulUnitsTestSceneBuilder.Create(false);
             CoroutinesTestSceneBuilder.Create(false);
             StaticMembersTestSceneBuilder.Create(false);
+            LightsTestSceneBuilder.Create(false);
         }
     }
 
