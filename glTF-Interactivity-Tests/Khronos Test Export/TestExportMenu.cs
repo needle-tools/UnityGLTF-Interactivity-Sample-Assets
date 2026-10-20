@@ -94,7 +94,7 @@ namespace Khronos_Test_Export
             return true;
         }
 
-        private static string FindTestExporterScene()
+        internal static string FindTestExporterScene()
         {
             return AssetDatabase.FindAssets($"{SceneName} t:SceneAsset")
                 .Select(AssetDatabase.GUIDToAssetPath)

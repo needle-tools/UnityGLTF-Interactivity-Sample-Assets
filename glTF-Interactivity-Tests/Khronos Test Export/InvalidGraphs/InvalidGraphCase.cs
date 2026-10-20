@@ -51,6 +51,12 @@ namespace Khronos_Test_Export.InvalidGraphs
             if (applyMutation)
                 MutateExtension?.Invoke(extension);
 
+            // Extension ops must be listed, otherwise a case could be rejected for that instead of its own rule
+            var extensionsUsed = new JArray("KHR_interactivity");
+            foreach (var extensionName in TestContext.DeclarationExtensions(extension))
+                if (extensionName != "KHR_interactivity")
+                    extensionsUsed.Add(extensionName);
+
             return new JObject
             {
                 ["asset"] = new JObject
@@ -68,7 +74,7 @@ namespace Khronos_Test_Export.InvalidGraphs
                         ["pass"] = PassCondition,
                     },
                 },
-                ["extensionsUsed"] = new JArray("KHR_interactivity"),
+                ["extensionsUsed"] = extensionsUsed,
                 ["scene"] = 0,
                 ["scenes"] = new JArray(new JObject { ["nodes"] = new JArray(0) }),
                 // Target for pointer templates like /nodes/0/translation.

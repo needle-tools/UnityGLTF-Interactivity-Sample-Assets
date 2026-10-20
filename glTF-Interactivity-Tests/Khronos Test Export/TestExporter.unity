@@ -973,6 +973,11 @@ MonoBehaviour:
     Description: 
     typeFullName: Khronos_Test_Export.WhileLoopTest
   - Enabled: 1
+    Name: graph/declaration equality
+    Description: Two declarations of the same extension operation that differ only
+      in an input value socket type are different declarations, so the graph is valid.
+    typeFullName: Khronos_Test_Export.GraphDeclarationEqualityTest
+  - Enabled: 1
     Name: graph/extra and unknown sockets
     Description: Flows to unknown input flow sockets, additional input value sockets
       and output flows, type-default input values and node references with an explicit
@@ -992,9 +997,9 @@ MonoBehaviour:
     typeFullName: Khronos_Test_Export.GraphJsonSyntaxTest
   - Enabled: 1
     Name: graph/unsupported operations and graphs
-    Description: Operations of an unsupported extension are no-ops, and an invalid
-      graph that is not the default graph doesn't prevent the default graph from
-      running.
+    Description: Operations of an unsupported extension are no-ops, also when named
+      like a core operation, and an invalid graph that is not the default graph doesn't
+      prevent the default graph from running.
     typeFullName: Khronos_Test_Export.GraphUnsupportedOperationsTest
   - Enabled: 1
     Name: pointer/AssetCapabilities_GetTests
@@ -1012,6 +1017,12 @@ MonoBehaviour:
       fire [err] and don''t change the value, and sanity checks of the values (assumes
       the viewer renders with an active camera, otherwise all values are NaN).'
     typeFullName: Khronos_Test_Export.ActiveCameraPointersTest
+  - Enabled: 1
+    Name: pointer/get light type pointers
+    Description: 'The spot pointers of KHR_lights_punctual only exist for spot lights:
+      pointer/get on point and directional lights returns isValid false, pointer/set
+      triggers [err].'
+    typeFullName: Khronos_Test_Export.PointerLightTypePointersTest
   - Enabled: 1
     Name: pointer/get_set_morphtargets
     Description: 
@@ -1240,6 +1251,11 @@ MonoBehaviour:
     Description: 
     typeFullName: Khronos_Test_Export.WhileLoopTest
   - Enabled: 0
+    Name: graph/declaration equality
+    Description: Two declarations of the same extension operation that differ only
+      in an input value socket type are different declarations, so the graph is valid.
+    typeFullName: Khronos_Test_Export.GraphDeclarationEqualityTest
+  - Enabled: 0
     Name: graph/extra and unknown sockets
     Description: Flows to unknown input flow sockets, additional input value sockets
       and output flows, type-default input values and node references with an explicit
@@ -1259,9 +1275,9 @@ MonoBehaviour:
     typeFullName: Khronos_Test_Export.GraphJsonSyntaxTest
   - Enabled: 0
     Name: graph/unsupported operations and graphs
-    Description: Operations of an unsupported extension are no-ops, and an invalid
-      graph that is not the default graph doesn't prevent the default graph from
-      running.
+    Description: Operations of an unsupported extension are no-ops, also when named
+      like a core operation, and an invalid graph that is not the default graph doesn't
+      prevent the default graph from running.
     typeFullName: Khronos_Test_Export.GraphUnsupportedOperationsTest
   - Enabled: 0
     Name: pointer/AssetCapabilities_GetTests
@@ -1279,6 +1295,12 @@ MonoBehaviour:
       fire [err] and don''t change the value, and sanity checks of the values (assumes
       the viewer renders with an active camera, otherwise all values are NaN).'
     typeFullName: Khronos_Test_Export.ActiveCameraPointersTest
+  - Enabled: 0
+    Name: pointer/get light type pointers
+    Description: 'The spot pointers of KHR_lights_punctual only exist for spot lights:
+      pointer/get on point and directional lights returns isValid false, pointer/set
+      triggers [err].'
+    typeFullName: Khronos_Test_Export.PointerLightTypePointersTest
   - Enabled: 0
     Name: pointer/get_set_morphtargets
     Description: 

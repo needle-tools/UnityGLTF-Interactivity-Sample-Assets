@@ -11,6 +11,8 @@ namespace Khronos_Test_Export
     /// The exporter can't write them, so they are added to the serialized extension after export:
     ///  - nodes whose declaration refers to an unsupported extension are no-ops: their output flows are never
     ///    activated and their output values are type-default (int 0)
+    ///  - an operation named like a core operation (math/pi) but declared by an unsupported extension is a no-op too,
+    ///    it must not run the core implementation: its float output is type-default NaN, not pi
     ///  - an invalid second graph next to the valid default graph 0; graph 1 would send test/onFailed if it ran
     /// </summary>
     public class GraphUnsupportedOperationsTest : ITestCase
@@ -19,6 +21,7 @@ namespace Khronos_Test_Export
 
         private CheckBox _noOpFlowCheckBox;
         private CheckBox _noOpValueCheckBox;
+        private CheckBox _coreNamesakeCheckBox;
         private CheckBox _invalidSecondGraphCheckBox;
 
         public string GetTestName()
@@ -28,7 +31,7 @@ namespace Khronos_Test_Export
 
         public string GetTestDescription()
         {
-            return "Operations of an unsupported extension are no-ops, and an invalid graph that is not the default graph doesn't prevent the default graph from running.";
+            return "Operations of an unsupported extension are no-ops, also when named like a core operation, and an invalid graph that is not the default graph doesn't prevent the default graph from running.";
         }
 
         public void PrepareObjects(TestContext context)
@@ -36,6 +39,7 @@ namespace Khronos_Test_Export
             _noOpFlowCheckBox = context.AddCheckBox("unsupported op:\noutput flow", true);
             _noOpFlowCheckBox.Negate();
             _noOpValueCheckBox = context.AddCheckBox("unsupported op:\ntype-default output");
+            _coreNamesakeCheckBox = context.AddCheckBox("ext. math/pi:\nisNaN (no-op)");
             _invalidSecondGraphCheckBox = context.AddCheckBox("invalid graph 1:\ngraph 0 runs", true);
         }
 
@@ -53,6 +57,14 @@ namespace Khronos_Test_Export
             _noOpFlowCheckBox.SetupNegateCheck(flowPlaceholder.FlowOut("0"));
             context.AddToCurrentEntrySequence(flowPlaceholder.FlowIn(Flow_SequenceNode.IdFlowIn), valueCheckFlow);
 
+            // Placeholder that becomes math/pi of the unsupported extension; a core math/pi would make isNaN false
+            var namesakePlaceholder = nodeCreator.CreateNode<Math_ENode>();
+            var isNaN = nodeCreator.CreateNode<Math_IsNaNNode>();
+            isNaN.ValueIn(Math_IsNaNNode.IdValueA).ConnectToSource(namesakePlaceholder.ValueOut(Math_ENode.IdOut));
+            context.NewEntryPoint(_coreNamesakeCheckBox.GetText());
+            _coreNamesakeCheckBox.SetupCheck(isNaN.FirstValueOut(), out var namesakeCheckFlow, true);
+            context.AddToCurrentEntrySequence(namesakeCheckFlow);
+
             context.PatchSerializedGraph(graph =>
             {
                 var declarations = (JArray)graph["declarations"];
@@ -69,6 +81,14 @@ namespace Khronos_Test_Export
                     ["outputValueSockets"] = new JObject { [Math_AbsNode.IdOut] = new JObject { ["type"] = intType } },
                 });
                 TestContext.SerializedNode(graph, valuePlaceholder)["declaration"] = declarations.Count - 1;
+
+                declarations.Add(new JObject
+                {
+                    ["op"] = "math/pi",
+                    ["extension"] = UnsupportedExtension,
+                    ["outputValueSockets"] = new JObject { [Math_PiNode.IdOut] = new JObject { ["type"] = TestContext.SerializedTypeIndex(graph, GltfTypes.Float) } },
+                });
+                TestContext.SerializedNode(graph, namesakePlaceholder)["declaration"] = declarations.Count - 1;
             });
 
             // Invalid graph 1: its math/add declaration becomes the undefined operation math/doesNotExist

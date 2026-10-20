@@ -94,7 +94,7 @@ namespace Khronos_Test_Export
         /// <summary>
         /// Adds a sampler that no channel references, with an input accessor running to <paramref name="inputMax"/>.
         /// </summary>
-        private static void AddUnusedSampler(GLTFSceneExporter exporter, int animationIndex, float inputMax)
+        internal static void AddUnusedSampler(GLTFSceneExporter exporter, int animationIndex, float inputMax)
         {
             var times = new[] { 0f, inputMax };
             var values = new[] { 0f, 0f, 0f, 0f, 0f, 0f };

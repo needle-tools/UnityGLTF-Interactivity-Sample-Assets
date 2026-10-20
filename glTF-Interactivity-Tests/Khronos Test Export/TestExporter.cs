@@ -273,7 +273,9 @@ namespace Khronos_Test_Export
             return testExportPath;
         }
         
-        public void ExportTest(ITestCase[] cases, bool batchExport, string allInOneName, string indexFileName)
+        /// <param name="exportPathOverride">Destination folder instead of the GLTFTestExportPath pref. The README coverage
+        /// of the regular test folder is not updated for it.</param>
+        public void ExportTest(ITestCase[] cases, bool batchExport, string allInOneName, string indexFileName, string exportPathOverride = null)
         {
             // Labels, log messages and names must not depend on the exporting machine's locale
             // (e.g. "0,0001" on a German system), so export with the invariant culture.
@@ -281,7 +283,7 @@ namespace Khronos_Test_Export
             CultureInfo.CurrentCulture = CultureInfo.InvariantCulture;
             try
             {
-                ExportTestInvariant(cases, batchExport, allInOneName, indexFileName);
+                ExportTestInvariant(cases, batchExport, allInOneName, indexFileName, exportPathOverride);
             }
             finally
             {
@@ -289,7 +291,7 @@ namespace Khronos_Test_Export
             }
         }
 
-        private void ExportTestInvariant(ITestCase[] cases, bool batchExport, string allInOneName, string indexFileName)
+        private void ExportTestInvariant(ITestCase[] cases, bool batchExport, string allInOneName, string indexFileName, string exportPathOverride)
         {
             var settings = GLTFSettings.GetDefaultSettings();
             settings.UseCaching = false;
@@ -315,7 +317,7 @@ namespace Khronos_Test_Export
             
             var exportContext = new ExportContext(settings);
 
-            var path = EditorPrefs.GetString("GLTFTestExportPath", "");
+            var path = exportPathOverride ?? EditorPrefs.GetString("GLTFTestExportPath", "");
             if (string.IsNullOrEmpty(path))
             {
                 path = ShowDestinationFolderDialog();
@@ -384,7 +386,8 @@ namespace Khronos_Test_Export
                 }
                 string fullIndexFilePath = Path.Combine(path, indexFileName + ".json");
                 CreateIndexJsonFile(fullIndexFilePath, tests);
-                ReadmeCoverageWriter.Update(path);
+                if (exportPathOverride == null)
+                    ReadmeCoverageWriter.Update(path);
 
                 Debug.Log("Batch exported " + totalTestCount + " test cases with a total of " + totalSubTestCount + " sub-tests to: " + path);
 

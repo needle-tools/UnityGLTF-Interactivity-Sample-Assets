@@ -79,7 +79,7 @@ namespace Khronos_Test_Export
             // Find all classes with ITestCase interface
             var testCases = new List<TestCaseEntry>(this.testCases ?? new TestCaseEntry[0]);
             var testCaseTypes = System.Reflection.Assembly.GetExecutingAssembly().GetTypes()
-                .Where(t => !t.GetCustomAttributes().Any( c => c.GetType() == typeof(IgnoreTestCaseAttribute)));
+                .Where(t => !t.GetCustomAttributes().Any( c => c.GetType() == typeof(IgnoreTestCaseAttribute) || c.GetType() == typeof(UndefinedBehaviourTestAttribute)));
 
             testCases.Where(tc => !testCaseTypes.Contains(tc.type)).ToList().ForEach(tc => testCases.Remove(tc));
 

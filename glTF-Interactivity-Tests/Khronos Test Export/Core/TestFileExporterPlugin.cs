@@ -92,9 +92,13 @@ namespace Khronos_Test_Export
                 if (_extensionJsonPatches.Count > 0)
                 {
                     var extensions = gltfRoot.Extensions;
-                    extensions[GltfInteractivityExtension.ExtensionName] =
-                        new PatchedExtension(extensions[GltfInteractivityExtension.ExtensionName], _extensionJsonPatches.ToArray());
+                    var patched = new PatchedExtension(extensions[GltfInteractivityExtension.ExtensionName].Serialize(), _extensionJsonPatches.ToArray());
+                    extensions[GltfInteractivityExtension.ExtensionName] = patched;
                     _extensionJsonPatches.Clear();
+
+                    // Patches can add declarations of other extensions; every extension a declaration refers to belongs in extensionsUsed
+                    foreach (var extensionName in TestContext.DeclarationExtensions((JObject)patched.Serialize().Value))
+                        exporter.DeclareExtensionUsage(extensionName, false);
                 }
             }
 
@@ -110,28 +114,31 @@ namespace Khronos_Test_Export
                 _extensionJsonPatches.Add(patch);
             }
 
+            /// <summary> The serialized extension with the patches applied once, so extensionsUsed can be derived from the result. </summary>
             private class PatchedExtension : IExtension
             {
-                private readonly IExtension _extension;
-                private readonly Action<JObject>[] _patches;
+                private readonly JProperty _property;
 
-                public PatchedExtension(IExtension extension, Action<JObject>[] patches)
+                public PatchedExtension(JProperty serializedExtension, Action<JObject>[] patches)
                 {
-                    _extension = extension;
-                    _patches = patches;
+                    _property = serializedExtension;
+                    foreach (var patch in patches)
+                        patch((JObject)_property.Value);
+                }
+
+                private PatchedExtension(JProperty patchedProperty)
+                {
+                    _property = patchedProperty;
                 }
 
                 public JProperty Serialize()
                 {
-                    var property = _extension.Serialize();
-                    foreach (var patch in _patches)
-                        patch((JObject)property.Value);
-                    return property;
+                    return (JProperty)_property.DeepClone();
                 }
 
                 public IExtension Clone(GLTFRoot root)
                 {
-                    return new PatchedExtension(_extension.Clone(root), _patches);
+                    return new PatchedExtension((JProperty)_property.DeepClone());
                 }
             }
         }

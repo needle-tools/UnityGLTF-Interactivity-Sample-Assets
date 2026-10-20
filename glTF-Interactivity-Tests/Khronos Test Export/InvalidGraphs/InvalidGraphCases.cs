@@ -245,6 +245,31 @@ namespace Khronos_Test_Export.InvalidGraphs
                     copy["outputValueSockets"] = new JObject { ["other"] = new JObject { ["type"] = TypeIndex(gr, "int") } };
                     Arr(gr, "declarations").Add(copy);
                 }));
+            // JSON properties are unordered, so the input value socket order doesn't make declarations different
+            Action<InvalidGraphBuilder> extOpTwoInputs = b =>
+            {
+                var decl = b.AddDecl(new JObject
+                {
+                    ["op"] = "test/customOp2",
+                    ["extension"] = "EXT_interactivity_invalid_graph_test",
+                    ["inputValueSockets"] = new JObject
+                    {
+                        ["a"] = new JObject { ["type"] = b.Type("int") },
+                        ["b"] = new JObject { ["type"] = b.Type("int") },
+                    },
+                    ["outputValueSockets"] = new JObject { ["result"] = new JObject { ["type"] = b.Type("int") } },
+                });
+                b.AddNode(decl, Values(("a", b.Inline("int", 1)), ("b", b.Inline("int", 2))));
+            };
+            c.Add(Reject("E5d", g, "duplicate_extension_declaration_reordered_inputs",
+                "extension op declared twice, the second time with input sockets b, a instead of a, b (still equal)", SecDecl, extOpTwoInputs,
+                gr =>
+                {
+                    var copy = (JObject)Decl(gr, "test/customOp2").DeepClone();
+                    var inputs = (JObject)copy["inputValueSockets"];
+                    copy["inputValueSockets"] = new JObject { ["b"] = inputs["b"], ["a"] = inputs["a"] };
+                    Arr(gr, "declarations").Add(copy);
+                }));
             c.Add(Assert("E6", g, "extension_not_string", "declaration extension is a number", SecGraph, extOp,
                 gr => extDecl(gr)["extension"] = 5));
 

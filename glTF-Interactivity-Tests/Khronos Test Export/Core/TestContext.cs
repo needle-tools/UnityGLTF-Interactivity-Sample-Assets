@@ -486,6 +486,29 @@ namespace Khronos_Test_Export
             return types.Count - 1;
         }
 
+        /// <summary>
+        /// The distinct string values of the declarations' <c>extension</c> property in all graphs of a serialized
+        /// KHR_interactivity extension object. Every extension a declaration refers to must be listed in extensionsUsed.
+        /// </summary>
+        public static List<string> DeclarationExtensions(JObject interactivityExtension)
+        {
+            var result = new List<string>();
+            if (!(interactivityExtension["graphs"] is JArray graphs))
+                return result;
+            foreach (var graph in graphs)
+            {
+                if (!(graph is JObject graphObject) || !(graphObject["declarations"] is JArray declarations))
+                    continue;
+                foreach (var declaration in declarations)
+                {
+                    var extension = (declaration as JObject)?["extension"];
+                    if (extension?.Type == JTokenType.String && !result.Contains((string)extension))
+                        result.Add((string)extension);
+                }
+            }
+            return result;
+        }
+
         public void AddFallbackToLastEntryPoint(FlowInRef flow)
         {
             if (_lastEntryPoint == null)
